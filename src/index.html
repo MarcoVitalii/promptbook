@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promptbook</title>
+<!--
+  Promptbook — a prompt book in one file. No install, no server, no libraries.
+  Put this file in the show folder and open it in Chrome or Edge.
+
+  Embedded font: Inter (subset). Copyright 2016 The Inter Project Authors.
+  Licensed under the SIL Open Font License 1.1 — https://scripts.sil.org/OFL
+-->
+<style>
+/*FONTS*/
+/*CSS*/
+</style>
+<style id="pageRule"></style>
+</head>
+<body class="facing">
+<header id="bar">
+  <button id="bMenu" data-tt="menu">&#9776;</button>
+  <span id="who"><b id="showName"></b><span id="status"></span></span>
+  <select id="outline" data-tt="jump"></select>
+  <input id="search" type="search" data-tp="find" autocomplete="off">
+  <span class="sep"></span>
+  <span id="pens"></span>
+  <button id="bErase" data-t="eraser"></button>
+  <button id="bFinger" data-t="finger" data-tt="fingerTip"></button>
+  <button id="bUndo" data-tt="undo">&#8630;</button>
+  <button id="bRedo" data-tt="redo">&#8631;</button>
+  <span class="sep"></span>
+  <button id="bFacing" data-t="boards" data-tt="boardsTip"></button>
+  <button id="bCues" data-t="cues" data-tt="cuesTip"></button>
+  <button id="bInk" data-t="ink" data-tt="inkTip"></button>
+  <button id="bNight" data-tt="night">&#9790;</button>
+  <button id="zOut" data-tt="zoomOut">&minus;</button>
+  <button id="zFit" data-t="fit"></button>
+  <button id="zIn" data-tt="zoomIn">+</button>
+  <span class="grow"></span>
+  <button id="bReview" hidden></button>
+  <button id="bList" data-t="cueList"></button>
+  <button id="bPrint" data-t="print"></button>
+  <div id="menu" hidden></div>
+</header>
+<div id="banner" hidden></div>
+<div id="work">
+  <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+  <aside id="drawer" hidden></aside>
+</div>
+<div id="pop" hidden></div>
+<div id="editor" hidden></div>
+<div id="dlg" hidden></div>
+<div id="start" hidden></div>
+<div id="toast" hidden></div>
+<div id="measure"></div>
+<div id="cuePrint"></div>
+<input id="filePick" type="file" hidden>
+<script>
+/*JS*/
+</script>
+</body>
+</html>
