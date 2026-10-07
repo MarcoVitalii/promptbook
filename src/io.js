@@ -277,7 +277,7 @@ async function exportBundle() {
   }
   const d = new Date(), p = n => String(n).padStart(2, '0');
   const stamp = d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
-  download(slug(S.cfg.title || S.store.name || 'show') + '-' + stamp + '.promptbook.json', new Blob([JSON.stringify(b)], { type: 'application/json' }));
+  download(slug(titleOf() || S.store.name || 'show') + '-' + stamp + '.promptbook.json', new Blob([JSON.stringify(b)], { type: 'application/json' }));
   toast(t('exported'));
 }
 function importBundle() {
@@ -322,7 +322,9 @@ function openTextDialog(first) {
 function openSettings() {
   openDlg(t('setTitle'), (body, foot, close) => {
     body.classList.add('form');
-    const ti = h('input'); ti.type = 'text'; ti.value = S.cfg.title;
+    const ti = h('input'); ti.type = 'text'; ti.value = titleOf();
+    const inScript = !!(S.meta && S.meta.title);
+    if (inScript) { ti.disabled = true; ti.title = t('titleInScript'); }
     const ps = h('select'); for (const k of Object.keys(PAPERS)) { const o = h('option', null, k); o.value = k; ps.appendChild(o); } ps.value = S.cfg.paper;
     const ls = h('select'); for (const [k, n] of [['en', 'English'], ['it', 'Italiano']]) { const o = h('option', null, n); o.value = k; ls.appendChild(o); } ls.value = LANG;
     const fs2 = h('select'); for (const v of [0.25, 0.4, 0.55, 0.7]) { const o = h('option', null, Math.round(v * 100) + '%'); o.value = v; fs2.appendChild(o); }
@@ -345,7 +347,7 @@ function openSettings() {
     dlgBtn(foot, t('save'), 'pri', () => {
       const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, runs: i[3].checked }; });
       const paperChanged = ps.value !== S.cfg.paper;
-      S.cfg = normCfg(Object.assign({}, S.cfg, { title: ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
+      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
       close();
       if (paperChanged) S.meas = new Map();
@@ -512,5 +514,5 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
 init();

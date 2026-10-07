@@ -1,5 +1,24 @@
 # Changelog
 
+## r1.1 — 2026-10-07 (built, not yet tagged)
+
+Front page
+- The script can start with a frontmatter block between two `---` lines: `title:`, `author:`, `company:`, `year:` or any other `key: value`.
+- The values are shown on a front page before the script, in the order written, the title larger. Keys are not shown.
+- The front page and the character page have no number; the script still starts on page 1.
+- `title` in the script replaces the title from Settings.
+
+Characters
+- `characters:` (or `personaggi:`) in the frontmatter lists the characters, one `- NAME/ALIAS - description` per line; alias and description are optional. `[ANNA, MARCO]` on one line also works.
+- The list is printed on a page of its own after the front page: name / alias — description.
+- A speech typed with an alias (`A: …`) is shown under the full name.
+- Review lists speakers that are not in the list, and listed characters that never speak.
+- Group names are not checked: ALL, OTHERS, ALL OTHERS, ALL BUT x, TUTTI, GLI ALTRI, TUTTI TRANNE x and similar.
+
+Files
+- No new files. `script.md` may now begin with the frontmatter block.
+- Do not edit a show with r1.0 or r0.1 once it has frontmatter: they keep the text but show it as unrecognised lines on page 1.
+
 ## r1.0 — 2026-10-06
 
 Cue ends

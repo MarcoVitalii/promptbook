@@ -1,6 +1,6 @@
 # Digital Prompt Book — Specification
 
-**Status:** v0.8 — 2026-10-06 — release r1.0 built: R0, the cue-word box, cue ends and board templates. Checked in a simulated browser only; r1.0 has not run on the rehearsal laptop.
+**Status:** v0.9 — 2026-10-07 — r1.1 built, not yet committed or tagged: frontmatter, front page, character page with aliases (§5.12) on top of r1.0. Checked in a simulated browser only; neither r1.0 nor r1.1 has run on the rehearsal laptop.
 **Rehearsal deadline:** 2026-10-08
 **Companion file:** `PLAN.md`
 
@@ -17,6 +17,8 @@ Change in v0.6: Q22 answered. Templates are no longer a separate store; a templa
 Change in v0.7: Q26 answered. Templates live in the configuration, not in the script: no line in `script.md`, never on a facing page, never printed (§5.10 revised, D18 reworded, K10 added).
 
 Change in v0.8: Q24 answered ("build it now"). R1 is built and released as r1.0. §5.10 and §5.11 each end with an "As built" list; §7 carries the test record. Releases are versioned in git (PLAN §8).
+
+Change in v0.9: the script can start with a frontmatter block: title and other details for a front page, and a character list that speeches are checked against (§5.12, D19). Built as r1.1.
 
 ---
 
@@ -54,6 +56,7 @@ The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses)
 | D15 | One editor. Script text is edited in one place at a time; no merge, no co-editing. | Q15 | `[LOCKED]` |
 | D16 | Boards keep the built-in pen only (no shapes, arrows, text objects, no movable props), on condition that reusable stage backgrounds exist: board templates, §5.10. | Q18, Q22 | `[LOCKED]` |
 | D18 | A template is a board in every respect but one: it is kept in the show's configuration instead of having a place in the script. Same data, same pen. A board can be based on a template, and a template can be based on another template. Based-on is a live link, not a copy. | Q22, Q26 | `[LOCKED]` |
+| D19 | The script may start with a frontmatter block between two `---` lines. Its values are printed on a front page in the order written, the title larger. A `characters` list in it is the reference for checking speaker names; group names such as ALL, OTHERS, ALL BUT x are never checked. This extends D3: still no new markup inside the script body. | client, v0.9 | `[LOCKED]` in principle, details `[ASSUMED]` |
 | D17 | A cue can have an end, marked at its own position in the text (§5.11). An end is a position, like the cue itself; still no timing data (D4). | client, v0.5 | `[LOCKED]` in principle, design `[ASSUMED]` |
 
 ## 4. Conflicts in the answers
@@ -309,6 +312,46 @@ As built in r1.0:
 - The "runs" switch is a tick box per department in Settings. Shows saved before r1.0 get it guessed from the code (SND, AUDIO, MUS, VID… on; others off).
 - An end without a number re-pairs by position. If its cue's department is changed and another open cue of the new department sits between them, the end closes that one instead.
 
+### 5.12 Frontmatter, front page and character list — built in r1.1
+
+**Request as received:** "host a frontmatter with metadata to display on the first page like title, author, company and year of the representation. display just the values on the frontpage in the order described in the frontmatter itself, title with bigger fonts, the rest smaller. Allow to define characters to validate the rest of the script and potentially define call list later on. […] some expressions are used to quickly refer to groupings of characters without explicit enumeration, like ALL BUT x, or ALL OTHERS or OTHERS, exclude this by checks." Then: "personaggi should be printed on a separate page, with name/alias - description collected in the metadata".
+
+```
+---
+title: Il mare
+author: Marco Vitali
+company: Compagnia del Porto
+year: 2026
+characters:
+  - ANNA/A - la figlia
+  - MARCO/M - il pescatore
+  - SOLDATO 1
+---
+# ATTO PRIMO
+```
+
+| Point | Design | Status |
+|---|---|---|
+| Where | Only as the first thing in `script.md`, between two lines holding `---`. This is the form Obsidian shows as "Properties". | `[ASSUMED]` |
+| Fields | `key: value`, one per line. Any key is accepted; nothing is required. A key may hold a list, either `[A, B]` on the line or `- item` lines beneath it. Quotes around a value are dropped. Lines starting with `#` are ignored. | `[ASSUMED]` |
+| Front page | One page before the script. It shows the values only, never the keys, centred, in the order written. `title` (or `titolo`) is set large (38 px bold); everything else small (18 px). No running head, no page number, nothing on the facing page. | `[LOCKED]` by the request; sizes `[ASSUMED]` |
+| Not on the front page | `characters` (or `personaggi`), which has its own page, and Obsidian's own `tags`, `aliases`, `cssclasses`, which are never shown. | `[ASSUMED]` |
+| Character page | A page of its own after the front page, before the script. Heading: the key as typed (`Personaggi`, `Characters`). One line per character in the order written: **NAME** / ALIAS — description. No running head, no number, nothing facing it. Over 30 characters the list is set smaller in two columns. A longer list than fits one page is cut off. | `[LOCKED]` by the request; layout `[ASSUMED]` |
+| Aliases | `NAME/ALIAS`, several allowed (`MARCO/M/MARCHINO`). A speech typed with an alias (`M: …`, `A e M: …`) is shown, checked and listed under the full name; `script.md` keeps what was typed. A name always wins over an alias spelled the same. `E` cannot be an alias: it is read as the connector. | `[ASSUMED]` |
+| Page numbers | The front page and the character page have no number. The script still starts on page 1, so adding frontmatter to an existing show changes no page number. | `[ASSUMED]` |
+| Title | `title` in the script wins over the title in Settings, which is then shown greyed. Without it, Settings applies as before. | `[ASSUMED]` |
+| Character list | Each entry is `NAME`, `NAME/ALIAS`, either optionally followed by ` - description`. Names are compared in capitals with spaces collapsed, and printed in capitals. | `[ASSUMED]` |
+| Check | Only when the list has at least one name. A speaker is accepted if the whole name is in the list. Otherwise it is split at `,` `/` `+` `&` and at the connectors `e`, `ed`, `and`, `y`, `et`, and each part is looked up. Parts not found are listed in Review under "Not in the character list", once per name with a count, and count toward the badge. A hint, not an error (as D7 for cues). | `[ASSUMED]` |
+| Group names, never checked | `ALL`, `EVERYONE`, `EVERYBODY`, `TUTTI`, `TUTTE`; `OTHERS`, `THE OTHERS`, `ALL OTHERS`, `ALL THE OTHERS`, `ALTRI`, `GLI ALTRI`, `TUTTI GLI ALTRI`, `ALTRE`, `LE ALTRE`, `TUTTE LE ALTRE`; and `ALL / EVERYONE / TUTTI / TUTTE` followed by `BUT`, `EXCEPT`, `TRANNE`, `MENO`, `ECCETTO` or `SALVO` and anything. The names after `BUT` are not checked either. | `[LOCKED]` for the three forms named in the request; the rest `[ASSUMED]` |
+| Other collective speakers | `CORO`, `DONNE` and the like are ordinary names: add them to the list. | `[ASSUMED]` |
+| Listed but silent | Review also shows characters in the list with no speech of their own. Not counted in the badge. | `[ASSUMED]` |
+| Editing | The frontmatter is one block: double-tap the front page or the character page, or use "Edit whole script…". Pen ink on either page belongs to that block and stays on the page it was drawn on. | `[ASSUMED]` |
+| Tolerance | A `---` with no closing `---`, or with script lines such as `(action)` between the two, is not frontmatter; the lines stay in the script and appear in Review. A frontmatter without displayable values gives no front page; without characters, no character page. | `[ASSUMED]` |
+
+Not built: the call list itself, a character list longer than one page, layout options, checking the names after `ALL BUT`.
+
+Older releases: r1.0 and r0.1 do not know frontmatter. They keep the text but show its lines as unrecognised at the top of page 1.
+
 ## 6. Page layout `[LOCKED]`
 
 Left page (script):
@@ -350,9 +393,19 @@ Test record, 2026-10-06: 79 automated checks pass in Chromium 141 on Linux, no s
 
 Test record for r1.0, 2026-10-06: 145 automated checks pass in Chromium 141 on Linux, no script errors: the 84 from r0.1, 23 for cue ends, 38 for templates. Same limits as before: simulated pen and touch, a browser-private folder instead of the real folder dialog, PDF instead of a printer. A show folder written by r0.1 opens in r1.0; a show using ends or templates opened in r0.1 would show `{/…}` tokens as unknown cues and ignore templates.
 
+### r1.1 — built 2026-10-07, not yet committed or tagged
+
+| ID | Requirement | Spec | Built | Checked how |
+|---|---|---|---|---|
+| R1.5 | Frontmatter block, front page with values in written order, title larger, title wins over Settings. | §5.12 | Yes | Automated; screenshot |
+| R1.6 | Character list, speaker check with group names excluded, Review sections. | §5.12 | Yes | Automated |
+| R1.7 | Character page; aliases resolved to the full name. | §5.12 | Yes | Automated; screenshot |
+
+Test record for r1.1, 2026-10-07: 151 automated checks pass in Chromium 153 (Playwright headless shell) on Linux, no script errors: 127 existing and 24 new. The r1.0 suite as committed runs 127 checks here, not the 145 recorded above; the difference was not investigated. Same limits as before: simulated pen, no real folder dialog, no printer. The front page and the character page were not printed, and a list of more than 30 characters was not tried.
+
 ### Backlog — ordered after the first rehearsal
 
-Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. Highlighter, straight line and typed note tools. "Changed since last print" marks. Anything the first rehearsal shows.
+A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. Highlighter, straight line and typed note tools. "Changed since last print" marks. Anything the first rehearsal shows.
 
 ### R2 — later
 

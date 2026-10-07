@@ -68,6 +68,19 @@ body:not(.facing) .page.facing{display:none}
 .row.h2{display:block;padding:8px 226px 8px 38px}
 .row.h2 .tx{font-weight:700;font-size:15px;line-height:22px;letter-spacing:.02em}
 .row.mark{height:22px;padding-bottom:0;align-items:center}
+.row.front{display:block;box-sizing:border-box;padding:0 46px 0 38px}
+.row.front.none{height:0;padding:0}
+.row.front .tx{height:100%;box-sizing:border-box;padding-bottom:16%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.row.front .tx.cast{display:block;text-align:left;padding:40px 30px 0}
+.ch{font-weight:700;font-size:22px;line-height:30px;letter-spacing:.03em;border-bottom:2px solid var(--tx);padding-bottom:4px;margin-bottom:18px}
+.ce{font-size:15px;line-height:22px;padding:0 0 6px 1.2em;text-indent:-1.2em;break-inside:avoid}
+.cast.two .cl2{columns:2;column-gap:28px}
+.cast.two .ce{font-size:13px;line-height:19px;padding-bottom:4px}
+.ca{color:var(--muted)}
+.cd{color:var(--tx2)}
+.ft{font-weight:700;font-size:38px;line-height:46px;letter-spacing:.02em;margin:0 0 20px}
+.fl{font-size:18px;line-height:30px;color:var(--tx2)}
+.page.frontpg .phead,.page.frontpg .pfoot{display:none}
 .row.mark .rule{border-top:1.5px dashed var(--muted);height:0;opacity:.6}
 .row.simul .simnm{font-weight:400;font-size:11px;font-style:italic;color:var(--muted);letter-spacing:0}
 .simcols{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));border-left:3px double var(--muted)}

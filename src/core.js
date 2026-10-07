@@ -26,7 +26,7 @@ en: {
   save: 'Save', cancel: 'Cancel', close: 'Close',
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
-  fmtHelp: '# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
+  fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
   bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bName: 'Board name', facingEmpty: 'No board on this page',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
@@ -34,6 +34,8 @@ en: {
   rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
   rvAmp: '“&” with no speech above', rvInk: 'Ink to check', rvOrph: 'Ink whose text was removed', rvUnk: 'Unknown departments', rvChars: 'Characters',
   rvCharsHint: 'A name that appears once may be a typo or a misread line.',
+  rvNoChar: 'Not in the character list', rvNoCharHint: 'Speakers missing from “characters” at the top of the script. ALL, OTHERS, ALL BUT… are not checked.',
+  rvSilent: 'Listed but never speaks', titleInScript: 'Set by “title” at the top of the script',
   all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Description', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character',
   csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
@@ -73,7 +75,7 @@ it: {
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
-  fmtHelp: '# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
+  fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
   bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
@@ -81,6 +83,8 @@ it: {
   rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
   rvAmp: '«&» senza battuta sopra', rvInk: 'Inchiostro da controllare', rvOrph: 'Inchiostro di testo rimosso', rvUnk: 'Reparti sconosciuti', rvChars: 'Personaggi',
   rvCharsHint: 'Un nome che compare una sola volta può essere un refuso o una riga letta male.',
+  rvNoChar: 'Non nell’elenco dei personaggi', rvNoCharHint: 'Nomi che mancano da «personaggi» in testa al copione. TUTTI, GLI ALTRI, TUTTI TRANNE… non sono controllati.',
+  rvSilent: 'In elenco ma senza battute', titleInScript: 'Impostato da «titolo» in testa al copione',
   all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Descrizione', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio',
   csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
@@ -132,7 +136,7 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.0';
+const VERSION = 'r1.1';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -169,7 +173,7 @@ const S = {
   boards: new Map(),     // name -> { name, w, h, image, imageData, strokes, base }
   templates: new Map(),  // name -> same shape with tpl: true; kept in the configuration, never in the script
   urls: new Map(),       // 'boards/<file>' or 'templates/<file>' -> object URL
-  pairs: [], mode: 'script',
+  pairs: [], mode: 'script', meta: null,   // meta: the frontmatter of the script, when it has one
   pages: [], els: [], meas: new Map(),
   view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
@@ -178,6 +182,7 @@ const S = {
 };
 const paper = () => PAPERS[S.cfg.paper] || PAPERS.A4;
 const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
+const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
 
 /* =====================================================================
    PARSE
@@ -237,6 +242,80 @@ function isActionStart(st) {
   }
   return true;   // not closed on this line: a multi-line action
 }
+/* ---------- frontmatter ----------
+   ---
+   title: Il mare
+   author: Marco Vitali
+   characters:
+     - ANNA
+     - MARCO/M - il pescatore
+   ---
+   Every value is shown on the front page, in this order; the title larger. "characters" gets a page of
+   its own after it: name / alias - description. It is also the list speeches are checked against, and
+   a speech headed by an alias is shown under the full name. */
+const META_TITLE = new Set(['title', 'titolo']);
+const META_CHARS = new Set(['characters', 'personaggi']);
+const META_SKIP = new Set(['tags', 'aliases', 'cssclasses']);   // Obsidian's own properties
+const META_LINE = /^\s*(?:#|-\s|[^\s:][^:]*:)|^\s+\S/;
+const normName = s => String(s).toUpperCase().replace(/\s+/g, ' ').trim();
+function parseMeta(raw) {
+  const unq = v => { v = v.trim(); const m = /^(["'])(.*)\1$/.exec(v); return m ? m[2] : v; };
+  const fields = []; let cur = null;
+  for (const line of raw.split('\n').slice(1, -1)) {
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+    let m = /^\s*-\s+(.*)$/.exec(line);
+    if (m) { if (cur && m[1].trim()) cur.items.push(unq(m[1])); continue; }
+    m = /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(line);
+    if (m && !/^\s/.test(line)) {
+      cur = { key: m[1].trim().toLowerCase(), items: [] }; fields.push(cur);
+      const v = (m[2] || '').trim(), lm = /^\[(.*)\]$/.exec(v);
+      if (lm) cur.items = lm[1].split(',').map(unq).filter(Boolean);
+      else if (v && v !== '|' && v !== '>') cur.items.push(unq(v));
+    } else if (cur) cur.items.push(line.trim());
+  }
+  const out = { title: '', lines: [], chars: [], set: new Set(), alias: new Map(), charsKey: '' };
+  for (const f of fields) {
+    if (META_SKIP.has(f.key)) continue;
+    if (META_CHARS.has(f.key)) {
+      if (!out.charsKey) out.charsKey = f.key[0].toUpperCase() + f.key.slice(1);
+      for (const it of f.items) {
+        const m = /^(.*?)(?:\s+[-–—]\s+|\s*:\s+)(.*)$/.exec(it), names = (m ? m[1] : it).split('/').map(normName).filter(Boolean), name = names[0];
+        if (!name || out.set.has(name)) continue;
+        out.set.add(name); out.chars.push({ name, aliases: names.slice(1), desc: m ? m[2].trim() : '' });
+      }
+      continue;
+    }
+    const big = META_TITLE.has(f.key);
+    if (big && !out.title && f.items.length) out.title = f.items.join(' ');
+    for (const it of f.items) out.lines.push({ text: it, big });
+  }
+  for (const c of out.chars) {   // a name always wins over an alias spelled the same
+    c.aliases = c.aliases.filter(a => !out.set.has(a) && !out.alias.has(a));
+    for (const a of c.aliases) out.alias.set(a, c.name);
+  }
+  out.aliasSig = Array.from(out.alias).join(';');
+  return out;
+}
+const NAME_SEP = /(\s*[,\/+&]\s*|\s+(?:e|ed|and|y|et)\s+)/i;
+/* a speaker name with every alias replaced by the character's name */
+function fullName(name, meta) {
+  if (!meta || !meta.alias.size || meta.set.has(normName(name))) return name;
+  return name.split(NAME_SEP).map((p, i) => i % 2 ? p : (meta.alias.get(normName(p)) || p)).join('');
+}
+/* Names that stand for several characters without listing them. They are never checked against the list. */
+const GROUP_NAME = /^(?:(?:ALL|EVERYONE|EVERYBODY|TUTTI|TUTTE)(?:\s+(?:THE\s+|GLI\s+|LE\s+)?(?:OTHERS|ALTRI|ALTRE)|\s+(?:BUT|EXCEPT|TRANNE|MENO|ECCETTO|SALVO)\s+.+)?|(?:THE\s+|GLI\s+|LE\s+)?(?:OTHERS|ALTRI|ALTRE))$/u;
+/* which listed characters a speaker name uses, and which of its names are not in the list */
+function castCheck(name, set) {
+  const U = normName(name), used = [], unknown = [];
+  if (set.has(U)) return { used: [U], unknown };
+  if (GROUP_NAME.test(U)) return { used, unknown };
+  for (const p of U.split(/\s*[,\/+&]\s*|\s+(?:E|ED|AND|Y|ET)\s+/)) {
+    if (!p || GROUP_NAME.test(p)) continue;
+    (set.has(p) ? used : unknown).push(p);
+  }
+  return { used, unknown };
+}
+
 function classify(line) {
   const st = stripTokens(line);
   if (st === '') return { type: 'mark' };
@@ -250,8 +329,17 @@ function classify(line) {
 }
 function parseScript(text) {
   const lines = String(text || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').replace(/ /g, ' ').split('\n');
-  const blocks = []; let cur = null, gap = 0;
-  for (const line0 of lines) {
+  const blocks = []; let cur = null, gap = 0, at = 0;
+  /* frontmatter: only as the first thing in the file, between two --- lines */
+  let a = 0; while (a < lines.length && !lines[a].trim()) a++;
+  if (a < lines.length && lines[a].trim() === '---') {
+    let z = a + 1; while (z < lines.length && lines[z].trim() !== '---' && (!lines[z].trim() || META_LINE.test(lines[z]))) z++;
+    if (z < lines.length && lines[z].trim() === '---') {
+      blocks.push({ type: 'meta', raw: lines.slice(a, z + 1).map(l => l.replace(/\s+$/, '')).join('\n'), gap: a });
+      at = z + 1;
+    }
+  }
+  for (const line0 of lines.slice(at)) {
     const line = line0.replace(/\s+$/, '');
     if (!line.trim()) { gap++; cur = null; continue; }
     const c = classify(line);
@@ -271,6 +359,7 @@ function analyze(b) {
   const raw = b.raw;
   b.plain = stripTokens(raw); b.sv = hash(raw);
   b.tokens = []; b.cues = []; b.name = ''; b.simul = false; b.level = 0; b.title = '';
+  if (b.type === 'meta') { b.meta = parseMeta(raw); return b; }
   if (b.type === 'mark') {
     const re = new RegExp(TOKEN_SRC, 'g'); let m;
     while ((m = re.exec(raw))) b.cues.push(mkCue(m, -1));
@@ -382,8 +471,12 @@ function reparse(text) {
   }
   S.blocks = nb;
   S.byId = new Map(nb.map(b => [b.id, b]));
+  const sig0 = S.meta ? S.meta.aliasSig : '';
+  S.meta = nb.length && nb[0].type === 'meta' ? nb[0].meta : null;
+  if ((S.meta ? S.meta.aliasSig : '') !== sig0) S.meas = new Map();   // names in the name column change
   let act = '', scene = '';
   for (const b of nb) {
+    if (b.type === 'speech') b.name = fullName(b.head.name, S.meta);
     if (b.type === 'h') { if (b.level === 1) { act = b.title; scene = ''; } else scene = b.title; }
     b.act = act; b.scene = scene;
   }
@@ -635,6 +728,27 @@ function buildRow(g, fr) {
     row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule'));
     return row;
   }
+  if (b.type === 'meta') {   // front page and character page; outside those it takes no room
+    const row = h('div', 'row front'); row.dataset.b = b.id;
+    if (!fr) { row.classList.add('none'); return row; }
+    row.style.height = fr.h + 'px';
+    const tx = h('div', 'tx'); tx.dataset.b = b.id; tx.dataset.off = fr.off; tx.dataset.fl = (fr.first ? 'f' : '') + (fr.last ? 'l' : '');
+    if (fr.part === 'front') for (const l of b.meta.lines) tx.appendChild(h('div', l.big ? 'ft' : 'fl', l.text));
+    else {
+      tx.classList.add('cast'); if (b.meta.chars.length > 30) tx.classList.add('two');
+      tx.appendChild(h('div', 'ch', b.meta.charsKey));
+      const list = h('div', 'cl2');
+      for (const c of b.meta.chars) {
+        const e = h('div', 'ce'); e.appendChild(h('b', null, c.name));
+        if (c.aliases.length) e.appendChild(h('span', 'ca', ' / ' + c.aliases.join(' / ')));
+        if (c.desc) e.appendChild(h('span', 'cd', ' — ' + c.desc));
+        list.appendChild(e);
+      }
+      tx.appendChild(list);
+    }
+    row.appendChild(tx);
+    return row;
+  }
   const row = h('div', 'row ' + (b.type === 'h' ? 'h' + b.level : b.type)); row.dataset.b = b.id;
   if (b.type === 'h') { row.appendChild(elTx(b, 0, b.tokens.length)); return row; }
   const nm = h('div', 'nm');
@@ -691,7 +805,9 @@ function paginate() {
   const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
   let cur = null, y = 0, act = '', scene = '';
   const isHead = g => g.kind === 'single' && g.b.type === 'h';
-  const newPage = () => { cur = { items: [], boards: [], head: null, no: pages.length + 1 }; pages.push(cur); y = 0; };
+  const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
+  const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
+  const newPage = () => { const no = pages.length + 1 - off; cur = { items: [], boards: [], head: null, no, front: no < 1 }; pages.push(cur); y = 0; };
   const push = it => {
     it.y = y; cur.items.push(it); y += it.h;
     const g = it.g;
@@ -707,6 +823,15 @@ function paginate() {
   newPage();
   for (const g of S.groups) {
     const m = g.m, b = g.kind === 'single' ? g.b : null;
+    if (b && b.type === 'meta') {
+      parts0.forEach((part, k) => {
+        if (cur.items.length) newPage();
+        push({ g, h: H, whole: false, part, from: 0, to: 0, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
+      });
+      if (!off) push({ g, h: 0, whole: true });
+      continue;
+    }
+    if (cur.front && cur.items.length) newPage();
     if (b && b.type === 'h' && b.level === 1 && cur.items.length) newPage();
     if (y + m.h <= H + 0.5) { push({ g, h: m.h, whole: true }); continue; }
     const total = b ? (m.lines[0] || 0) : 0;
@@ -746,15 +871,15 @@ function paginate() {
           if (c.board && c.label && !P.boards.includes(c.label)) P.boards.push(c.label);
         }
       }
-      parts.push(bs.map(b => b.id + '~' + b.sv).join('+') + (it.whole ? '' : ':' + it.from + '-' + it.to));
+      parts.push(bs.map(b => b.id + '~' + b.sv + '~' + b.name).join('+') + (it.whole ? '' : ':' + it.from + '-' + it.to + (it.part || '')));
     }
-    P.sig = P.no + '|' + P.head + '|' + S.cfg.title + '|' + parts.join(',');
+    P.sig = P.no + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
     P.fsig = facingSig(P);
     P.rails = [];
   }
   for (const s of S.pairs) {   // a paired cue runs from its page to the page of its end
     const e = s.endRef; if (!s.page || !e.page) continue;
-    for (let n = s.page; n <= e.page && n <= pages.length; n++) pages[n - 1].rails.push(s);
+    for (let n = s.page; n <= e.page && n + off <= pages.length; n++) pages[n - 1 + off].rails.push(s);
   }
   for (const P of pages) if (P.rails.length) P.sig += '|' + P.rails.map(s => s.b.id + ':' + s.s + '>' + s.endRef.b.id + ':' + s.endRef.s + '@' + s.lane).join(',');
   S.pages = pages;

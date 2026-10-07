@@ -46,8 +46,8 @@ window.addEventListener('resize', () => { if (S.loaded) { sizeWrap(); renderVisi
 
 function renderScriptPage(i) {
   const P = S.pages[i], E = S.els[i], el = E.a;
-  el.textContent = ''; el.dataset.pi = i;
-  el.appendChild(h('div', 'phead', [S.cfg.title, P.head].filter(Boolean).join('  —  ')));
+  el.textContent = ''; el.dataset.pi = i; el.classList.toggle('frontpg', P.front);
+  el.appendChild(h('div', 'phead', [titleOf(), P.head].filter(Boolean).join('  —  ')));
   const body = h('div', 'pbody');
   for (const it of P.items) body.appendChild(buildRow(it.g, it.whole ? null : it));
   el.append(body, sv('svg', { class: 'links' }), h('div', 'tags'), sv('svg', { class: 'ink' }), h('div', 'pfoot', String(P.no)));
@@ -265,6 +265,7 @@ function shapeChanged() { refreshFacing(); if (S.mode === 'templates') renderTem
 function renderFacing(i) {
   const P = S.pages[i], E = S.els[i], el = E.f, pp = paper();
   el.textContent = ''; el.dataset.pi = i;
+  if (P.front) { E.fdone = true; return; }   // nothing faces the front page
   el.appendChild(h('div', 'phead', t('boards') + ' · ' + P.no));
   const body = h('div', 'fbody'); el.appendChild(body);
   const bs = P.boards.map(ensureBoard);
@@ -1026,6 +1027,7 @@ function collectCues() {
 }
 function reviewData() {
   const paras = [], amps = [], flagged = [], unk = [], chars = new Map(), ends = [], running = [];
+  const cast = S.meta && S.meta.set.size ? S.meta.set : null, noChar = new Map(), spoke = new Set();
   for (const b of S.blocks) {
     for (const c of b.cues) {
       if (c.board) continue;
@@ -1035,12 +1037,19 @@ function reviewData() {
     if (b.type === 'para') paras.push(b);
     if (b.type === 'speech') {
       chars.set(b.name, (chars.get(b.name) || 0) + 1);
+      if (cast) {
+        const ck = castCheck(b.name, cast);
+        for (const n of ck.used) spoke.add(n);
+        for (const n of ck.unknown) { const o = noChar.get(n); if (o) o.n++; else noChar.set(n, { name: n, n: 1, b }); }
+      }
       if (b.simul && b.g.kind === 'single') amps.push(b);
     }
     if (inkFlag(b)) flagged.push(b);
     for (const c of b.cues) if (!c.board && !deptOf(c.dept)) unk.push({ b, c });
   }
-  return { paras, amps, flagged, unk, chars, ends, running, orphans: S.orphans, count: paras.length + amps.length + flagged.length + unk.length + ends.length + S.orphans.length };
+  const silent = cast ? S.meta.chars.filter(c => !spoke.has(c.name)).map(c => c.name) : [];
+  return { paras, amps, flagged, unk, chars, ends, running, noChar: Array.from(noChar.values()), silent, orphans: S.orphans,
+    count: paras.length + amps.length + flagged.length + unk.length + ends.length + noChar.size + S.orphans.length };
 }
 function updReview() {
   const rv = reviewData(), bt = $('#bReview');
@@ -1059,8 +1068,8 @@ function updOutline() {
 function updPanels() {
   updOutline(); updReview();
   if (S.drawer === 'cues') renderDrawer();
-  $('#showName').textContent = S.cfg.title || S.store.name || t('untitled');
-  document.title = (S.cfg.title || S.store.name || 'Promptbook') + ' — Promptbook';
+  $('#showName').textContent = titleOf() || S.store.name || t('untitled');
+  document.title = (titleOf() || S.store.name || 'Promptbook') + ' — Promptbook';
 }
 function toggleDrawer(kind) {
   S.drawer = S.drawer === kind ? null : kind;
@@ -1125,6 +1134,7 @@ function renderDrawer() {
     const snip = s => s.length > 90 ? s.slice(0, 90) + '…' : s;
     sec(t('rvPara'), t('rvParaHint'), rv.paras, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvAmp'), '', rv.amps, b => snip(b.plain), b => jumpTo(b));
+    sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + o.b.page : ''), o => jumpTo(o.b));
     sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvUnk'), '', rv.unk, o => o.c.dept + ' ' + o.c.label + ' — ' + snip(o.b.plain || o.c.desc), o => jumpTo(o.b));
     sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + o.c.dept + ' ' + o.c.label + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
@@ -1139,6 +1149,11 @@ function renderDrawer() {
       body.appendChild(h('p', 'hint', t('rvCharsHint')));
       const cw = h('div', 'chars');
       for (const [nm, n] of Array.from(rv.chars).sort((a, b) => b[1] - a[1])) { const sp = h('span', n === 1 ? 'one' : '', nm + ' '); sp.appendChild(h('b', null, '×' + n)); cw.appendChild(sp); }
+      body.appendChild(cw);
+    }
+    if (rv.silent.length) {
+      body.appendChild(h('h3', null, t('rvSilent') + ' (' + rv.silent.length + ')'));
+      const cw = h('div', 'chars'); for (const nm of rv.silent) cw.appendChild(h('span', null, nm));
       body.appendChild(cw);
     }
   }
@@ -1163,7 +1178,7 @@ function doPrint(kind) {
   document.body.classList.add('pr-' + kind);
   if (kind === 'cues') {
     const cp = $('#cuePrint'); cp.textContent = '';
-    cp.appendChild(h('h1', null, (S.cfg.title ? S.cfg.title + ' — ' : '') + t('cueList') + (S.cueFilter ? ' · ' + S.cueFilter : '')));
+    cp.appendChild(h('h1', null, (titleOf() ? titleOf() + ' — ' : '') + t('cueList') + (S.cueFilter ? ' · ' + S.cueFilter : '')));
     cp.appendChild(cueTable(filteredCues(), false));
   } else renderAll();
   window.print();
