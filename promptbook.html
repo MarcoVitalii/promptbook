@@ -121,6 +121,7 @@ body:not(.facing) .page.facing{display:none}
 .tag.unk{border-left-style:dotted}
 .tag.etag{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--c)}
 .tag.etag b::before{content:"";display:inline-block;width:7px;height:7px;background:var(--c);margin-right:5px}
+.tag .nd{color:var(--c);font-weight:700}
 .tag.btag b::before{content:"";display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;margin-right:5px}
 .links,.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .links path{fill:none;stroke-width:1.2}
@@ -169,6 +170,8 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dp{font-weight:700;white-space:nowrap;border-left:5px solid var(--c);padding-left:8px}
 .cl .ctx{color:var(--muted);font-size:12px}
 .cl .dupe{color:var(--acc);font-weight:700}
+.cl .notes{font-size:12px;margin-top:3px;white-space:pre-wrap}
+textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 .cl .endl{color:var(--muted);font-size:12px;margin-top:3px}
 .rv h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 6px}
 .rv h3:first-child{margin-top:0}
@@ -210,7 +213,7 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:10px;font:14px/1.5 ui-monospace,Consolas,"Courier New",monospace}
 .form label{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px}
 .form input[type=text],.form select{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px;width:100%}
-.drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
+.drow{display:grid;grid-template-columns:76px 1fr 46px 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
@@ -249,6 +252,8 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   #cuePrint table{width:100%;border-collapse:collapse}
   #cuePrint td,#cuePrint th{border-bottom:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}
   #cuePrint tr{break-inside:avoid}
+  #cuePrint .dsec{break-before:page}
+  #cuePrint .dsec:first-child{break-before:auto}
   #cuePrint .dp{font-weight:700;border-left:5px solid var(--c);padding-left:8px;white-space:nowrap}
 }
 
@@ -343,11 +348,11 @@ en: {
   errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
-  endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', runsShort: 'runs',
-  runsHint: 'Tick “runs” for departments whose cues play until stopped, such as sound and video. Their open cues are offered first when you mark an end.',
-  thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}',
-  rvEnd: 'Ends with no cue to close', rvOpen: 'Still running at the end',
-  rvOpenHint: 'Cues in “runs” departments with no end marked. Not counted in the badge.',
+  endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
+  makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Notes (cue list only)', hasNotes: 'Has notes',
+  thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
+  thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Notes', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
+  rvEnd: 'Ends with no cue to close',
   templates: 'Templates', mTemplates: 'Templates…', tplBack: 'Back to script', tplNew: '+ Template', tplChild: 'New based on this',
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
@@ -391,11 +396,11 @@ it: {
   errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
-  endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', runsShort: 'dura',
-  runsHint: 'Spunta «dura» per i reparti i cui cue restano attivi finché non vengono fermati, come audio e video. I loro cue aperti sono proposti per primi quando segni una fine.',
-  thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}',
-  rvEnd: 'Fine senza cue da chiudere', rvOpen: 'Ancora attivi alla fine',
-  rvOpenHint: 'Cue dei reparti «dura» senza una fine segnata. Non contati nel numero in alto.',
+  endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
+  makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Note (solo nella lista cue)', hasNotes: 'Ha note',
+  thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
+  thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Note', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
+  rvEnd: 'Fine senza cue da chiudere',
   templates: 'Modelli', mTemplates: 'Modelli…', tplBack: 'Torna al copione', tplNew: '+ Modello', tplChild: 'Nuovo basato su questo',
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
@@ -431,24 +436,22 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.2';
+const VERSION = 'r1.3';
 
 function defaultConfig() {
   const it = LANG === 'it';
   return { title: '', paper: 'A4', departments: [
-    { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00', runs: false },
-    { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6', runs: true },
-    { code: 'VID', name: 'Video', colour: '#7a3fd1', runs: true } ], defaultBoard: null,
+    { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00' },
+    { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
+    { code: 'VID', name: 'Video', colour: '#7a3fd1' } ], defaultBoard: null,
     templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4 };
 }
-const RUNS_GUESS = /^(SND|SOUND|AUD|AUDIO|MUS|MUSIC|MUSICA|VID|VIDEO)/;
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'),
-      runs: typeof x.runs === 'boolean' ? x.runs : RUNS_GUESS.test(code) };   // runs: cues play until stopped
+    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888') };
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -492,9 +495,24 @@ function stripTokens(s) {
   return s.replace(new RegExp(TOKEN_SRC, 'g'), '').replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').trim();
 }
 function cleanField(s) { return String(s || '').replace(/[{}|]/g, '/').replace(/\s+/g, ' ').trim(); }
-function fmtToken(dept, label, desc, end) {
-  label = cleanField(label); desc = cleanField(desc);
-  return '{' + (end ? '/' : '') + dept + (label ? ' ' + label : '') + (desc ? ' | ' + desc : '') + '}';
+/* {DEPT label / DEPT label | short text | notes}: links are the cues this cue ends, notes are for the cue list only */
+function fmtToken(dept, label, desc, end, links, notes) {
+  label = cleanField(label); desc = cleanField(desc); notes = cleanField(notes);
+  const lk = (links || []).map(l => l.dept + (l.label ? ' ' + l.label : '')).join(' / ');
+  const lab = lk ? (label ? label + ' / ' : '/ ') + lk : label;
+  return '{' + (end ? '/' : '') + dept + (lab ? ' ' + lab : '') + (desc || notes ? ' | ' + desc : '') + (notes ? ' | ' + notes : '') + '}';
+}
+/* "6 / SND 5 / VID 2" -> own label "6" and the cues it ends. Not a link unless every part after
+   a " / " starts with an upper-case department code, so a label such as "5 / 6" stays a label. */
+const cueName = c => c.dept + (c.label ? ' ' + c.label : '');
+function splitLinks(s) {
+  const parts = (' ' + s).split(/\s\/\s+/), label = parts[0].trim(), links = [];
+  for (const p of parts.slice(1)) {
+    const m = /^(\p{Lu}[\p{Lu}\p{N}_-]+)(?:\s+(.*))?$/u.exec(p.trim());
+    if (!m) return { label: s, links: [] };
+    links.push({ dept: m[1], label: (m[2] || '').trim() });
+  }
+  return { label, links };
 }
 function autoHead(s) {
   if (s.length > 70) return 0;
@@ -648,7 +666,10 @@ function mkCue(m, wi) {
   let dept = m[1].toUpperCase();
   const end = dept.length > 1 && dept[0] === '/';   // {/SND 5} ends cue SND 5
   if (end) dept = dept.slice(1);
-  return { dept, label: (m[2] || '').trim(), desc: (m[3] || '').trim(), s: m.index, e: m.index + m[0].length, wi, end, board: !end && dept === 'BOARD' };
+  const board = !end && dept === 'BOARD', lk = end || board ? { label: (m[2] || '').trim(), links: [] } : splitLinks((m[2] || '').trim());
+  const rest = (m[3] || '').trim(), bar = rest.indexOf('|');   // short text | notes
+  const desc = bar < 0 ? rest : rest.slice(0, bar).trim(), notes = bar < 0 ? '' : rest.slice(bar + 1).replace(/\s*\|\s*/g, ' / ').trim();
+  return { dept, label: lk.label, links: lk.links, desc, notes, s: m.index, e: m.index + m[0].length, wi, end, board };
 }
 function analyze(b) {
   const raw = b.raw;
@@ -777,28 +798,34 @@ function reparse(text) {
   }
   groupBlocks(); pairCues();
 }
-/* Pair every end token with the cue it closes: the nearest earlier cue that is still open and has the
-   same department and label. An end without a label closes the nearest open cue of its department.
-   Paired cues also get a lane for the running rail in the margin. */
+/* Pair every end with the cue it closes: the nearest earlier cue that is still open and has the same
+   department and label. An end without a label closes the nearest open cue of its department. An end
+   is either a {/DEPT label} token or a cue that links to what it ends, {DEPT 6 / DEPT 5}; a linking
+   cue closes its targets first and then stays open itself. Paired cues also get a lane for the
+   running rail in the margin. */
 function pairCues() {
   const open = new Map(), pairs = []; let ord = 0;
-  for (const b of S.blocks) for (const c of b.cues) {
-    c.b = b; c.ord = ord++; c.endRef = null; c.startRef = null; c.lane = 0;
-    if (c.board) continue;
-    let q = open.get(c.dept);
-    if (!c.end) { if (!q) open.set(c.dept, q = []); q.push(c); continue; }
-    if (!q) continue;
+  const close = (c, dept, label) => {
+    const q = open.get(dept); if (!q) return null;
     let k = -1;
-    for (let i = q.length - 1; i >= 0; i--) if (!c.label || q[i].label === c.label) { k = i; break; }
-    if (k < 0) continue;
-    const s = q.splice(k, 1)[0]; s.endRef = c; c.startRef = s; pairs.push(s);
+    for (let i = q.length - 1; i >= 0; i--) if (!label || q[i].label === label) { k = i; break; }
+    if (k < 0) return null;
+    const s = q.splice(k, 1)[0]; s.endRef = c; c.closes.push(s); pairs.push(s); return s;
+  };
+  for (const b of S.blocks) for (const c of b.cues) {
+    c.b = b; c.ord = ord++; c.endRef = null; c.startRef = null; c.closes = []; c.unresolved = []; c.lane = 0;
+    for (const l of c.links) l.ref = null;
+    if (c.board) continue;
+    if (c.end) { close(c, c.dept, c.label); c.startRef = c.closes[0] || null; continue; }
+    for (const l of c.links) { l.ref = close(c, l.dept, l.label); if (!l.ref) c.unresolved.push(l); }
+    let q = open.get(c.dept); if (!q) open.set(c.dept, q = []); q.push(c);
   }
   pairs.sort((a, b) => a.ord - b.ord);
   const lanes = [];
-  for (const s of pairs) {
-    let k = lanes.findIndex(endOrd => endOrd < s.ord);
+  for (const s of pairs) {   // a lane is free again once its rail has ended; a linking cue's tag can hand its lane on
+    let k = lanes.findIndex(endOrd => endOrd <= s.ord);
     if (k < 0) k = lanes.length;
-    lanes[k] = s.endRef.ord; s.lane = s.endRef.lane = Math.min(k, 5);
+    lanes[k] = s.endRef.ord; s.lane = Math.min(k, 5);
   }
   S.pairs = pairs;
 }
@@ -1271,10 +1298,13 @@ function layoutTags(i) {
   list.sort((a, b) => a.yc - b.yc || a.x - b.x);
   const els = list.map(o => {
     const d = o.c.board ? null : deptOf(o.c.dept);
-    const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end ? ' etag' : '')); tg.type = 'button';
+    const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end || o.c.links.length ? ' etag' : '')); tg.type = 'button';
     tg.style.setProperty('--c', cueColour(o.c));
     tg.dataset.b = o.b.id; tg.dataset.s = o.c.s;
-    tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : o.c.dept + (o.c.label ? ' ' + o.c.label : '')));
+    tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : cueName(o.c)));
+    const tip = [o.c.links.length ? t('endsCue', o.c.links.map(cueName).join(', ')) : '', o.c.notes ? t('hasNotes') + ': ' + o.c.notes : ''].filter(Boolean).join(' · ');
+    if (o.c.notes) tg.appendChild(h('span', 'nd', ' \u2022'));
+    if (tip) tg.title = tip;   // a linking cue is drawn like a plain end: outlined, stop square, rail
     if (!o.c.board && o.c.desc) tg.appendChild(h('span', null, ' ' + o.c.desc));
     tg.style.left = tagX + 'px';
     tagsEl.appendChild(tg);
@@ -1980,7 +2010,9 @@ function insertOwnCue(b, tok) {
 function removeCue(bid, cs) {
   const b = S.byId.get(bid), c = b && b.cues.find(q => q.s === cs); if (!c) return;
   const edits = [{ b, s: c.s, e: c.e, text: null }];
-  if (!c.end && c.endRef) edits.push({ b: c.endRef.b, s: c.endRef.s, e: c.endRef.e, text: null });   // a cue takes its end with it
+  const en = c.end ? null : c.endRef;   // a cue takes its end token with it; a cue that links to it only loses the link
+  if (en && en.end) edits.push({ b: en.b, s: en.s, e: en.e, text: null });
+  else if (en) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(en.dept, en.label, en.desc, false, en.links.filter(l => l.ref !== c), en.notes) });
   commitText(textEdits(edits));
 }
 /* Cues that an end placed after word wi of block b (or on its own line after b) could close, most
@@ -2002,8 +2034,7 @@ function openCuesAt(b, wi, own) {
     if (!labels) { seen.set(c.dept, labels = new Set([c.label])); out.push(c); continue; }
     if (c.label && !labels.has(c.label)) { labels.add(c.label); out.push(c); }
   }
-  const runs = c => { const d = deptOf(c.dept); return d && d.runs ? 0 : 1; };
-  return out.sort((x, z) => runs(x) - runs(z) || z.ord - x.ord).slice(0, 4);
+  return out.sort((x, z) => z.ord - x.ord).slice(0, 4);
 }
 function lastLabelBefore(b, c) {
   let last = '';
@@ -2073,32 +2104,54 @@ function openPin(b, wi, x, y) {
 function openCueEdit(b, c, x, y) {
   const bid = b.id, cs = c.s; let dept = c.dept;
   openPop(x, y, (p, pop) => {
-    const li = h('input', 'pin'), di = h('input', 'pin');
-    li.type = 'text'; di.type = 'text'; li.value = c.label; di.value = c.desc;
+    const li = h('input', 'pin'), di = h('input', 'pin'), ni = h('textarea', 'pin');
+    li.type = 'text'; di.type = 'text'; li.value = c.label; di.value = c.desc; ni.value = c.notes; ni.rows = 3; ni.style.padding = '6px 8px';
     const last = c.end ? '' : lastLabelBefore(b, c);
-    li.placeholder = t('label') + (last ? ' (' + t('lastLabel', last) + ')' : ''); di.placeholder = t('desc');
-    if (c.end) p.appendChild(h('p', 'pt', c.startRef ? t('endTitle', c.startRef.dept + (c.startRef.label ? ' ' + c.startRef.label : '') + (c.startRef.desc ? ' — ' + c.startRef.desc : '')) : t('endLoose')));
+    li.placeholder = t('label') + (last ? ' (' + t('lastLabel', last) + ')' : ''); di.placeholder = t('desc'); ni.placeholder = t('notes');
+    if (c.end) p.appendChild(h('p', 'pt', c.startRef ? t('endTitle', cueName(c.startRef) + (c.startRef.desc ? ' — ' + c.startRef.desc : '')) : t('endLoose')));
+    else if (c.links.length) p.appendChild(h('p', 'pt', t('linkTitle', c.links.map(cueName).join(', '))));
     const apply = () => {
       const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
-      const nl = cleanField(li.value), nd = cleanField(di.value);
-      if (nl === nc.label && nd === nc.desc && dept === nc.dept) return;
-      const edits = [{ b: nb, s: nc.s, e: nc.e, text: fmtToken(dept, nl, nd, nc.end) }];
+      const nl = cleanField(li.value), nd = cleanField(di.value), nn = cleanField(ni.value);
+      if (nl === nc.label && nd === nc.desc && nn === nc.notes && dept === nc.dept) return;
+      const edits = [{ b: nb, s: nc.s, e: nc.e, text: fmtToken(dept, nl, nd, nc.end, nc.links, nn) }];
       const en = nc.end ? null : nc.endRef;   // a renamed cue keeps its end: the end follows in the same step
-      if (en && (dept !== nc.dept || nl !== nc.label)) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(dept, en.label ? nl : '', en.desc, true) });
+      if (en && (dept !== nc.dept || nl !== nc.label)) {
+        if (en.end) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(dept, en.label ? nl : '', en.desc, true, [], en.notes) });
+        else edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(en.dept, en.label, en.desc, false,
+          en.links.map(l => l.ref === nc ? { dept, label: l.label ? nl : '' } : l), en.notes) });
+      }
       commitText(textEdits(edits));
     };
+    /* an end token becomes a cue that ends the same cue, and back */
+    const convert = text => {
+      pop.onclose = null; closePop();
+      const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
+      commitText(textEdits([{ b: nb, s: nc.s, e: nc.e, text: text(nc) }]));
+      const b2 = S.byId.get(bid), c2 = b2 && b2.cues.find(q => q.s === cs); if (c2) openCueEdit(b2, c2, x, y);
+    };
     p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); }));
-    p.append(li, di);
+    p.append(li, di, ni);
     const row = h('div', 'prow');
     const del = h('button', 'btn sm danger', t('del')); del.type = 'button';
     del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
-    row.append(del, h('span', 'grow'), done); p.appendChild(row);
+    row.append(del, h('span', 'grow'), done);
+    if (c.end && c.startRef) {
+      const mk = h('button', 'btn sm', t('makeCue')); mk.type = 'button';
+      mk.onclick = () => convert(nc => fmtToken(c.startRef.dept, '', cleanField(di.value), false, [{ dept: c.startRef.dept, label: nc.label }], cleanField(ni.value)));
+      const r2 = h('div', 'prow'); r2.append(mk); p.appendChild(r2);
+    } else if (c.links.length) {
+      const pl = h('button', 'btn sm', t('plainEnd')); pl.type = 'button';
+      pl.onclick = () => convert(() => fmtToken(c.links[0].dept, c.links[0].label, cleanField(di.value), true, [], cleanField(ni.value)));
+      const r2 = h('div', 'prow'); r2.append(pl); p.appendChild(r2);
+    }
+    p.appendChild(row);
     pop.onclose = apply;
-    for (const inp of [li, di]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
+    for (const inp of [li, di, ni]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
     pop.key = ev => {
       if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length !== 1) return false;
-      if (document.activeElement === li || document.activeElement === di) return false;
+      if (document.activeElement === li || document.activeElement === di || document.activeElement === ni) return false;
       li.focus(); return false;   // let the key land in the label field
     };
   });
@@ -2198,8 +2251,8 @@ function collectCues() {
   };
   for (const b of bl) for (const c of b.cues) {
     if (c.board || (c.end && c.startRef)) continue;
-    const o = Object.assign({ b, c, act: b.act, scene: b.scene, loose: !!c.end, end: null }, where(c));
-    if (c.endRef) o.end = Object.assign({ c: c.endRef }, where(c.endRef));
+    const o = Object.assign({ b, c, act: b.act, scene: b.scene, loose: !!c.end, end: null, endedBy: null }, where(c));
+    if (c.endRef) { o.end = Object.assign({ c: c.endRef }, where(c.endRef)); if (!c.endRef.end) o.endedBy = c.endRef; }
     out.push(o);
   }
   const seen = new Map();
@@ -2208,13 +2261,12 @@ function collectCues() {
   return out;
 }
 function reviewData() {
-  const paras = [], amps = [], flagged = [], unk = [], chars = new Map(), ends = [], running = [];
+  const paras = [], amps = [], flagged = [], unk = [], chars = new Map(), ends = [];
   const cast = S.meta && S.meta.set.size ? S.meta.set : null, noChar = new Map(), spoke = new Set();
   for (const b of S.blocks) {
     for (const c of b.cues) {
       if (c.board) continue;
-      if (c.end) { if (!c.startRef) ends.push({ b, c }); }
-      else if (!c.endRef) { const d = deptOf(c.dept); if (d && d.runs) running.push({ b, c }); }
+      if (c.end ? !c.startRef : c.unresolved.length) ends.push({ b, c });
     }
     if (b.type === 'para') paras.push(b);
     if (b.type === 'speech') {
@@ -2230,7 +2282,7 @@ function reviewData() {
     for (const c of b.cues) if (!c.board && !deptOf(c.dept)) unk.push({ b, c });
   }
   const silent = cast ? S.meta.chars.filter(c => !spoke.has(c.name)).map(c => c.name) : [];
-  return { paras, amps, flagged, unk, chars, ends, running, noChar: Array.from(noChar.values()), silent, orphans: S.orphans,
+  return { paras, amps, flagged, unk, chars, ends, noChar: Array.from(noChar.values()), silent, orphans: S.orphans,
     count: paras.length + amps.length + flagged.length + unk.length + ends.length + noChar.size + S.orphans.length };
 }
 function updReview() {
@@ -2270,7 +2322,10 @@ function cueTable(list, clickable) {
     d.style.setProperty('--c', cueColour(o.c)); tr.appendChild(d);
     const n = h('td', o.dup || o.loose ? 'dupe' : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup) n.title = t('dup'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
     const dc = h('td', null, o.c.desc);
-    if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.end.c.desc ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));
+    if (o.c.notes) dc.appendChild(h('div', 'notes', o.c.notes));
+    if (o.c.links.length) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsCue', o.c.links.map(cueName).join(', '))));
+    if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.endedBy ? ' ' + t('endedBy', cueName(o.endedBy)) : '') + (o.end.c.desc && !o.endedBy ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));
+    if (o.end && !o.endedBy && o.end.c.notes) dc.appendChild(h('div', 'notes', o.end.c.notes));
     tr.appendChild(dc);
     tr.appendChild(h('td', 'ctx', [o.act, o.scene].filter(Boolean).join(' · ')));
     tr.appendChild(h('td', 'ctx', (o.who ? o.who + ': ' : '') + o.ctx));
@@ -2290,7 +2345,9 @@ function renderDrawer() {
     head.appendChild(h('h2', null, t('cueList') + ' (' + all.length + ')'));
     const csv = h('button', 'btn sm', t('csv')); csv.type = 'button'; csv.onclick = exportCSV;
     const pr = h('button', 'btn sm', t('print')); pr.type = 'button'; pr.onclick = () => doPrint('cues');
-    head.append(csv, pr, x);
+    const csvD = h('button', 'btn sm', t('csvDept')); csvD.type = 'button'; csvD.onclick = exportCSVByDept;
+    const prD = h('button', 'btn sm', t('printDept')); prD.type = 'button'; prD.onclick = () => doPrint('cues', true);
+    head.append(csv, csvD, pr, prD, x);
     const chips = h('div', 'chips');
     const codes = [null].concat(S.cfg.departments.map(d => d.code));
     for (const o of all) if (!codes.includes(o.c.dept)) codes.push(o.c.dept);
@@ -2319,13 +2376,12 @@ function renderDrawer() {
     sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + o.b.page : ''), o => jumpTo(o.b));
     sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvUnk'), '', rv.unk, o => o.c.dept + ' ' + o.c.label + ' — ' + snip(o.b.plain || o.c.desc), o => jumpTo(o.b));
-    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + o.c.dept + ' ' + o.c.label + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
+    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
     sec(t('rvOrph'), '', rv.orphans, o => '✕  ' + snip(o.text), o => {
       const k = rm(S.orphans, o); if (k < 0) return;
       pushHist({ undo: () => { S.orphans.splice(k, 0, o); inkChanged(); }, redo: () => { rm(S.orphans, o); inkChanged(); } });
       inkChanged();
     });
-    sec(t('rvOpen'), t('rvOpenHint'), rv.running, o => o.c.dept + ' ' + o.c.label + (o.c.desc ? ' — ' + snip(o.c.desc) : '') + (o.c.page ? ' · p. ' + o.c.page : ''), o => jumpTo(o.b));
     if (rv.chars.size) {
       body.appendChild(h('h3', null, t('rvChars') + ' (' + rv.chars.size + ')'));
       body.appendChild(h('p', 'hint', t('rvCharsHint')));
@@ -2341,27 +2397,45 @@ function renderDrawer() {
   }
   dr.append(head, body);
 }
-function exportCSV() {
+function csvText(list) {
   const sep = (1.1).toLocaleString().includes(',') ? ';' : ',';
   const q = v => { v = String(v == null ? '' : v); return /["\n\r;,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc')]];
-  for (const o of filteredCues()) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
-    o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc : '']);
-  download('cues' + (S.cueFilter ? '-' + S.cueFilter : '') + '.csv', new Blob(['﻿' + rows.map(r => r.map(q).join(sep)).join('\r\n') + '\r\n'], { type: 'text/csv' }));
+  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
+  for (const o of list) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
+    o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc + (o.endedBy || !o.end.c.notes ? '' : (o.end.c.desc ? ' — ' : '') + o.end.c.notes) : '',
+    o.endedBy ? cueName(o.endedBy) : '', o.c.links.map(cueName).join('; '), o.c.notes]);
+  return '\uFEFF' + rows.map(r => r.map(q).join(sep)).join('\r\n') + '\r\n';
+}
+function exportCSV() {
+  download('cues' + (S.cueFilter ? '-' + S.cueFilter : '') + '.csv', new Blob([csvText(filteredCues())], { type: 'text/csv' }));
+}
+/* the cue list split by department, in the order of Settings; departments with no cues are left out */
+function cuesByDept() {
+  const all = collectCues(), codes = S.cfg.departments.map(d => d.code);
+  for (const o of all) if (!codes.includes(o.c.dept)) codes.push(o.c.dept);
+  return codes.map(code => [code, all.filter(o => o.c.dept === code)]).filter(g => g[1].length);
+}
+async function exportCSVByDept() {
+  const groups = cuesByDept(); if (!groups.length) { toast(t('noCues')); return; }
+  const files = new Map();
+  for (const [code, list] of groups) files.set('cues-' + code.replace(/[^\p{L}\p{N}_-]/gu, '_') + '.csv', new Blob([csvText(list)], { type: 'text/csv' }));
+  download('cues.zip', await buildZip(files));
 }
 function download(name, blob) {
   const a = document.createElement('a'), url = URL.createObjectURL(blob);
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-function doPrint(kind) {
+function doPrint(kind, byDept) {
   exitTemplates();
   document.body.classList.remove('pr-book', 'pr-script', 'pr-cues');
   document.body.classList.add('pr-' + kind);
   if (kind === 'cues') {
     const cp = $('#cuePrint'); cp.textContent = '';
-    cp.appendChild(h('h1', null, (titleOf() ? titleOf() + ' — ' : '') + t('cueList') + (S.cueFilter ? ' · ' + S.cueFilter : '')));
-    cp.appendChild(cueTable(filteredCues(), false));
+    const head = code => (titleOf() ? titleOf() + ' — ' : '') + t('cueList') + (code ? ' · ' + code : '');
+    if (byDept) for (const [code, list] of cuesByDept()) {   // one sheet per department
+      const sec = h('section', 'dsec'); sec.append(h('h1', null, head(code)), cueTable(list, false)); cp.appendChild(sec);
+    } else cp.append(h('h1', null, head(S.cueFilter)), cueTable(filteredCues(), false));
   } else renderAll();
   window.print();
 }
@@ -2845,18 +2919,17 @@ function openSettings() {
       h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
-      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), rl = h('label', 'chk'), rc = h('input'), x = h('button', 'btn sm', '\u2715');
-      c.type = 'text'; n.type = 'text'; col.type = 'color'; rc.type = 'checkbox'; x.type = 'button';
-      c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888'; rc.checked = !!d.runs;
-      rl.append(rc, t('runsShort'));
-      x.onclick = () => r.remove(); r.append(c, n, col, rl, x); list.appendChild(r);
+      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715');
+      c.type = 'text'; n.type = 'text'; col.type = 'color'; x.type = 'button';
+      c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
+      x.onclick = () => r.remove(); r.append(c, n, col, x); list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
-    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f', runs: false }); body.appendChild(ab);
-    body.appendChild(h('p', 'hint', t('deptHint') + ' ' + t('runsHint')));
+    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
+    body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, runs: i[3].checked }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value }; });
       const paperChanged = ps.value !== S.cfg.paper;
       S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }

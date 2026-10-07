@@ -121,7 +121,7 @@ Also: `/` is already accepted inside a speaker name (`ANNA/MARCO:` is one group 
 | 12 | Group speaker | `ANNA e MARCO:` with lowercase connectors | Whole line upper case | Whole line upper case | Different | **S.** Upper-case the connector on export. |
 | 13 | Unrecognised line | Continues the block above, or is listed for review; never dropped | Silently becomes action | Parser diagnostics | Different | None. The current behaviour is the safer one for pasted Word text. |
 | 14 | Technical cue | `{DEPT label \| description}` after a word or on its own line | None. Closest carrier: note `[[…]]` | None. Closest carrier: comment `/* … */` | Added | **Not closable.** Both tools would print `{LX 12}` as dialogue. Export must strip cues or wrap them in notes/comments. |
-| 15 | Cue end | `{/DEPT label \| description}` | None | None | Added | As 14. |
+| 15 | Cue end | `{/DEPT label \| description}`, or a cue that ends others: `{SND 6 / SND 5 \| description \| notes}` | None | None | Added | As 14. |
 | 16 | Blocking board | `{BOARD name}` | None | None | Added | As 14. |
 | 17 | Ink | `script.ink.json`, keyed to block text | None | None | Added | Stays outside the script in any scenario. |
 | 18 | Emphasis | None (italics come only from parentheses) | `*i*`, `**b**`, `_u_` | Same, plus `~strike~` | Missing | **M.** Tokeniser change. Bold changes word widths, so page breaks and ink positions need rechecking. |

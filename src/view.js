@@ -89,10 +89,13 @@ function layoutTags(i) {
   list.sort((a, b) => a.yc - b.yc || a.x - b.x);
   const els = list.map(o => {
     const d = o.c.board ? null : deptOf(o.c.dept);
-    const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end ? ' etag' : '')); tg.type = 'button';
+    const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end || o.c.links.length ? ' etag' : '')); tg.type = 'button';
     tg.style.setProperty('--c', cueColour(o.c));
     tg.dataset.b = o.b.id; tg.dataset.s = o.c.s;
-    tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : o.c.dept + (o.c.label ? ' ' + o.c.label : '')));
+    tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : cueName(o.c)));
+    const tip = [o.c.links.length ? t('endsCue', o.c.links.map(cueName).join(', ')) : '', o.c.notes ? t('hasNotes') + ': ' + o.c.notes : ''].filter(Boolean).join(' · ');
+    if (o.c.notes) tg.appendChild(h('span', 'nd', ' \u2022'));
+    if (tip) tg.title = tip;   // a linking cue is drawn like a plain end: outlined, stop square, rail
     if (!o.c.board && o.c.desc) tg.appendChild(h('span', null, ' ' + o.c.desc));
     tg.style.left = tagX + 'px';
     tagsEl.appendChild(tg);
@@ -798,7 +801,9 @@ function insertOwnCue(b, tok) {
 function removeCue(bid, cs) {
   const b = S.byId.get(bid), c = b && b.cues.find(q => q.s === cs); if (!c) return;
   const edits = [{ b, s: c.s, e: c.e, text: null }];
-  if (!c.end && c.endRef) edits.push({ b: c.endRef.b, s: c.endRef.s, e: c.endRef.e, text: null });   // a cue takes its end with it
+  const en = c.end ? null : c.endRef;   // a cue takes its end token with it; a cue that links to it only loses the link
+  if (en && en.end) edits.push({ b: en.b, s: en.s, e: en.e, text: null });
+  else if (en) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(en.dept, en.label, en.desc, false, en.links.filter(l => l.ref !== c), en.notes) });
   commitText(textEdits(edits));
 }
 /* Cues that an end placed after word wi of block b (or on its own line after b) could close, most
@@ -820,8 +825,7 @@ function openCuesAt(b, wi, own) {
     if (!labels) { seen.set(c.dept, labels = new Set([c.label])); out.push(c); continue; }
     if (c.label && !labels.has(c.label)) { labels.add(c.label); out.push(c); }
   }
-  const runs = c => { const d = deptOf(c.dept); return d && d.runs ? 0 : 1; };
-  return out.sort((x, z) => runs(x) - runs(z) || z.ord - x.ord).slice(0, 4);
+  return out.sort((x, z) => z.ord - x.ord).slice(0, 4);
 }
 function lastLabelBefore(b, c) {
   let last = '';
@@ -891,32 +895,54 @@ function openPin(b, wi, x, y) {
 function openCueEdit(b, c, x, y) {
   const bid = b.id, cs = c.s; let dept = c.dept;
   openPop(x, y, (p, pop) => {
-    const li = h('input', 'pin'), di = h('input', 'pin');
-    li.type = 'text'; di.type = 'text'; li.value = c.label; di.value = c.desc;
+    const li = h('input', 'pin'), di = h('input', 'pin'), ni = h('textarea', 'pin');
+    li.type = 'text'; di.type = 'text'; li.value = c.label; di.value = c.desc; ni.value = c.notes; ni.rows = 3; ni.style.padding = '6px 8px';
     const last = c.end ? '' : lastLabelBefore(b, c);
-    li.placeholder = t('label') + (last ? ' (' + t('lastLabel', last) + ')' : ''); di.placeholder = t('desc');
-    if (c.end) p.appendChild(h('p', 'pt', c.startRef ? t('endTitle', c.startRef.dept + (c.startRef.label ? ' ' + c.startRef.label : '') + (c.startRef.desc ? ' — ' + c.startRef.desc : '')) : t('endLoose')));
+    li.placeholder = t('label') + (last ? ' (' + t('lastLabel', last) + ')' : ''); di.placeholder = t('desc'); ni.placeholder = t('notes');
+    if (c.end) p.appendChild(h('p', 'pt', c.startRef ? t('endTitle', cueName(c.startRef) + (c.startRef.desc ? ' — ' + c.startRef.desc : '')) : t('endLoose')));
+    else if (c.links.length) p.appendChild(h('p', 'pt', t('linkTitle', c.links.map(cueName).join(', '))));
     const apply = () => {
       const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
-      const nl = cleanField(li.value), nd = cleanField(di.value);
-      if (nl === nc.label && nd === nc.desc && dept === nc.dept) return;
-      const edits = [{ b: nb, s: nc.s, e: nc.e, text: fmtToken(dept, nl, nd, nc.end) }];
+      const nl = cleanField(li.value), nd = cleanField(di.value), nn = cleanField(ni.value);
+      if (nl === nc.label && nd === nc.desc && nn === nc.notes && dept === nc.dept) return;
+      const edits = [{ b: nb, s: nc.s, e: nc.e, text: fmtToken(dept, nl, nd, nc.end, nc.links, nn) }];
       const en = nc.end ? null : nc.endRef;   // a renamed cue keeps its end: the end follows in the same step
-      if (en && (dept !== nc.dept || nl !== nc.label)) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(dept, en.label ? nl : '', en.desc, true) });
+      if (en && (dept !== nc.dept || nl !== nc.label)) {
+        if (en.end) edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(dept, en.label ? nl : '', en.desc, true, [], en.notes) });
+        else edits.push({ b: en.b, s: en.s, e: en.e, text: fmtToken(en.dept, en.label, en.desc, false,
+          en.links.map(l => l.ref === nc ? { dept, label: l.label ? nl : '' } : l), en.notes) });
+      }
       commitText(textEdits(edits));
     };
+    /* an end token becomes a cue that ends the same cue, and back */
+    const convert = text => {
+      pop.onclose = null; closePop();
+      const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
+      commitText(textEdits([{ b: nb, s: nc.s, e: nc.e, text: text(nc) }]));
+      const b2 = S.byId.get(bid), c2 = b2 && b2.cues.find(q => q.s === cs); if (c2) openCueEdit(b2, c2, x, y);
+    };
     p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); }));
-    p.append(li, di);
+    p.append(li, di, ni);
     const row = h('div', 'prow');
     const del = h('button', 'btn sm danger', t('del')); del.type = 'button';
     del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
-    row.append(del, h('span', 'grow'), done); p.appendChild(row);
+    row.append(del, h('span', 'grow'), done);
+    if (c.end && c.startRef) {
+      const mk = h('button', 'btn sm', t('makeCue')); mk.type = 'button';
+      mk.onclick = () => convert(nc => fmtToken(c.startRef.dept, '', cleanField(di.value), false, [{ dept: c.startRef.dept, label: nc.label }], cleanField(ni.value)));
+      const r2 = h('div', 'prow'); r2.append(mk); p.appendChild(r2);
+    } else if (c.links.length) {
+      const pl = h('button', 'btn sm', t('plainEnd')); pl.type = 'button';
+      pl.onclick = () => convert(() => fmtToken(c.links[0].dept, c.links[0].label, cleanField(di.value), true, [], cleanField(ni.value)));
+      const r2 = h('div', 'prow'); r2.append(pl); p.appendChild(r2);
+    }
+    p.appendChild(row);
     pop.onclose = apply;
-    for (const inp of [li, di]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
+    for (const inp of [li, di, ni]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
     pop.key = ev => {
       if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length !== 1) return false;
-      if (document.activeElement === li || document.activeElement === di) return false;
+      if (document.activeElement === li || document.activeElement === di || document.activeElement === ni) return false;
       li.focus(); return false;   // let the key land in the label field
     };
   });
@@ -1016,8 +1042,8 @@ function collectCues() {
   };
   for (const b of bl) for (const c of b.cues) {
     if (c.board || (c.end && c.startRef)) continue;
-    const o = Object.assign({ b, c, act: b.act, scene: b.scene, loose: !!c.end, end: null }, where(c));
-    if (c.endRef) o.end = Object.assign({ c: c.endRef }, where(c.endRef));
+    const o = Object.assign({ b, c, act: b.act, scene: b.scene, loose: !!c.end, end: null, endedBy: null }, where(c));
+    if (c.endRef) { o.end = Object.assign({ c: c.endRef }, where(c.endRef)); if (!c.endRef.end) o.endedBy = c.endRef; }
     out.push(o);
   }
   const seen = new Map();
@@ -1026,13 +1052,12 @@ function collectCues() {
   return out;
 }
 function reviewData() {
-  const paras = [], amps = [], flagged = [], unk = [], chars = new Map(), ends = [], running = [];
+  const paras = [], amps = [], flagged = [], unk = [], chars = new Map(), ends = [];
   const cast = S.meta && S.meta.set.size ? S.meta.set : null, noChar = new Map(), spoke = new Set();
   for (const b of S.blocks) {
     for (const c of b.cues) {
       if (c.board) continue;
-      if (c.end) { if (!c.startRef) ends.push({ b, c }); }
-      else if (!c.endRef) { const d = deptOf(c.dept); if (d && d.runs) running.push({ b, c }); }
+      if (c.end ? !c.startRef : c.unresolved.length) ends.push({ b, c });
     }
     if (b.type === 'para') paras.push(b);
     if (b.type === 'speech') {
@@ -1048,7 +1073,7 @@ function reviewData() {
     for (const c of b.cues) if (!c.board && !deptOf(c.dept)) unk.push({ b, c });
   }
   const silent = cast ? S.meta.chars.filter(c => !spoke.has(c.name)).map(c => c.name) : [];
-  return { paras, amps, flagged, unk, chars, ends, running, noChar: Array.from(noChar.values()), silent, orphans: S.orphans,
+  return { paras, amps, flagged, unk, chars, ends, noChar: Array.from(noChar.values()), silent, orphans: S.orphans,
     count: paras.length + amps.length + flagged.length + unk.length + ends.length + noChar.size + S.orphans.length };
 }
 function updReview() {
@@ -1088,7 +1113,10 @@ function cueTable(list, clickable) {
     d.style.setProperty('--c', cueColour(o.c)); tr.appendChild(d);
     const n = h('td', o.dup || o.loose ? 'dupe' : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup) n.title = t('dup'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
     const dc = h('td', null, o.c.desc);
-    if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.end.c.desc ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));
+    if (o.c.notes) dc.appendChild(h('div', 'notes', o.c.notes));
+    if (o.c.links.length) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsCue', o.c.links.map(cueName).join(', '))));
+    if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.endedBy ? ' ' + t('endedBy', cueName(o.endedBy)) : '') + (o.end.c.desc && !o.endedBy ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));
+    if (o.end && !o.endedBy && o.end.c.notes) dc.appendChild(h('div', 'notes', o.end.c.notes));
     tr.appendChild(dc);
     tr.appendChild(h('td', 'ctx', [o.act, o.scene].filter(Boolean).join(' · ')));
     tr.appendChild(h('td', 'ctx', (o.who ? o.who + ': ' : '') + o.ctx));
@@ -1108,7 +1136,9 @@ function renderDrawer() {
     head.appendChild(h('h2', null, t('cueList') + ' (' + all.length + ')'));
     const csv = h('button', 'btn sm', t('csv')); csv.type = 'button'; csv.onclick = exportCSV;
     const pr = h('button', 'btn sm', t('print')); pr.type = 'button'; pr.onclick = () => doPrint('cues');
-    head.append(csv, pr, x);
+    const csvD = h('button', 'btn sm', t('csvDept')); csvD.type = 'button'; csvD.onclick = exportCSVByDept;
+    const prD = h('button', 'btn sm', t('printDept')); prD.type = 'button'; prD.onclick = () => doPrint('cues', true);
+    head.append(csv, csvD, pr, prD, x);
     const chips = h('div', 'chips');
     const codes = [null].concat(S.cfg.departments.map(d => d.code));
     for (const o of all) if (!codes.includes(o.c.dept)) codes.push(o.c.dept);
@@ -1137,13 +1167,12 @@ function renderDrawer() {
     sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + o.b.page : ''), o => jumpTo(o.b));
     sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvUnk'), '', rv.unk, o => o.c.dept + ' ' + o.c.label + ' — ' + snip(o.b.plain || o.c.desc), o => jumpTo(o.b));
-    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + o.c.dept + ' ' + o.c.label + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
+    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
     sec(t('rvOrph'), '', rv.orphans, o => '✕  ' + snip(o.text), o => {
       const k = rm(S.orphans, o); if (k < 0) return;
       pushHist({ undo: () => { S.orphans.splice(k, 0, o); inkChanged(); }, redo: () => { rm(S.orphans, o); inkChanged(); } });
       inkChanged();
     });
-    sec(t('rvOpen'), t('rvOpenHint'), rv.running, o => o.c.dept + ' ' + o.c.label + (o.c.desc ? ' — ' + snip(o.c.desc) : '') + (o.c.page ? ' · p. ' + o.c.page : ''), o => jumpTo(o.b));
     if (rv.chars.size) {
       body.appendChild(h('h3', null, t('rvChars') + ' (' + rv.chars.size + ')'));
       body.appendChild(h('p', 'hint', t('rvCharsHint')));
@@ -1159,27 +1188,45 @@ function renderDrawer() {
   }
   dr.append(head, body);
 }
-function exportCSV() {
+function csvText(list) {
   const sep = (1.1).toLocaleString().includes(',') ? ';' : ',';
   const q = v => { v = String(v == null ? '' : v); return /["\n\r;,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc')]];
-  for (const o of filteredCues()) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
-    o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc : '']);
-  download('cues' + (S.cueFilter ? '-' + S.cueFilter : '') + '.csv', new Blob(['﻿' + rows.map(r => r.map(q).join(sep)).join('\r\n') + '\r\n'], { type: 'text/csv' }));
+  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
+  for (const o of list) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
+    o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc + (o.endedBy || !o.end.c.notes ? '' : (o.end.c.desc ? ' — ' : '') + o.end.c.notes) : '',
+    o.endedBy ? cueName(o.endedBy) : '', o.c.links.map(cueName).join('; '), o.c.notes]);
+  return '\uFEFF' + rows.map(r => r.map(q).join(sep)).join('\r\n') + '\r\n';
+}
+function exportCSV() {
+  download('cues' + (S.cueFilter ? '-' + S.cueFilter : '') + '.csv', new Blob([csvText(filteredCues())], { type: 'text/csv' }));
+}
+/* the cue list split by department, in the order of Settings; departments with no cues are left out */
+function cuesByDept() {
+  const all = collectCues(), codes = S.cfg.departments.map(d => d.code);
+  for (const o of all) if (!codes.includes(o.c.dept)) codes.push(o.c.dept);
+  return codes.map(code => [code, all.filter(o => o.c.dept === code)]).filter(g => g[1].length);
+}
+async function exportCSVByDept() {
+  const groups = cuesByDept(); if (!groups.length) { toast(t('noCues')); return; }
+  const files = new Map();
+  for (const [code, list] of groups) files.set('cues-' + code.replace(/[^\p{L}\p{N}_-]/gu, '_') + '.csv', new Blob([csvText(list)], { type: 'text/csv' }));
+  download('cues.zip', await buildZip(files));
 }
 function download(name, blob) {
   const a = document.createElement('a'), url = URL.createObjectURL(blob);
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-function doPrint(kind) {
+function doPrint(kind, byDept) {
   exitTemplates();
   document.body.classList.remove('pr-book', 'pr-script', 'pr-cues');
   document.body.classList.add('pr-' + kind);
   if (kind === 'cues') {
     const cp = $('#cuePrint'); cp.textContent = '';
-    cp.appendChild(h('h1', null, (titleOf() ? titleOf() + ' — ' : '') + t('cueList') + (S.cueFilter ? ' · ' + S.cueFilter : '')));
-    cp.appendChild(cueTable(filteredCues(), false));
+    const head = code => (titleOf() ? titleOf() + ' — ' : '') + t('cueList') + (code ? ' · ' + code : '');
+    if (byDept) for (const [code, list] of cuesByDept()) {   // one sheet per department
+      const sec = h('section', 'dsec'); sec.append(h('h1', null, head(code)), cueTable(list, false)); cp.appendChild(sec);
+    } else cp.append(h('h1', null, head(S.cueFilter)), cueTable(filteredCues(), false));
   } else renderAll();
   window.print();
 }

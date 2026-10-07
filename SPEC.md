@@ -281,7 +281,7 @@ As built in r1.0:
 - A board's shape follows the root of its chain. If that template later gets an image with other proportions, ink already drawn on boards built on it keeps its coordinates and may no longer sit where it did.
 - "Use as default" on boards is gone (see §5.5).
 
-### 5.11 Cue ends — R1, built in r1.0
+### 5.11 Cue ends — R1, built in r1.0, extended in r1.3
 
 **Request as received:** "support for end of cues (e.g. when a music should stop)".
 
@@ -301,6 +301,21 @@ Today a stop can only be written as another cue with "stop" in its description. 
 | Review hints | An end that closes nothing. A cue in a "runs until stopped" department that is still open at the end of the show. Hints, not errors. | `[ASSUMED]` |
 
 Not in R1: fades with durations as data (D4), automatic "everything stops at blackout" rules.
+
+**Change request (r1.3):** "not all video/audio cues need an end"; "fading can be another cue to signal the change or something an operator needs to remember"; a longer optional description shown only in the cue list; exports per department.
+
+| Point | Design | Status |
+|---|---|---|
+| Plain end | `{/SND 5}` stays, for what an operator does by hand. It has no number and does not appear in the other software's cue numbering. | `[LOCKED]` |
+| Linking cue | `{SND 6 / SND 5 \| text}`: SND 6 is a cue of its own and ends SND 5. Targets are separated by ` / `, any department: `{SND 9 / SND 6 / VID 2}`. Own label may be empty: `{SND / SND 5}`. | `[LOCKED]` |
+| Reading a link | A part after ` / ` is a link only if it starts with an upper-case department code; otherwise the whole text is the label (`1/2`, `5 / 6`). Not tied to the Settings list, so changing departments never changes how a script reads. | `[ASSUMED]` |
+| Pairing | Unchanged for each target: nearest earlier open cue of that department and number (no number: nearest of the department). A linking cue closes its targets first, then stays open itself. A target not found is a Review hint. | `[ASSUMED]` |
+| "Runs" | Removed. No department is expected to end; Review no longer lists open cues. | `[LOCKED]` |
+| Margin and rail | The linking cue is drawn exactly like a plain end: outlined tag, stop square before its number, short text as usual; hovering shows what it ends. The rail runs from the ended cue to that tag and may continue to the next; a chain shares one lane. | `[ASSUMED]` |
+| Editing | Renumber or change department of a cue: its end token and every link to it follow. Delete a cue: its end token goes; a linking cue stays, without the link. Delete a linking cue: its targets reopen. One undo each. | `[ASSUMED]` |
+| Notes | `{DEPT label \| short text \| notes}`. Shown in the cue list (screen, print, CSV), never in the margin; a dot marks the tag. One paragraph. | `[ASSUMED]` |
+| Per department | Cue list: one CSV per department in one zip; print with one sheet per department. A cue ended by another department's cue says so on its own sheet. | `[ASSUMED]` |
+| CSV | Existing columns keep their positions; "Ended by", "Ends" and "Notes" are appended. | `[ASSUMED]` |
 
 As built in r1.0:
 

@@ -468,18 +468,17 @@ function openSettings() {
       h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
-      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), rl = h('label', 'chk'), rc = h('input'), x = h('button', 'btn sm', '\u2715');
-      c.type = 'text'; n.type = 'text'; col.type = 'color'; rc.type = 'checkbox'; x.type = 'button';
-      c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888'; rc.checked = !!d.runs;
-      rl.append(rc, t('runsShort'));
-      x.onclick = () => r.remove(); r.append(c, n, col, rl, x); list.appendChild(r);
+      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715');
+      c.type = 'text'; n.type = 'text'; col.type = 'color'; x.type = 'button';
+      c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
+      x.onclick = () => r.remove(); r.append(c, n, col, x); list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
-    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f', runs: false }); body.appendChild(ab);
-    body.appendChild(h('p', 'hint', t('deptHint') + ' ' + t('runsHint')));
+    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
+    body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, runs: i[3].checked }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value }; });
       const paperChanged = ps.value !== S.cfg.paper;
       S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }

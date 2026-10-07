@@ -1,5 +1,21 @@
 # Changelog
 
+## r1.3 — 2026-10-07
+
+Cue ends
+- A cue can end another cue and be a cue of its own: `{SND 6 / SND 5 | sfuma 3s}`. SND 6 has its own number and row in the cue list and the CSV, and the running rail from SND 5 stops at its tag. One cue can end several, in any department: `{SND 9 / SND 6 / VID 2}`. A cue that links can itself be ended later.
+- `{/SND 5}` still works for an end with no cue of its own, for fades the operator does by hand.
+- A part after ` / ` counts as a link only if it starts with an upper-case department code, so a label such as `1/2` or `5 / 6` stays a label. A link whose target is not found is listed in Review.
+- Margin tag of a linking cue: drawn like a plain end (outlined, stop square before its number) with the running rail ending on it; hovering shows what it ends. Editing carries through links: renumbering a cue rewrites the links to it; deleting a cue keeps the cue that linked to it, without the link; deleting a linking cue leaves its targets open. Each is one undo.
+- In the editor of an end, “Make it a cue” turns `{/SND 5}` into `{SND / SND 5}` ready to be numbered; on a linking cue, “Make it a plain end” does the reverse.
+- The “runs” tick box per department is gone, with “Still running at the end” in Review and the ordering in the End row. A cue with no end is simply a cue. A `runs` value in an old `config.json` is ignored.
+
+Notes and department lists
+- A cue can carry a longer note after a second bar: `{SND 5 | mare | Traccia 03, -12 dB}`. Typed in a new field of the cue editor. It shows in the cue list, in print and in the CSV, not in the margin (a dot on the tag shows that notes exist).
+- The CSV has three new columns at the end: “Ended by”, “Ends”, “Notes”. Existing columns keep their positions.
+- Cue list: “By dept (.zip)” saves one CSV per department in one file; “Print by dept” prints one sheet per department, each on a new page. The department chips still filter one department for the CSV and Print buttons.
+- A show written by r1.2 opens unchanged. Do not edit a show with r1.2 once it uses links or notes: r1.2 shows `6 / SND 5` as the label and the note as part of the short text.
+
 ## r1.2 — 2026-10-07
 
 Show file

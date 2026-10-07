@@ -46,11 +46,11 @@ en: {
   errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
-  endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', runsShort: 'runs',
-  runsHint: 'Tick “runs” for departments whose cues play until stopped, such as sound and video. Their open cues are offered first when you mark an end.',
-  thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}',
-  rvEnd: 'Ends with no cue to close', rvOpen: 'Still running at the end',
-  rvOpenHint: 'Cues in “runs” departments with no end marked. Not counted in the badge.',
+  endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
+  makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Notes (cue list only)', hasNotes: 'Has notes',
+  thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
+  thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Notes', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
+  rvEnd: 'Ends with no cue to close',
   templates: 'Templates', mTemplates: 'Templates…', tplBack: 'Back to script', tplNew: '+ Template', tplChild: 'New based on this',
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
@@ -94,11 +94,11 @@ it: {
   errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
-  endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', runsShort: 'dura',
-  runsHint: 'Spunta «dura» per i reparti i cui cue restano attivi finché non vengono fermati, come audio e video. I loro cue aperti sono proposti per primi quando segni una fine.',
-  thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}',
-  rvEnd: 'Fine senza cue da chiudere', rvOpen: 'Ancora attivi alla fine',
-  rvOpenHint: 'Cue dei reparti «dura» senza una fine segnata. Non contati nel numero in alto.',
+  endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
+  makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Note (solo nella lista cue)', hasNotes: 'Ha note',
+  thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
+  thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Note', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
+  rvEnd: 'Fine senza cue da chiudere',
   templates: 'Modelli', mTemplates: 'Modelli…', tplBack: 'Torna al copione', tplNew: '+ Modello', tplChild: 'Nuovo basato su questo',
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
@@ -134,24 +134,22 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.2';
+const VERSION = 'r1.3';
 
 function defaultConfig() {
   const it = LANG === 'it';
   return { title: '', paper: 'A4', departments: [
-    { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00', runs: false },
-    { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6', runs: true },
-    { code: 'VID', name: 'Video', colour: '#7a3fd1', runs: true } ], defaultBoard: null,
+    { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00' },
+    { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
+    { code: 'VID', name: 'Video', colour: '#7a3fd1' } ], defaultBoard: null,
     templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4 };
 }
-const RUNS_GUESS = /^(SND|SOUND|AUD|AUDIO|MUS|MUSIC|MUSICA|VID|VIDEO)/;
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'),
-      runs: typeof x.runs === 'boolean' ? x.runs : RUNS_GUESS.test(code) };   // runs: cues play until stopped
+    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888') };
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -195,9 +193,24 @@ function stripTokens(s) {
   return s.replace(new RegExp(TOKEN_SRC, 'g'), '').replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').trim();
 }
 function cleanField(s) { return String(s || '').replace(/[{}|]/g, '/').replace(/\s+/g, ' ').trim(); }
-function fmtToken(dept, label, desc, end) {
-  label = cleanField(label); desc = cleanField(desc);
-  return '{' + (end ? '/' : '') + dept + (label ? ' ' + label : '') + (desc ? ' | ' + desc : '') + '}';
+/* {DEPT label / DEPT label | short text | notes}: links are the cues this cue ends, notes are for the cue list only */
+function fmtToken(dept, label, desc, end, links, notes) {
+  label = cleanField(label); desc = cleanField(desc); notes = cleanField(notes);
+  const lk = (links || []).map(l => l.dept + (l.label ? ' ' + l.label : '')).join(' / ');
+  const lab = lk ? (label ? label + ' / ' : '/ ') + lk : label;
+  return '{' + (end ? '/' : '') + dept + (lab ? ' ' + lab : '') + (desc || notes ? ' | ' + desc : '') + (notes ? ' | ' + notes : '') + '}';
+}
+/* "6 / SND 5 / VID 2" -> own label "6" and the cues it ends. Not a link unless every part after
+   a " / " starts with an upper-case department code, so a label such as "5 / 6" stays a label. */
+const cueName = c => c.dept + (c.label ? ' ' + c.label : '');
+function splitLinks(s) {
+  const parts = (' ' + s).split(/\s\/\s+/), label = parts[0].trim(), links = [];
+  for (const p of parts.slice(1)) {
+    const m = /^(\p{Lu}[\p{Lu}\p{N}_-]+)(?:\s+(.*))?$/u.exec(p.trim());
+    if (!m) return { label: s, links: [] };
+    links.push({ dept: m[1], label: (m[2] || '').trim() });
+  }
+  return { label, links };
 }
 function autoHead(s) {
   if (s.length > 70) return 0;
@@ -351,7 +364,10 @@ function mkCue(m, wi) {
   let dept = m[1].toUpperCase();
   const end = dept.length > 1 && dept[0] === '/';   // {/SND 5} ends cue SND 5
   if (end) dept = dept.slice(1);
-  return { dept, label: (m[2] || '').trim(), desc: (m[3] || '').trim(), s: m.index, e: m.index + m[0].length, wi, end, board: !end && dept === 'BOARD' };
+  const board = !end && dept === 'BOARD', lk = end || board ? { label: (m[2] || '').trim(), links: [] } : splitLinks((m[2] || '').trim());
+  const rest = (m[3] || '').trim(), bar = rest.indexOf('|');   // short text | notes
+  const desc = bar < 0 ? rest : rest.slice(0, bar).trim(), notes = bar < 0 ? '' : rest.slice(bar + 1).replace(/\s*\|\s*/g, ' / ').trim();
+  return { dept, label: lk.label, links: lk.links, desc, notes, s: m.index, e: m.index + m[0].length, wi, end, board };
 }
 function analyze(b) {
   const raw = b.raw;
@@ -480,28 +496,34 @@ function reparse(text) {
   }
   groupBlocks(); pairCues();
 }
-/* Pair every end token with the cue it closes: the nearest earlier cue that is still open and has the
-   same department and label. An end without a label closes the nearest open cue of its department.
-   Paired cues also get a lane for the running rail in the margin. */
+/* Pair every end with the cue it closes: the nearest earlier cue that is still open and has the same
+   department and label. An end without a label closes the nearest open cue of its department. An end
+   is either a {/DEPT label} token or a cue that links to what it ends, {DEPT 6 / DEPT 5}; a linking
+   cue closes its targets first and then stays open itself. Paired cues also get a lane for the
+   running rail in the margin. */
 function pairCues() {
   const open = new Map(), pairs = []; let ord = 0;
-  for (const b of S.blocks) for (const c of b.cues) {
-    c.b = b; c.ord = ord++; c.endRef = null; c.startRef = null; c.lane = 0;
-    if (c.board) continue;
-    let q = open.get(c.dept);
-    if (!c.end) { if (!q) open.set(c.dept, q = []); q.push(c); continue; }
-    if (!q) continue;
+  const close = (c, dept, label) => {
+    const q = open.get(dept); if (!q) return null;
     let k = -1;
-    for (let i = q.length - 1; i >= 0; i--) if (!c.label || q[i].label === c.label) { k = i; break; }
-    if (k < 0) continue;
-    const s = q.splice(k, 1)[0]; s.endRef = c; c.startRef = s; pairs.push(s);
+    for (let i = q.length - 1; i >= 0; i--) if (!label || q[i].label === label) { k = i; break; }
+    if (k < 0) return null;
+    const s = q.splice(k, 1)[0]; s.endRef = c; c.closes.push(s); pairs.push(s); return s;
+  };
+  for (const b of S.blocks) for (const c of b.cues) {
+    c.b = b; c.ord = ord++; c.endRef = null; c.startRef = null; c.closes = []; c.unresolved = []; c.lane = 0;
+    for (const l of c.links) l.ref = null;
+    if (c.board) continue;
+    if (c.end) { close(c, c.dept, c.label); c.startRef = c.closes[0] || null; continue; }
+    for (const l of c.links) { l.ref = close(c, l.dept, l.label); if (!l.ref) c.unresolved.push(l); }
+    let q = open.get(c.dept); if (!q) open.set(c.dept, q = []); q.push(c);
   }
   pairs.sort((a, b) => a.ord - b.ord);
   const lanes = [];
-  for (const s of pairs) {
-    let k = lanes.findIndex(endOrd => endOrd < s.ord);
+  for (const s of pairs) {   // a lane is free again once its rail has ended; a linking cue's tag can hand its lane on
+    let k = lanes.findIndex(endOrd => endOrd <= s.ord);
     if (k < 0) k = lanes.length;
-    lanes[k] = s.endRef.ord; s.lane = s.endRef.lane = Math.min(k, 5);
+    lanes[k] = s.endRef.ord; s.lane = Math.min(k, 5);
   }
   S.pairs = pairs;
 }

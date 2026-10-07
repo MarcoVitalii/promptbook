@@ -103,6 +103,7 @@ body:not(.facing) .page.facing{display:none}
 .tag.unk{border-left-style:dotted}
 .tag.etag{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--c)}
 .tag.etag b::before{content:"";display:inline-block;width:7px;height:7px;background:var(--c);margin-right:5px}
+.tag .nd{color:var(--c);font-weight:700}
 .tag.btag b::before{content:"";display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;margin-right:5px}
 .links,.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .links path{fill:none;stroke-width:1.2}
@@ -151,6 +152,8 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dp{font-weight:700;white-space:nowrap;border-left:5px solid var(--c);padding-left:8px}
 .cl .ctx{color:var(--muted);font-size:12px}
 .cl .dupe{color:var(--acc);font-weight:700}
+.cl .notes{font-size:12px;margin-top:3px;white-space:pre-wrap}
+textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 .cl .endl{color:var(--muted);font-size:12px;margin-top:3px}
 .rv h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 6px}
 .rv h3:first-child{margin-top:0}
@@ -192,7 +195,7 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:10px;font:14px/1.5 ui-monospace,Consolas,"Courier New",monospace}
 .form label{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px}
 .form input[type=text],.form select{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px;width:100%}
-.drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
+.drow{display:grid;grid-template-columns:76px 1fr 46px 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
@@ -231,5 +234,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   #cuePrint table{width:100%;border-collapse:collapse}
   #cuePrint td,#cuePrint th{border-bottom:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}
   #cuePrint tr{break-inside:avoid}
+  #cuePrint .dsec{break-before:page}
+  #cuePrint .dsec:first-child{break-before:auto}
   #cuePrint .dp{font-weight:700;border-left:5px solid var(--c);padding-left:8px;white-space:nowrap}
 }

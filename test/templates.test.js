@@ -164,9 +164,9 @@ const OUT = process.env.OUT || '.';
   await page.waitForSelector('.page.facing .board .bbase image');
   ok(await ev(() => PB.S.templates.size) === 4 && await ev(() => !!boardURL(PB.S.templates.get('Board 2')) && !!boardURL(PB.S.templates.get('Template 1'))), 'after reload the template images load again');
 
-  // 14. a show saved by r0.1 (no templates, no runs flags) still opens
+  // 14. a show saved by r0.1 (no templates, no runs flags; a runs flag in an old config is ignored) still opens
   await ev(() => PB.startMemory('ANNA: Ciao {SND 1 | a}.\n{BOARD X}\n', { title: 'old', departments: [{ code: 'LX', name: 'Luci', colour: '#c98a00' }, { code: 'SND', name: 'Audio', colour: '#1f6fd6' }], defaultBoard: null }, null, [{ name: 'X', image: null, w: 1000, h: 750, strokes: [] }]));
-  ok(await ev(() => PB.S.cfg.departments.map(d => d.code + ':' + d.runs).join() + '|' + PB.S.cfg.templates.length + '|' + PB.S.boards.get('X').base) === 'LX:false,SND:true|0|null', 'older show opens: departments get a sensible "runs", no templates');
+  ok(await ev(() => PB.S.cfg.departments.map(d => d.code + (d.runs === undefined ? '' : '!')).join() + '|' + PB.S.cfg.templates.length + '|' + PB.S.boards.get('X').base) === 'LX,SND|0|null', 'older show opens: no templates, no "runs" flag any more');
   await page.locator('.addboard').first().click();
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.size) === 2, 'without templates "+ Board" behaves as before');
 

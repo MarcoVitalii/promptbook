@@ -80,6 +80,7 @@ Items 1–2 alone already remove re-importing and hand-compiled cue lists. Ink i
 | Tier | Content | Gate |
 |---|---|---|
 | R0.1 | Cue words boxed instead of underlined | Delivered 2026-10-06. Display only; no file or gesture changes. |
+| R1.3 | Linking cues, cue notes, exports per department (SPEC §5.11) | Built 2026-10-07 as r1.3. Not yet tried on the laptop. |
 | R1 | Cue ends and board templates (SPEC §5.10, §5.11, §7) | Delivered 2026-10-06 as r1.0. 145 automated checks pass. Not yet tried on the laptop. |
 | Backlog | The former R1 list (SPEC §7) | Reordered by the first rehearsal's friction list |
 | R2 | Follow-along view for the stage manager, standbys | After R1. Single screen, so D12 is not reopened. |
@@ -152,6 +153,7 @@ Releases are kept in a git repository whose root is the project: `promptbook.htm
 |---|---|---|
 | `r0.1` | 2026-10-06 | First commit: R0 plus the cue-word box. R0 itself was delivered before the repository existed and has no tag. |
 | `r1.0` | 2026-10-06 | Cue ends, board templates |
+| `r1.3` | 2026-10-07 | Linking cues (`{SND 6 / SND 5}`), cue notes, exports per department; "runs" removed |
 
 Rule for every release: change `src/`, set `VERSION`, run `python3 build.py`, run `sh test/run.sh` with every check passing, add the `CHANGELOG.md` entry, commit, tag. The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
 
