@@ -68,7 +68,7 @@ function big() {
   await page.waitForTimeout(100);
   const wb = await page.locator('.page.script .row.speech .w').nth(3).boundingBox();
   await page.touchscreen.tap(wb.x + wb.width / 2, wb.y + wb.height / 2);
-  ok(await page.locator('#pop .depts .dbtn').count() === 3, 'finger tap opens the pin popover');
+  ok(await page.locator('#pop .depts .dbtn').count() === 4, 'finger tap opens the pin popover');
   await page.keyboard.press('Escape');
   const cdp = await ctx.newCDPSession(page);
   const st0 = await page.evaluate(() => document.querySelector('#desk').scrollTop);

@@ -31,7 +31,7 @@ const OUT = process.env.OUT || '.';
   const dl = page.waitForEvent('download');
   await page.locator('#drawer .btn', { hasText: 'CSV' }).click();
   const csv = require('fs').readFileSync(await (await dl).path(), 'utf8').split('\r\n');
-  ok(csv[0].includes('End p.') && csv[0].includes('Ended by') && csv[0].includes('Notes') && csv[1].includes('sfuma in 3s'), 'CSV carries the end columns: ' + csv[1]);
+  ok(csv[0].includes('End p.') && csv[0].includes('Ended by') && csv[0].includes('Margin') && csv[0].endsWith('Description') && csv[1].includes('sfuma in 3s'), 'CSV carries the end columns: ' + csv[1]);
   await page.locator('#bList').click();
 
   // 3. renaming the cue carries its end, as one undo step

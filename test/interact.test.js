@@ -44,16 +44,17 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.keyboard.press('s');
   ok((await text()).includes('porto. {SND}'), 'department letter pins from the keyboard');
   await page.keyboard.press('Escape');
+  ok((await text()).includes('porto. {SND 2}'), 'a number left blank becomes the last of the department plus one');
 
   // 3. own-line cue
   await page.locator('.w', { hasText: 'domande.' }).first().click();
   await page.locator('#pop .chk input').check();
   await page.locator('#pop .depts .dbtn', { hasText: 'VID' }).click();
   await page.keyboard.press('Escape');
-  ok(/domande\.\n\{VID\}\nANNA: Allora/.test(await text()), 'own-line cue sits after the speech');
+  ok(/domande\.\n\{VID 1\}\nANNA: Allora/.test(await text()), 'own-line cue sits after the speech');
 
   // 4. edit an existing cue from its tag, change department, delete another
-  await page.locator('.tag', { hasText: 'SND' }).filter({ hasNotText: 'SND 1' }).filter({ hasNotText: 'SND 2' }).first().click();
+  await page.locator('.tag', { hasText: /^SND 2$/ }).first().click();
   await page.locator('#pop .depts .dbtn', { hasText: 'VID' }).click();
   await page.locator('#pop input').first().fill('3A');
   await page.locator('#pop .btn', { hasText: 'Done' }).click();
@@ -86,7 +87,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.locator('.w', { hasText: 'anni' }).first().dblclick();
   await page.waitForSelector('#editor textarea');
   const raw = await page.locator('#editor textarea').inputValue();
-  ok(raw.startsWith('ANNA: Tu. Dopo tre anni {LX}'), 'editor shows the raw line: ' + raw);
+  ok(raw.startsWith('ANNA: Tu. Dopo tre anni {LX 13}'), 'editor shows the raw line: ' + raw);
   await page.locator('#editor textarea').fill(raw.replace('senza una parola', 'senza nemmeno una parola, come un ladro'));
   await page.keyboard.press('Control+Enter');
   ok(await page.locator('.flag').count() === 1, 'editing inked text raises the check flag');

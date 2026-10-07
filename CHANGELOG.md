@@ -1,5 +1,33 @@
 # Changelog
 
+## r1.4 — 2026-10-07
+
+Comments
+- Text between two lines holding `%%` is set aside: it stays in `script.md` and is left off the page, the cue list and every print. One line can be closed on itself: `%% text %%`. This is Obsidian's comment form, so the block is hidden there too.
+- The text editor of a block has “Comment out”; on a comment it has “Restore”. A commented block leaves a small `%%` marker in the left gutter: tap it to read the content, restore it or edit it. Each step is one undo.
+- Cues inside a comment are not cues. Ink on a commented block is set aside (it shows under “Ink whose text was removed”) and comes back when the block is restored unchanged.
+- A `%%` that is never closed hides nothing: the line is listed under “Lines not recognised”.
+- Review lists “Commented out”, not counted in the badge.
+- Whole lines only. To cut part of a speech, split the speech first.
+
+To do notes
+- A department can be ticked “To do” in Settings. Its notes are pinned like cues (`{TODO | short text | longer text}`) and show in the margin, but they are not cues: they are left out of the cue list, its count, the CSV and the prints, they get no number, and they are never offered as something to end.
+- Review lists them first under “To do”, counted in the badge. Tap one to jump to it; the tick removes the note from the script (one undo).
+- New shows come with a red TODO department. A show that already has its own department list is not changed: add a department in Settings and tick “To do”.
+
+Cue list
+- The short margin text and the longer description are two columns, “Margin” and “Description”. The description column appears only when a listed cue has one; the panel widens for it. The cue editor and the CSV headers use the same two names; CSV columns keep their positions.
+- “Cue line” is now the cue word with two words on each side. The word is boxed in the department colour, as on the page; in the CSV it is in `[brackets]`. A cue on its own line keeps the `▸` between the lines around it.
+- The cue list is printed from its own panel only (“Print”, “Print by dept”). The Print button in the top bar offers the book and the script pages.
+
+Numbers
+- A newly pinned cue whose number is left blank gets the last number of its department before that point, plus one: 5 gives 6, A12 gives A13, 5.5 gives 5.6; the first cue of a department is 1. The field shows the number it will get. Pinning and numbering are one undo.
+- Nothing is renumbered. A cue placed between 5 and 6 becomes a second 6 and is marked as a duplicate, as before. To leave a cue without a number, clear the field after the cue exists.
+- Enter closes the cue editor even when no field has been typed in.
+
+Compatibility
+- A show written by r1.3 opens unchanged. Do not edit or print a show with r1.3 once it uses `%%`: r1.3 shows the commented text as unrecognised lines and prints it. TODO notes read by r1.3 are ordinary cues of a department.
+
 ## r1.3 — 2026-10-07
 
 Cue ends

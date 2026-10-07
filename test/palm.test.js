@@ -31,7 +31,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 346, y: 300, pointerType: 'pen' });
   const wb = await page.locator('.w', { hasText: 'domande.' }).first().boundingBox();
   await page.touchscreen.tap(wb.x + 10, wb.y + 8);
-  ok(await page.locator('#pop .depts .dbtn').count() === 3, 'a quick finger tap still pins while the pen hovers');
+  ok(await page.locator('#pop .depts .dbtn').count() === 4, 'a quick finger tap still pins while the pen hovers');
   console.log(errs.join('\n') || 'no page errors');
   await browser.close();
 })();

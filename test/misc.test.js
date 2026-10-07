@@ -97,9 +97,9 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.locator('#dlg .drow').nth(rowsN - 1).locator('input[type=text]').nth(1).fill('Flys');
   await page.locator('#dlg .btn', { hasText: 'Save' }).click();
   const g = await page.evaluate(() => [getComputedStyle(document.querySelector('.page')).width, PB.S.cfg.departments.map(d => d.code).join(','), PB.S.pages.length]);
-  ok(g[0] === '816px' && g[1] === 'LX,SND,VID,FLY', 'paper and departments change from settings: ' + g.join(' | '));
+  ok(g[0] === '816px' && g[1] === 'LX,SND,VID,TODO,FLY', 'paper and departments change from settings: ' + g.join(' | '));
   await page.locator('.w', { hasText: 'domande.' }).first().click();
-  ok(await page.locator('#pop .depts .dbtn').count() === 4, 'new department offered when pinning');
+  ok(await page.locator('#pop .depts .dbtn').count() === 5, 'new department offered when pinning');
   await page.keyboard.press('Escape');
 
   // night mode + screenshot

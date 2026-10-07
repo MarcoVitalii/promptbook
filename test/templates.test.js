@@ -103,7 +103,7 @@ const OUT = process.env.OUT || '.';
   await menu('Templates');
   await page.keyboard.press('Control+z');
   await page.locator('.tplbar .btn', { hasText: 'Back to script' }).click();
-  const tg = await ev(() => { const pg = document.querySelector('.page.script'); const tags = Array.from(pg.querySelectorAll('.tag')); return [tags.length, tags.every(t => parseFloat(t.style.top) > 50), PB.serialize().includes('Rispondi! {LX}')]; });
+  const tg = await ev(() => { const pg = document.querySelector('.page.script'); const tags = Array.from(pg.querySelectorAll('.tag')); return [tags.length, tags.every(t => parseFloat(t.style.top) > 50), PB.serialize().includes('Rispondi! {LX')]; });
   ok(tg[0] >= 5 && tg[1] && !tg[2], 'undo from the Templates view, then back: tags laid out correctly: ' + JSON.stringify(tg));
 
   // 11. never printed

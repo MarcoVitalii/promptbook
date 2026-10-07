@@ -70,6 +70,8 @@ body:not(.facing) .page.facing{display:none}
 .row.mark{height:22px;padding-bottom:0;align-items:center}
 .row.front{display:block;box-sizing:border-box;padding:0 46px 0 38px}
 .row.front.none{height:0;padding:0}
+.row.note{display:block;height:0;padding:0;position:relative}
+.cmk{position:absolute;left:5px;top:-14px;height:18px;padding:0 4px;border:1px dashed var(--muted);border-radius:4px;background:var(--paper);color:var(--muted);font:700 10px/16px sans-serif;cursor:pointer}
 .row.front .tx{height:100%;box-sizing:border-box;padding-bottom:16%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .row.front .tx.cast{display:block;text-align:left;padding:40px 30px 0}
 .ch{font-weight:700;font-size:22px;line-height:30px;letter-spacing:.03em;border-bottom:2px solid var(--tx);padding-bottom:4px;margin-bottom:18px}
@@ -152,7 +154,13 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dp{font-weight:700;white-space:nowrap;border-left:5px solid var(--c);padding-left:8px}
 .cl .ctx{color:var(--muted);font-size:12px}
 .cl .dupe{color:var(--acc);font-weight:700}
-.cl .notes{font-size:12px;margin-top:3px;white-space:pre-wrap}
+.cl .notes{font-size:12px;white-space:pre-wrap}
+.cl .notes+.notes{margin-top:3px}
+.cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+#drawer.wide{width:580px}
+.rv .todo{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--ui-b)}
+.rv .todo .it{border-bottom:0;border-left:5px solid var(--c);padding-left:8px}
+.ntx{font:13px/1.4 "PB",sans-serif;white-space:pre-wrap;max-height:40vh;overflow:auto;margin:0 0 4px;padding:6px 8px;border:1px dashed var(--ui-b);border-radius:6px}
 textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 .cl .endl{color:var(--muted);font-size:12px;margin-top:3px}
 .rv h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 0 6px}
@@ -195,7 +203,7 @@ textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:10px;font:14px/1.5 ui-monospace,Consolas,"Courier New",monospace}
 .form label{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px}
 .form input[type=text],.form select{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px;width:100%}
-.drow{display:grid;grid-template-columns:76px 1fr 46px 36px;gap:6px;margin-bottom:6px;align-items:center}
+.drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
@@ -236,5 +244,6 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   #cuePrint tr{break-inside:avoid}
   #cuePrint .dsec{break-before:page}
   #cuePrint .dsec:first-child{break-before:auto}
+  #cuePrint .cw{color:#000}
   #cuePrint .dp{font-weight:700;border-left:5px solid var(--c);padding-left:8px;white-space:nowrap}
 }

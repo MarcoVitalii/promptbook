@@ -468,17 +468,18 @@ function openSettings() {
       h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
-      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715');
+      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input');
       c.type = 'text'; n.type = 'text'; col.type = 'color'; x.type = 'button';
       c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
-      x.onclick = () => r.remove(); r.append(c, n, col, x); list.appendChild(r);
+      cb.type = 'checkbox'; cb.checked = !!d.review; rv.append(cb, t('deptReview')); rv.title = t('deptReviewTip');
+      x.onclick = () => r.remove(); r.append(c, n, col, rv, x); list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
     const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
     body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked }; });
       const paperChanged = ps.value !== S.cfg.paper;
       S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
@@ -558,8 +559,8 @@ function bindUI() {
   $('#bPrint').onclick = e => {
     const r = e.currentTarget.getBoundingClientRect();
     openPop(r.left - 200, r.bottom - 10, p => {
-      for (const k of ['book', 'script', 'cues']) {
-        const b = h('button', 'btn', t(k === 'book' ? 'prBook' : k === 'script' ? 'prScript' : 'prCues')); b.type = 'button';
+      for (const k of ['book', 'script']) {   // the cue list is printed from its own panel
+        const b = h('button', 'btn', t(k === 'book' ? 'prBook' : 'prScript')); b.type = 'button';
         b.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px';
         b.onclick = () => { closePop(); doPrint(k); };
         p.appendChild(b);

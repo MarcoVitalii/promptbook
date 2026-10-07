@@ -19,10 +19,10 @@ en: {
   eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
   boards: 'Boards', boardsTip: 'Show the facing page', cues: 'Cues', cuesTip: 'Show or hide cues', ink: 'Ink', inkTip: 'Show or hide ink',
   night: 'Night mode', fit: 'Fit', zoomIn: 'Zoom in', zoomOut: 'Zoom out', cueList: 'Cue list', print: 'Print', review: 'Review',
-  prBook: 'Book: script and facing pages', prScript: 'Script pages only', prCues: 'Cue list',
+  prBook: 'Book: script and facing pages', prScript: 'Script pages only',
   stSaved: 'Saved {0}', stSaving: 'Saving…', stPending: 'Saving soon', stMem: 'Not on disk', stErr: 'Save failed',
   cueAfter: 'Cue after “{0}”', cueOwn: 'Cue on its own line, after this block', ownLine: 'On its own line',
-  boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Description', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
+  boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
   save: 'Save', cancel: 'Cancel', close: 'Close',
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
@@ -36,7 +36,7 @@ en: {
   rvCharsHint: 'A name that appears once may be a typo or a misread line.',
   rvNoChar: 'Not in the character list', rvNoCharHint: 'Speakers missing from “characters” at the top of the script. ALL, OTHERS, ALL BUT… are not checked.',
   rvSilent: 'Listed but never speaks', titleInScript: 'Set by “title” at the top of the script',
-  all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Description', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character',
+  all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Margin', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character',
   csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
   deptHint: 'Changing a code does not rewrite cues already in the script.',
@@ -47,10 +47,12 @@ en: {
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
-  makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Notes (cue list only)', hasNotes: 'Has notes',
+  makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
   thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
-  thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Notes', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
+  thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
   rvEnd: 'Ends with no cue to close',
+  nextLabel: 'blank = {0}', rvTodo: 'To do', deptReview: 'To do', deptReviewTip: 'Review notes, not cues: listed under Review and left out of the cue list',
+  rvNote: 'Commented out', rvNoteHint: 'Hidden on the page and in print. Tap to read or restore.', noteOut: 'Comment out', noteBack: 'Restore', noteTitle: 'Commented out',
   templates: 'Templates', mTemplates: 'Templates…', tplBack: 'Back to script', tplNew: '+ Template', tplChild: 'New based on this',
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
@@ -67,10 +69,10 @@ it: {
   eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
   boards: 'Tavole', boardsTip: 'Mostra la pagina a fronte', cues: 'Cue', cuesTip: 'Mostra o nascondi i cue', ink: 'Tratti', inkTip: 'Mostra o nascondi l’inchiostro',
   night: 'Modalità notte', fit: 'Adatta', zoomIn: 'Ingrandisci', zoomOut: 'Riduci', cueList: 'Lista cue', print: 'Stampa', review: 'Rivedi',
-  prBook: 'Copione e pagine a fronte', prScript: 'Solo pagine del copione', prCues: 'Lista cue',
+  prBook: 'Copione e pagine a fronte', prScript: 'Solo pagine del copione',
   stSaved: 'Salvato {0}', stSaving: 'Salvataggio…', stPending: 'Da salvare', stMem: 'Non su disco', stErr: 'Salvataggio fallito',
   cueAfter: 'Cue dopo «{0}»', cueOwn: 'Cue su riga propria, dopo questo blocco', ownLine: 'Su riga propria',
-  boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Descrizione', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
+  boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
@@ -84,7 +86,7 @@ it: {
   rvCharsHint: 'Un nome che compare una sola volta può essere un refuso o una riga letta male.',
   rvNoChar: 'Non nell’elenco dei personaggi', rvNoCharHint: 'Nomi che mancano da «personaggi» in testa al copione. TUTTI, GLI ALTRI, TUTTI TRANNE… non sono controllati.',
   rvSilent: 'In elenco ma senza battute', titleInScript: 'Impostato da «titolo» in testa al copione',
-  all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Descrizione', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio',
+  all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Margine', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio',
   csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
   deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
@@ -95,10 +97,12 @@ it: {
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
-  makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Note (solo nella lista cue)', hasNotes: 'Ha note',
+  makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
   thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
-  thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Note', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
+  thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
   rvEnd: 'Fine senza cue da chiudere',
+  nextLabel: 'vuoto = {0}', rvTodo: 'Da fare', deptReview: 'Da fare', deptReviewTip: 'Appunti da rivedere, non cue: elencati in Rivedi e lasciati fuori dalla lista cue',
+  rvNote: 'Commentati', rvNoteHint: 'Nascosti nella pagina e in stampa. Tocca per leggere o ripristinare.', noteOut: 'Commenta', noteBack: 'Ripristina', noteTitle: 'Commentato',
   templates: 'Modelli', mTemplates: 'Modelli…', tplBack: 'Torna al copione', tplNew: '+ Modello', tplChild: 'Nuovo basato su questo',
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
@@ -134,14 +138,15 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.3';
+const VERSION = 'r1.4';
 
 function defaultConfig() {
   const it = LANG === 'it';
   return { title: '', paper: 'A4', departments: [
     { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00' },
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
-    { code: 'VID', name: 'Video', colour: '#7a3fd1' } ], defaultBoard: null,
+    { code: 'VID', name: 'Video', colour: '#7a3fd1' },
+    { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
     templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4 };
 }
 function normCfg(c) {
@@ -149,7 +154,7 @@ function normCfg(c) {
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888') };
+    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review };
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -178,6 +183,8 @@ const S = {
 };
 const paper = () => PAPERS[S.cfg.paper] || PAPERS.A4;
 const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
+/* a review department holds notes for after the rehearsal: listed in Review, never in the cue list */
+const isReview = code => { const d = deptOf(code); return !!(d && d.review); };
 const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
 
 /* =====================================================================
@@ -338,6 +345,18 @@ function classify(line) {
   if (isActionStart(st)) return { type: 'action' };
   return null;
 }
+/* ---------- comments ----------
+   %%
+   ANNA: A speech set aside.
+   %%
+   Everything between two lines holding %% is kept in the file and left off the page, the cue list and
+   the print. One line can also be closed on itself: %% text %%. A %% that is never closed is not a comment. */
+const FENCE = /^\s*%%\s*$/, NOTE1 = /^\s*%%(?!\s*$).*%%\s*$/;
+const noInk = b => b.type === 'mark' || b.type === 'note';
+function uncomment(v) {
+  return String(v).replace(/\r\n?/g, '\n').split('\n').map(l => NOTE1.test(l) ? l.trim().slice(2, -2).trim() : l).filter(l => !FENCE.test(l)).join('\n').replace(/^\n+|\s+$/g, '');
+}
+function commentOut(v) { v = uncomment(v); return v ? '%%\n' + v + '\n%%' : ''; }
 function parseScript(text) {
   const lines = String(text || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').replace(/ /g, ' ').split('\n');
   const blocks = []; let cur = null, gap = 0, at = 0;
@@ -350,10 +369,18 @@ function parseScript(text) {
       at = z + 1;
     }
   }
-  for (const line0 of lines.slice(at)) {
-    const line = line0.replace(/\s+$/, '');
+  const ls = lines.slice(at);
+  for (let i = 0; i < ls.length; i++) {
+    const line = ls[i].replace(/\s+$/, '');
     if (!line.trim()) { gap++; cur = null; continue; }
-    const c = classify(line);
+    const fence = FENCE.test(line); let z = NOTE1.test(line) ? i : -1;
+    if (fence) { z = i + 1; while (z < ls.length && !FENCE.test(ls[z])) z++; if (z >= ls.length) z = -1; }
+    if (z >= 0) {
+      blocks.push({ type: 'note', raw: ls.slice(i, z + 1).map(l => l.replace(/\s+$/, '')).join('\n'), gap });
+      cur = null; gap = 0; i = z; continue;
+    }
+    const c = fence ? null : classify(line);
+    if (fence) cur = null;   // never closed: shown as an unrecognised line
     if (c) { cur = Object.assign({ raw: line, gap }, c); blocks.push(cur); gap = 0; }
     else if (cur && cur.type !== 'mark' && cur.type !== 'h') cur.raw += '\n' + line;
     else { cur = { type: 'para', raw: line, gap }; blocks.push(cur); gap = 0; }
@@ -374,6 +401,7 @@ function analyze(b) {
   b.plain = stripTokens(raw); b.sv = hash(raw);
   b.tokens = []; b.cues = []; b.name = ''; b.simul = false; b.level = 0; b.title = '';
   if (b.type === 'meta') { b.meta = parseMeta(raw); return b; }
+  if (b.type === 'note') { b.inner = uncomment(raw); b.plain = ''; return b; }
   if (b.type === 'mark') {
     const re = new RegExp(TOKEN_SRC, 'g'); let m;
     while ((m = re.exec(raw))) b.cues.push(mkCue(m, -1));
@@ -455,19 +483,19 @@ function reparse(text) {
   if (oldMid.length === 1 && newMid.length === 1) {
     newMid[0].id = oldMid[0].id;
     const e = S.ink.get(oldMid[0].id);
-    if (e && newMid[0].type === 'mark') { S.ink.delete(oldMid[0].id); S.orphans.push({ text: oldMid[0].plain, snap: e.snap, lines: e.lines, strokes: e.strokes }); }
+    if (e && noInk(newMid[0])) { S.ink.delete(oldMid[0].id); S.orphans.push({ text: oldMid[0].plain, snap: e.snap, lines: e.lines, strokes: e.strokes }); }
   } else {
     const byPlain = new Map();
-    for (const b of newMid) { if (b.type === 'mark') continue; const q = byPlain.get(b.plain); if (q) q.push(b); else byPlain.set(b.plain, [b]); }
+    for (const b of newMid) { if (noInk(b)) continue; const q = byPlain.get(b.plain); if (q) q.push(b); else byPlain.set(b.plain, [b]); }
     const rest = [];
     for (const ob of oldMid) {
-      if (ob.type === 'mark') continue;
+      if (noInk(ob)) continue;
       const q = byPlain.get(ob.plain);
       if (q && q.length) q.shift().id = ob.id; else if (S.ink.has(ob.id)) rest.push(ob);
     }
     for (const ob of rest) {
       let best = null, bs = 0;
-      for (const b of newMid) { if (b.id || b.type === 'mark') continue; const sc = similarity(b.plain, ob.plain); if (sc > bs) { bs = sc; best = b; } }
+      for (const b of newMid) { if (b.id || noInk(b)) continue; const sc = similarity(b.plain, ob.plain); if (sc > bs) { bs = sc; best = b; } }
       if (best && bs >= 0.34) best.id = ob.id;
     }
   }
@@ -479,7 +507,7 @@ function reparse(text) {
     if (e) { S.ink.delete(ob.id); S.orphans.push({ text: ob.plain, snap: e.snap, lines: e.lines, strokes: e.strokes }); }
   }
   if (S.orphans.length) for (const b of newMid) {
-    if (b.type === 'mark' || S.ink.has(b.id)) continue;
+    if (noInk(b) || S.ink.has(b.id)) continue;
     const k = S.orphans.findIndex(o => o.text === b.plain);
     if (k >= 0) { const o = S.orphans.splice(k, 1)[0]; S.ink.set(b.id, { snap: o.snap == null ? o.text : o.snap, lines: o.lines, strokes: o.strokes }); }
   }
@@ -634,7 +662,7 @@ function attachInk(file) {
   const entries = (file.blocks || []).filter(e => e && Array.isArray(e.strokes) && e.strokes.length);
   const bl = S.blocks, used = new Set(), res = new Array(entries.length).fill(-1);
   const index = new Map();
-  bl.forEach((b, i) => { if (b.type === 'mark') return; const q = index.get(b.plain); if (q) q.push(i); else index.set(b.plain, [i]); });
+  bl.forEach((b, i) => { if (noInk(b)) return; const q = index.get(b.plain); if (q) q.push(i); else index.set(b.plain, [i]); });
   let ptr = 0;
   entries.forEach((e, k) => {
     const q = index.get(String(e.text || '')); if (!q) return;
@@ -651,7 +679,7 @@ function attachInk(file) {
     if (lo > hi) { lo = 0; hi = bl.length; }
     let best = -1, bs = 0;
     for (let i = lo; i < hi; i++) {
-      if (used.has(i) || bl[i].type === 'mark') continue;
+      if (used.has(i) || noInk(bl[i])) continue;
       const sc = similarity(bl[i].plain, String(e.text || ''));
       if (sc > bs) { bs = sc; best = i; }
     }
@@ -746,6 +774,12 @@ function buildRow(g, fr) {
   if (b.type === 'mark') {
     const row = h('div', 'row mark'); row.dataset.b = b.id;
     row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule'));
+    return row;
+  }
+  if (b.type === 'note') {   // takes no room: only a marker in the gutter, never printed
+    const row = h('div', 'row note'); row.dataset.b = b.id;
+    const k = h('button', 'cmk pbtn noprint', '%%'); k.type = 'button'; k.dataset.b = b.id; k.title = t('noteTitle');
+    row.appendChild(k);
     return row;
   }
   if (b.type === 'meta') {   // front page and character page; outside those it takes no room

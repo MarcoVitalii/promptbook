@@ -367,6 +367,27 @@ Not built: the call list itself, a character list longer than one page, layout o
 
 Older releases: r1.0 and r0.1 do not know frontmatter. They keep the text but show its lines as unrecognised at the top of page 1.
 
+### 5.13 Comments, to-do notes, cue list columns, automatic numbers — built in r1.4
+
+**Change request (r1.4):** commented-out blocks to stage changes without losing content; quick notes to review after rehearsals; cue list printed only from its panel; separate columns for the margin text and the description; a shorter cue line with the cue word marked; a blank number becomes the last plus one.
+
+| Point | Design | Status |
+|---|---|---|
+| Comment | Lines between two lines holding `%%`, or one line `%% text %%`. A block of its own; ends the block above. Blank lines inside are kept. | `[LOCKED]` |
+| Unclosed `%%` | Not a comment. The line is an unrecognised line; the text after it stays in the script. | `[ASSUMED]` |
+| On the page | No text and no height: a `%%` marker in the left gutter, never printed. Tap: content, Restore, Edit text. | `[ASSUMED]` |
+| Making one | “Comment out” in a block's text editor; “Restore” on a comment. One undo each. | `[ASSUMED]` |
+| Cues and ink | Cues inside are not parsed. Ink on the block becomes orphaned and re-attaches when the same text is back. | `[ASSUMED]` |
+| Scope | Whole lines. A span inside a speech is backlog. | `[ASSUMED]` |
+| To-do notes | No new syntax: a department with `review: true` in `config.json` (“To do” tick box in Settings). Same token as a cue. | `[LOCKED]` |
+| Where they show | Margin tag as any cue. Not in the cue list, CSV or cue prints. Review: “To do”, first section, counted, with a tick that deletes the token. | `[ASSUMED]` |
+| Default | New shows get `TODO`, red (`#d62828`). Existing department lists are left alone. | `[LOCKED]` |
+| Names | The short text of a cue is “Margin”, the long one “Description”; “comment” is the `%%` block. The token is unchanged: `{DEPT label \| margin \| description}`. | `[LOCKED]` |
+| Cue list columns | Dept, No., Margin, Description, Act / scene, Cue line, P. Description only when some listed cue has one. CSV: same positions as r1.3, headers renamed. | `[ASSUMED]` |
+| Cue line | Two words, the cue word, two words; `…` where the speech goes on. The word is boxed in the department colour; `[word]` in the CSV. Standalone cues keep `▸`. | `[ASSUMED]` |
+| Cue list print | Only from the cue list panel. The top-bar Print offers book and script. | `[LOCKED]` |
+| Blank number | On a newly pinned cue only: last label of the department before that point, trailing number plus one; none before gives 1; a last label with no digits gives none. Ends and to-do notes get no number. No renumbering (D7 stands). | `[ASSUMED]` |
+
 ## 6. Page layout `[LOCKED]`
 
 Left page (script):
@@ -418,9 +439,20 @@ Test record for r1.0, 2026-10-06: 145 automated checks pass in Chromium 141 on L
 
 Test record for r1.1, 2026-10-07: 151 automated checks pass in Chromium 153 (Playwright headless shell) on Linux, no script errors: 127 existing and 24 new. The r1.0 suite as committed runs 127 checks here, not the 145 recorded above; the difference was not investigated. Same limits as before: simulated pen, no real folder dialog, no printer. The front page and the character page were not printed, and a list of more than 30 characters was not tried.
 
+### r1.4 — built 2026-10-07
+
+| ID | Requirement | Spec | Built | Checked how |
+|---|---|---|---|---|
+| R1.8 | `%%` comments: parse, marker, comment out and restore, Review section. | §5.13 | Yes | Automated, incl. ink coming back |
+| R1.9 | To-do notes as a review department; Review section with tick. | §5.13 | Yes | Automated |
+| R1.10 | Cue list: Margin and Description columns, short cue line with marked word, print only from the panel. | §5.13 | Yes | Automated; screenshot |
+| R1.11 | Blank number on a new cue becomes last plus one. | §5.13 | Yes | Automated |
+
+Test record for r1.4, 2026-10-07: 205 automated checks pass in Chromium (Playwright headless shell) on Linux: 166 existing, 39 new in `test/notes-todos.test.js`. Two test files, `parse-undo` and `zipshow`, stop with an error before their first check; they do the same on r1.3 as committed and were not investigated. Not printed on paper; the comment marker was not tried with a real pen or finger.
+
 ### Backlog — ordered after the first rehearsal
 
-A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. Highlighter, straight line and typed note tools. "Changed since last print" marks. Anything the first rehearsal shows.
+A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Anything the first rehearsal shows.
 
 ### R2 — later
 
