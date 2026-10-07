@@ -48,7 +48,7 @@ The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses)
 | D7 | Departments are configurable. Cue numbers are free text typed by the SM, optional, never auto-changed. Renumbering is an explicit, optional command. | Q6 | `[LOCKED]` |
 | D8 | Page layout per §6. | Q7 | `[LOCKED]` |
 | D9 | Cue lists are documentation only. No console or playback export. | Q8 | `[LOCKED]` |
-| D10 | Storage is a plain folder. Git is optional and external. | Q9 | `[LOCKED]` |
+| D10 | Storage is a plain folder. Git is optional and external. | Q9 | `[LOCKED]` — amended in r1.2: the same files now live in one `.zip` show file, to make moving a show easy. Older folders still open. Git no longer sees the individual files. |
 | D11 | Calling the show from the tool means a follow-along view for the stage manager alone. No synced screens. Postponed to R2. | Q11, Q16 | `[LOCKED]` |
 | D12 | "Zero dependencies" means: one HTML file, no install, no server, no build step, no third-party libraries. The only third-party content is one embedded font (Inter, SIL Open Font License 1.1). | Q5 | `[ASSUMED]` |
 | D13 | The editing device is a laptop with touchscreen and pen. R0 is built and tested for that device only. | Q14 | `[LOCKED]` |

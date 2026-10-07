@@ -10,11 +10,11 @@
 /* ---------- strings ---------- */
 const STR = {
 en: {
-  appSub: 'Prompt book', openFolder: 'Open show folder…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
+  appSub: 'Prompt book', openFile: 'Open show file…', openFolder: 'Open an older show folder…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
   pasteNew: 'Start from pasted text', contDraft: 'Continue the unsaved draft ({0})', importBk: 'Import a backup file…',
-  startHint: 'Pick the folder that holds, or will hold, this show. The tool keeps script.md, script.ink.json, config.json and a boards folder in it.',
-  noFs: 'This browser cannot save into a folder. Open the file in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
-  menu: 'Menu', mOpen: 'Open folder…', mSaveTo: 'Save into a folder…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
+  startHint: 'A show is one .zip file: script, ink, settings, boards and images together. Copy that file to move the show. Create it with “Start from pasted text” or the sample, then “Save as show file…”.',
+  noFs: 'This browser cannot save show files. Open the tool in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
+  menu: 'Menu', mOpen: 'Open show file…', mOpenFolder: 'Open older show folder…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
   mSettings: 'Settings…', mClose: 'Close show', jump: 'Jump to act or scene', jumpTo: 'Jump to…', find: 'Find…',
   eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
   boards: 'Boards', boardsTip: 'Show the facing page', cues: 'Cues', cuesTip: 'Show or hide cues', ink: 'Ink', inkTip: 'Show or hide ink',
@@ -40,11 +40,10 @@ en: {
   csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
   deptHint: 'Changing a code does not rewrite cues already in the script.',
-  extChanged: 'script.md was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
-  reloaded: 'script.md reloaded, it was changed outside',
-  memBanner: 'This show is only in this browser. Save it into a folder or export a backup.',
-  overwrite: 'This folder already contains a script.md. Replace it with the current show?', replace: 'Replace',
-  errOpen: 'Could not open the folder: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
+  extChanged: 'This show was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
+  reloaded: 'Show reloaded, it was changed outside',
+  memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
+  errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', runsShort: 'runs',
@@ -59,11 +58,11 @@ en: {
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…'
 },
 it: {
-  appSub: 'Copione di scena', openFolder: 'Apri la cartella dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
+  appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
   pasteNew: 'Inizia incollando il testo', contDraft: 'Riprendi la bozza non salvata ({0})', importBk: 'Importa un file di backup…',
-  startHint: 'Scegli la cartella che contiene, o conterrà, questo spettacolo. Lo strumento vi tiene script.md, script.ink.json, config.json e una cartella boards.',
-  noFs: 'Questo browser non può salvare in una cartella. Per farlo apri il file in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
-  menu: 'Menu', mOpen: 'Apri cartella…', mSaveTo: 'Salva in una cartella…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
+  startHint: 'Uno spettacolo è un solo file .zip: copione, appunti a penna, impostazioni, schemi e immagini insieme. Per spostarlo basta copiare quel file. Crealo con «Inizia incollando il testo» o con l’esempio, poi «Salva come file spettacolo…».',
+  noFs: 'Questo browser non può salvare i file dello spettacolo. Per farlo apri lo strumento in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
+  menu: 'Menu', mOpen: 'Apri file spettacolo…', mOpenFolder: 'Apri vecchia cartella…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
   mSettings: 'Impostazioni…', mClose: 'Chiudi spettacolo', jump: 'Vai ad atto o scena', jumpTo: 'Vai a…', find: 'Cerca…',
   eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
   boards: 'Tavole', boardsTip: 'Mostra la pagina a fronte', cues: 'Cue', cuesTip: 'Mostra o nascondi i cue', ink: 'Tratti', inkTip: 'Mostra o nascondi l’inchiostro',
@@ -89,11 +88,10 @@ it: {
   csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
   deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
-  extChanged: 'script.md è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
-  reloaded: 'script.md ricaricato, era stato modificato altrove',
-  memBanner: 'Questo spettacolo è solo in questo browser. Salvalo in una cartella o esporta un backup.',
-  overwrite: 'Questa cartella contiene già uno script.md. Sostituirlo con lo spettacolo corrente?', replace: 'Sostituisci',
-  errOpen: 'Impossibile aprire la cartella: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
+  extChanged: 'Questo spettacolo è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
+  reloaded: 'Spettacolo ricaricato, era stato modificato altrove',
+  memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
+  errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', runsShort: 'dura',
@@ -136,7 +134,7 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.1';
+const VERSION = 'r1.2';
 
 function defaultConfig() {
   const it = LANG === 'it';

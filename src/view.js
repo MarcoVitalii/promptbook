@@ -344,7 +344,7 @@ async function setBoardImage(B, file) {
   B.h = clamp(Math.round(BOARD_W * im.h / im.w), 250, 1700);
   const fname = slug(B.name) + '-' + Date.now().toString(36) + '.' + im.ext;
   B.image = fname;
-  if (S.store.mode === 'folder') {
+  if (onDisk()) {
     try { await writeBlob(B.tpl ? 'templates' : 'boards', fname, im.blob); } catch (e) { saveError(e); }
     S.urls.set(imgKey(B), URL.createObjectURL(im.blob)); B.imageData = null;
   } else B.imageData = await blobToDataURL(im.blob);
@@ -410,7 +410,7 @@ function newTemplate(base) {
 }
 async function copyToTemplates(B) {
   const T = mkBoard(uniqueTplName(B.name), { h: B.h, image: B.image, imageData: B.imageData, base: B.base, strokes: JSON.parse(JSON.stringify(B.strokes)) }, true);
-  if (B.image && S.store.mode === 'folder') {
+  if (B.image && onDisk()) {
     try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); S.urls.set(imgKey(T), URL.createObjectURL(f)); } }
     catch (e) { saveError(e); }
   }

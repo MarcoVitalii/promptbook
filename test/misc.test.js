@@ -121,12 +121,12 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const after = await page.evaluate(() => JSON.stringify([PB.serialize(), PB.inkFile(), PB.S.cfg]));
   ok(before === after, 'backup export then import restores script, ink and settings exactly');
 
-  // save from the browser into a folder (picker replaced by a private folder for the test)
-  await page.evaluate(async () => { const root = await navigator.storage.getDirectory(); const dir = await root.getDirectoryHandle('show2', { create: true }); window.showDirectoryPicker = async () => dir; });
-  await page.locator('#banner .btn', { hasText: 'Save into a folder' }).click();
-  await page.waitForFunction(() => PB.S.store.mode === 'folder' && !PB.S.store.saving && PB.S.store.lastSave);
-  const names = await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show2'); const out = []; for await (const [n] of d.entries()) out.push(n); return out.sort().join(','); });
-  ok(names.includes('config.json') && names.includes('script.md') && names.includes('script.ink.json'), 'show written into the folder: ' + names);
+  // save from the browser into a show file (picker replaced by a private file for the test)
+  await page.evaluate(async () => { const root = await navigator.storage.getDirectory(); const fh = await root.getFileHandle('show2.promptbook.zip', { create: true }); window.showSaveFilePicker = async () => fh; });
+  await page.locator('#banner .btn', { hasText: 'Save as show file' }).click();
+  await page.waitForFunction(() => PB.S.store.mode === 'zip' && !PB.S.store.saving && PB.S.store.lastSave);
+  const names = await page.evaluate(async () => { const f = await (await (await navigator.storage.getDirectory()).getFileHandle('show2.promptbook.zip')).getFile(); return Array.from((await PB.readZip(f)).keys()).sort().join(','); });
+  ok(names.includes('config.json') && names.includes('script.md') && names.includes('script.ink.json'), 'show written into the zip: ' + names);
   ok(await page.locator('#banner').isHidden(), 'banner gone once the show is on disk');
 
   // cue list PDF

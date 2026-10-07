@@ -125,10 +125,11 @@ const OUT = process.env.OUT || '.';
   ok(before === await ev(() => JSON.stringify([PB.bundle(true).templates, PB.bundle(true).boards, PB.S.cfg.templates, PB.S.cfg.defaultTemplate])), 'backup carries templates, bases and the default');
 
   // 13. folder: templates/ files and config list; reload restores the chain
-  await ev(async () => { const root = await navigator.storage.getDirectory(); try { await root.removeEntry('tshow', { recursive: true }); } catch (e) {} const dir = await root.getDirectoryHandle('tshow', { create: true }); window.showDirectoryPicker = async () => dir; });
-  await page.locator('#banner .btn', { hasText: 'Save into a folder' }).click();
-  await page.waitForFunction(() => PB.S.store.mode === 'folder' && !PB.S.store.saving && PB.S.store.lastSave);
-  const files = await ev(async () => { const out = {}; const walk = async (d, p) => { for await (const [nm, h] of d.entries()) { if (h.kind === 'file') out[p + nm] = (await (await h.getFile()).text()).slice(0, 4000); else await walk(h, p + nm + '/'); } }; await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle('tshow'), ''); return out; });
+  await ev(async () => { const root = await navigator.storage.getDirectory(); try { await root.removeEntry('tshow.promptbook.zip'); } catch (e) {} const fh = await root.getFileHandle('tshow.promptbook.zip', { create: true }); window.showSaveFilePicker = async () => fh; });
+  await page.locator('#banner .btn', { hasText: 'Save as show file' }).click();
+  await page.waitForFunction(() => PB.S.store.mode === 'zip' && !PB.S.store.saving && PB.S.store.lastSave);
+  const readShow = () => ev(async () => { const out = {}; const m = await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle('tshow.promptbook.zip')).getFile()); for (const [k, b] of m) out[k] = /\.json$|\.md$/.test(k) ? (await b.text()).slice(0, 4000) : b.size; return out; });
+  const files = await readShow();
   const cfg = JSON.parse(files['config.json']);
   ok(['templates/template-1.json', 'templates/palco-a.json', 'templates/board-1.json', 'boards/board-1.json'].every(f => f in files), 'template drawings saved under templates/: ' + Object.keys(files).sort().join(', '));
   ok(cfg.templates.join() === 'Template 1,Palco A,Board 1' && cfg.defaultTemplate === 'Palco A' && JSON.parse(files['templates/palco-a.json']).base === 'Template 1' && JSON.parse(files['boards/board-1.json']).base === 'Palco A', 'config.json lists them; bases stored');
@@ -154,7 +155,8 @@ const OUT = process.env.OUT || '.';
   await page.waitForTimeout(200);
   await fig('Board 2').locator('button', { hasText: 'To templates' }).click();
   await page.waitForFunction(() => PB.S.templates.has('Board 2') && !PB.S.store.saving && !PB.S.store.dirty.tpls.size && !PB.S.store.dirty.cfg);
-  const imgs = await ev(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('tshow'); const ls = async n => { const out = []; for await (const [nm] of (await d.getDirectoryHandle(n)).entries()) if (/\.(png|jpg)$/.test(nm)) out.push(nm); return out.sort(); }; return [await ls('boards'), await ls('templates'), PB.S.templates.get('Template 1').image, PB.S.boards.get('Board 2').image]; });
+  const zf = Object.keys(await readShow()), ls = n => zf.filter(k => k.startsWith(n + '/') && /\.(png|jpg)$/.test(k)).map(k => k.slice(n.length + 1)).sort();
+  const imgs = [ls('boards'), ls('templates'), await ev(() => PB.S.templates.get('Template 1').image), await ev(() => PB.S.boards.get('Board 2').image)];
   ok(imgs[1].includes(imgs[2]) && imgs[0].includes(imgs[3]) && imgs[1].includes(imgs[3]), 'image files: template image in templates/, board image in boards/ and copied to templates/ with the board');
   await page.waitForTimeout(900);
   await page.reload(); await page.waitForSelector('#start .card');

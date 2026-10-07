@@ -1,5 +1,18 @@
 # Changelog
 
+## r1.2 — 2026-10-07
+
+Show file
+- A show is now one `.zip` file instead of a folder of loose files. Menu → “Save as show file…” creates it; “Open show file…” opens it. Autosave rewrites the zip.
+- Inside: `script.md`, `script.ink.json`, `config.json`, `boards/`, `templates/`, exactly as the folder had them. Any zip tool can open it.
+- A folder zipped by hand (Explorer, Finder) opens as is; the extra top-level folder is ignored.
+- Older show folders still open (“Open older show folder…”). “Save as show file…” converts one, images included; only the show's own files are copied, so the zip never contains the empty file the save dialog creates or other stray files. “Save into a folder…” is gone.
+- If another program replaces the file (sync, copy over): reloaded when nothing is unsaved, otherwise the Keep mine / Load that version banner.
+- Editing `script.md` in another editor while the tool is open no longer works with a show file; unzip, edit, zip, or use “Edit whole script…”.
+- Unused images are dropped from the zip on save.
+- Needs Chrome or Edge. The new checks (`test/zipshow.test.js`) are written but have not been run yet.
+- A show file written by r1.2 cannot be opened by r1.1 or earlier; their folders open in r1.2.
+
 ## r1.1 — 2026-10-07 (built, not yet tagged)
 
 Front page

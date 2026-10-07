@@ -36,7 +36,7 @@ function big() {
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
   await page.goto(url);
   await page.waitForSelector('#start .card');
-  ok((await page.locator('#start').textContent()).includes('Apri la cartella'), 'Italian UI picked from the browser language');
+  ok((await page.locator('#start').textContent()).includes('Apri il file'), 'Italian UI picked from the browser language');
 
   // ---- large script, timing ----
   const text = big();

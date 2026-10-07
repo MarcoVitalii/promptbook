@@ -307,11 +307,11 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 /* ---------- strings ---------- */
 const STR = {
 en: {
-  appSub: 'Prompt book', openFolder: 'Open show folder…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
+  appSub: 'Prompt book', openFile: 'Open show file…', openFolder: 'Open an older show folder…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
   pasteNew: 'Start from pasted text', contDraft: 'Continue the unsaved draft ({0})', importBk: 'Import a backup file…',
-  startHint: 'Pick the folder that holds, or will hold, this show. The tool keeps script.md, script.ink.json, config.json and a boards folder in it.',
-  noFs: 'This browser cannot save into a folder. Open the file in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
-  menu: 'Menu', mOpen: 'Open folder…', mSaveTo: 'Save into a folder…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
+  startHint: 'A show is one .zip file: script, ink, settings, boards and images together. Copy that file to move the show. Create it with “Start from pasted text” or the sample, then “Save as show file…”.',
+  noFs: 'This browser cannot save show files. Open the tool in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
+  menu: 'Menu', mOpen: 'Open show file…', mOpenFolder: 'Open older show folder…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
   mSettings: 'Settings…', mClose: 'Close show', jump: 'Jump to act or scene', jumpTo: 'Jump to…', find: 'Find…',
   eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
   boards: 'Boards', boardsTip: 'Show the facing page', cues: 'Cues', cuesTip: 'Show or hide cues', ink: 'Ink', inkTip: 'Show or hide ink',
@@ -337,11 +337,10 @@ en: {
   csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
   deptHint: 'Changing a code does not rewrite cues already in the script.',
-  extChanged: 'script.md was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
-  reloaded: 'script.md reloaded, it was changed outside',
-  memBanner: 'This show is only in this browser. Save it into a folder or export a backup.',
-  overwrite: 'This folder already contains a script.md. Replace it with the current show?', replace: 'Replace',
-  errOpen: 'Could not open the folder: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
+  extChanged: 'This show was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
+  reloaded: 'Show reloaded, it was changed outside',
+  memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
+  errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', runsShort: 'runs',
@@ -356,11 +355,11 @@ en: {
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…'
 },
 it: {
-  appSub: 'Copione di scena', openFolder: 'Apri la cartella dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
+  appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
   pasteNew: 'Inizia incollando il testo', contDraft: 'Riprendi la bozza non salvata ({0})', importBk: 'Importa un file di backup…',
-  startHint: 'Scegli la cartella che contiene, o conterrà, questo spettacolo. Lo strumento vi tiene script.md, script.ink.json, config.json e una cartella boards.',
-  noFs: 'Questo browser non può salvare in una cartella. Per farlo apri il file in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
-  menu: 'Menu', mOpen: 'Apri cartella…', mSaveTo: 'Salva in una cartella…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
+  startHint: 'Uno spettacolo è un solo file .zip: copione, appunti a penna, impostazioni, schemi e immagini insieme. Per spostarlo basta copiare quel file. Crealo con «Inizia incollando il testo» o con l’esempio, poi «Salva come file spettacolo…».',
+  noFs: 'Questo browser non può salvare i file dello spettacolo. Per farlo apri lo strumento in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
+  menu: 'Menu', mOpen: 'Apri file spettacolo…', mOpenFolder: 'Apri vecchia cartella…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
   mSettings: 'Impostazioni…', mClose: 'Chiudi spettacolo', jump: 'Vai ad atto o scena', jumpTo: 'Vai a…', find: 'Cerca…',
   eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
   boards: 'Tavole', boardsTip: 'Mostra la pagina a fronte', cues: 'Cue', cuesTip: 'Mostra o nascondi i cue', ink: 'Tratti', inkTip: 'Mostra o nascondi l’inchiostro',
@@ -386,11 +385,10 @@ it: {
   csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
   deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
-  extChanged: 'script.md è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
-  reloaded: 'script.md ricaricato, era stato modificato altrove',
-  memBanner: 'Questo spettacolo è solo in questo browser. Salvalo in una cartella o esporta un backup.',
-  overwrite: 'Questa cartella contiene già uno script.md. Sostituirlo con lo spettacolo corrente?', replace: 'Sostituisci',
-  errOpen: 'Impossibile aprire la cartella: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
+  extChanged: 'Questo spettacolo è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
+  reloaded: 'Spettacolo ricaricato, era stato modificato altrove',
+  memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
+  errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', runsShort: 'dura',
@@ -433,7 +431,7 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.1';
+const VERSION = 'r1.2';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -1528,7 +1526,7 @@ async function setBoardImage(B, file) {
   B.h = clamp(Math.round(BOARD_W * im.h / im.w), 250, 1700);
   const fname = slug(B.name) + '-' + Date.now().toString(36) + '.' + im.ext;
   B.image = fname;
-  if (S.store.mode === 'folder') {
+  if (onDisk()) {
     try { await writeBlob(B.tpl ? 'templates' : 'boards', fname, im.blob); } catch (e) { saveError(e); }
     S.urls.set(imgKey(B), URL.createObjectURL(im.blob)); B.imageData = null;
   } else B.imageData = await blobToDataURL(im.blob);
@@ -1594,7 +1592,7 @@ function newTemplate(base) {
 }
 async function copyToTemplates(B) {
   const T = mkBoard(uniqueTplName(B.name), { h: B.h, image: B.image, imageData: B.imageData, base: B.base, strokes: JSON.parse(JSON.stringify(B.strokes)) }, true);
-  if (B.image && S.store.mode === 'folder') {
+  if (B.image && onDisk()) {
     try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); S.urls.set(imgKey(T), URL.createObjectURL(f)); } }
     catch (e) { saveError(e); }
   }
@@ -2378,15 +2376,20 @@ let toastT = 0;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600); }
 
 /* =====================================================================
-   STORE: show folder (Chrome, Edge) or in-browser fallback
+   STORE: show file (.zip) or older show folder (Chrome, Edge), or in-browser fallback
+   A show file holds the same files a show folder does: script.md, script.ink.json,
+   config.json, boards/, templates/. In zip mode they live in s.files (path -> Blob)
+   and the whole archive is rewritten on each save.
    ===================================================================== */
+const onDisk = () => S.store.mode === 'folder' || S.store.mode === 'zip';
 function resetStore() {
   const s = S.store;
-  s.mode = 'none'; s.dir = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
+  s.mode = 'none'; s.dir = null; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
 }
 async function dirFor(sub) { return sub ? S.store.dir.getDirectoryHandle(sub, { create: true }) : S.store.dir; }
 async function readFile(name, sub) {
+  if (S.store.mode === 'zip') return S.store.files.get(sub ? sub + '/' + name : name) || null;
   try { const d = await dirFor(sub); return await (await d.getFileHandle(name)).getFile(); }
   catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
 }
@@ -2400,17 +2403,19 @@ async function readJSON(name, sub) {
   try { return JSON.parse(tx); } catch (e) { console.warn('Unreadable JSON: ' + name); return null; }
 }
 async function writeBlob(sub, name, blob) {
+  if (S.store.mode === 'zip') { S.store.files.set(sub ? sub + '/' + name : name, blob instanceof Blob ? blob : new Blob([blob])); return null; }
   const d = await dirFor(sub), fh = await d.getFileHandle(name, { create: true });
   const w = await fh.createWritable(); await w.write(blob); await w.close();
   return fh;
 }
 async function writeText(name, text) {
   const fh = await writeBlob(null, name, text);
+  if (!fh) return;
   S.store.stamp[name] = (await fh.getFile()).lastModified;
 }
 function cfgFile() {
   const c = JSON.parse(JSON.stringify(S.cfg));
-  if (S.store.mode === 'folder' && c.defaultBoard) delete c.defaultBoard.imageData;
+  if (onDisk() && c.defaultBoard) delete c.defaultBoard.imageData;
   return c;
 }
 function boardFile(B, withData) {
@@ -2423,6 +2428,94 @@ function boardNames(text) {
   const out = new Set(), re = /\{BOARD[ \t]+([^{}|]+?)[ \t]*(?:\|[^{}]*)?\}/gi; let m;
   while ((m = re.exec(text))) out.add(m[1].trim());
   return out;
+}
+/* ---------- zip: just enough of the format to read and write a show file ---------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = -1; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
+async function pipeBytes(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+const zipCache = new WeakMap();   // Blob -> its compressed entry, so unchanged files are not recompressed on every save
+async function zipEntry(blob, name) {
+  let e = zipCache.get(blob);
+  if (!e) {
+    const raw = new Uint8Array(await blob.arrayBuffer());
+    let data = raw, method = 0;
+    if (/\.(json|md|txt)$/i.test(name) && raw.length > 64) { const z = await pipeBytes(raw, new CompressionStream('deflate-raw')); if (z.length < raw.length) { data = z; method = 8; } }
+    e = { crc: crc32(raw), size: raw.length, method, data };
+    zipCache.set(blob, e);
+  }
+  return e;
+}
+async function buildZip(files) {
+  const enc = new TextEncoder(), d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const parts = [], central = []; let off = 0;
+  for (const [name, blob] of files) {
+    const e = await zipEntry(blob, name), nb = enc.encode(name);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, e.method, true);
+    lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, e.crc, true);
+    lh.setUint32(18, e.data.length, true); lh.setUint32(22, e.size, true); lh.setUint16(26, nb.length, true);
+    parts.push(lh.buffer, nb, e.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, e.method, true);
+    ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, e.crc, true);
+    ch.setUint32(20, e.data.length, true); ch.setUint32(24, e.size, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+    central.push(ch.buffer, nb);
+    off += 30 + nb.length + e.data.length;
+  }
+  const csize = central.reduce((a, b) => a + b.byteLength, 0), n = files.size;
+  if (n > 65534 || off + csize > 0xFFFFFFF0) throw new Error('show too large for a zip file');
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, n, true); eo.setUint16(10, n, true); eo.setUint32(12, csize, true); eo.setUint32(16, off, true);
+  return new Blob([...parts, ...central, eo.buffer], { type: 'application/zip' });
+}
+async function readZip(file) {
+  const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer());
+  let e = tail.byteLength - 22;
+  while (e >= 0 && tail.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('not a zip file');
+  const n = tail.getUint16(e + 10, true), cdSize = tail.getUint32(e + 12, true), cdOff = tail.getUint32(e + 16, true);
+  if (cdOff === 0xFFFFFFFF || n === 0xFFFF) throw new Error('zip64 is not supported');
+  const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
+  let p = 0;
+  for (let i = 0; i < n; i++) {
+    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('damaged zip file');
+    const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
+    const nl = cd.getUint16(p + 28, true), xl = cd.getUint16(p + 30, true), cl = cd.getUint16(p + 32, true), lo = cd.getUint32(p + 42, true);
+    const name = dec.decode(new Uint8Array(cd.buffer, p + 46, nl)); p += 46 + nl + xl + cl;
+    if (name.endsWith('/') || (flags & 1)) continue;
+    const lh = new DataView(await file.slice(lo, lo + 30).arrayBuffer());
+    const start = lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), body = file.slice(start, start + csz);
+    if (method === 0) out.set(name, body);
+    else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error('damaged zip file'); out.set(name, new Blob([z])); }
+    else throw new Error('unsupported zip compression');
+  }
+  // a folder zipped by the operating system has everything inside one top-level folder; drop it, and drop its clutter
+  for (const k of Array.from(out.keys())) if (/^__MACOSX\//.test(k) || /(^|\/)\.DS_Store$/.test(k)) out.delete(k);
+  if (!out.has('script.md') && !out.has('config.json')) {
+    const tops = new Set(Array.from(out.keys()).map(k => k.split('/')[0]));
+    if (tops.size === 1) { const pre = Array.from(tops)[0] + '/'; for (const [k, v] of Array.from(out)) { out.delete(k); out.set(k.slice(pre.length), v); } }
+  }
+  return out;
+}
+function pruneImages(files) {
+  const refs = Array.from(files).filter(([k]) => /\.json$/.test(k)).map(([, b]) => b);
+  return Promise.all(refs.map(b => b.text())).then(texts => {
+    const all = texts.join('\n');
+    for (const k of Array.from(files.keys())) if (/^(boards|templates)\/[^/]+$/.test(k) && !/\.json$/.test(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
+  });
+}
+async function flushZip() {
+  const s = S.store;
+  await pruneImages(s.files);
+  const blob = await buildZip(s.files);
+  const w = await s.handle.createWritable(); await w.write(blob); await w.close();
+  s.stamp.zip = (await s.handle.getFile()).lastModified;
+}
+async function zipChanged() {
+  const s = S.store;
+  if (s.stamp.zip === undefined) return false;   // not written yet
+  try { return (await s.handle.getFile()).lastModified !== s.stamp.zip; } catch (e) { return false; }
 }
 async function changedOutside() {
   const s = S.store;
@@ -2444,10 +2537,15 @@ async function saveNow(force) {
   if (s.mode === 'none') return;
   s.saving = true; setStatus();
   try {
-    if (s.mode === 'folder') {
+    if (onDisk()) {
+      const any = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
+      if (s.mode === 'zip' && any && force !== true) {
+        if (!s.conflict && await zipChanged()) { s.conflict = true; showConflict(); }
+        if (s.conflict) { s.saving = false; setStatus(); return; }
+      }
       if (d.script) {
-        if (force !== true && !s.conflict && await changedOutside()) { s.conflict = true; showConflict(); }
-        if (!s.conflict || force === true) {
+        if (s.mode === 'folder' && force !== true && !s.conflict && await changedOutside()) { s.conflict = true; showConflict(); }
+        if (s.mode === 'zip' || !s.conflict || force === true) {
           d.script = false;
           try { await writeText('script.md', serialize()); } catch (e) { d.script = true; throw e; }
           s.conflict = false; showMemBanner();
@@ -2469,6 +2567,7 @@ async function saveNow(force) {
           try { await writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); } catch (e) { d.tpls.add(n); throw e; }
         }
       }
+      if (s.mode === 'zip' && any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); }
       s.lastSave = new Date(); s.err = null;
     } else {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
@@ -2493,7 +2592,7 @@ function setStatus() {
   const pending = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
   el.classList.toggle('err', !!s.err); el.title = s.err ? String(s.err.message || s.err) : '';
   if (s.err) el.textContent = t('stErr');
-  else if (s.mode === 'folder') el.textContent = s.saving ? t('stSaving') : pending ? t('stPending') : s.lastSave ? t('stSaved', s.lastSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : s.name;
+  else if (onDisk()) el.textContent = s.saving ? t('stSaving') : pending ? t('stPending') : s.lastSave ? t('stSaved', s.lastSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : s.name;
   else el.textContent = s.mode === 'memory' ? t('stMem') : '';
 }
 function showBanner(text, actions) {
@@ -2507,13 +2606,14 @@ function showMemBanner() {
   if (s.conflict) return;
   if (s.mode === 'memory') {
     const acts = [[t('mExport'), exportBundle]];
-    if (window.showDirectoryPicker) acts.unshift([t('mSaveTo'), saveToFolder]);
+    if (window.showSaveFilePicker) acts.unshift([t('mSaveTo'), saveToZip]);
     showBanner(t('memBanner'), acts);
   } else if (!$('#banner').hidden) { $('#banner').hidden = true; if (S.loaded) { sizeWrap(); renderVisible(); } }
 }
 function showConflict() {
   showBanner(t('extChanged'), [
     [t('loadTheirs'), async () => {
+      if (S.store.mode === 'zip') { S.store.conflict = false; S.store.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; await reloadZip(); return; }
       const tx = await readText('script.md'); S.store.conflict = false; S.store.dirty.script = false; showMemBanner();
       if (tx != null) { commitText(tx); if (serialize() === parseScriptText(tx)) S.store.dirty.script = false; setStatus(); }
     }],
@@ -2522,7 +2622,16 @@ function showConflict() {
 }
 async function checkExternal() {
   const s = S.store;
-  if (document.hidden || s.mode !== 'folder' || !S.loaded || s.saving || s.conflict || S.editing) return;
+  if (document.hidden || !onDisk() || !S.loaded || s.saving || s.conflict || S.editing) return;
+  if (s.mode === 'zip') {
+    try {
+      if (!(await zipChanged())) return;
+      const d = s.dirty;
+      if (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size) { s.conflict = true; showConflict(); return; }
+      await reloadZip(); toast(t('reloaded'));
+    } catch (e) { console.warn(e); }
+    return;
+  }
   try {
     if (!(await changedOutside())) return;
     if (s.dirty.script) { s.conflict = true; showConflict(); return; }
@@ -2543,7 +2652,7 @@ document.addEventListener('visibilitychange', checkExternal);
 window.addEventListener('focus', checkExternal);
 window.addEventListener('beforeunload', e => {
   const s = S.store, d = s.dirty;
-  if (s.mode === 'folder' && (s.err || d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) { e.preventDefault(); e.returnValue = ''; }
+  if (onDisk() && (s.err || d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) { e.preventDefault(); e.returnValue = ''; }
 });
 
 function idb() {
@@ -2591,6 +2700,25 @@ async function openFolder(handle) {
   } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
   clearTimeout(saveT); resetStore();
   const s = S.store; s.mode = 'folder'; s.dir = handle; s.name = handle.name;
+  return loadStore(handle);
+}
+async function openZipFile(handle) {
+  try {
+    if (!handle) [handle] = await window.showOpenFilePicker({ id: 'promptbook', types: ZIP_TYPES });
+    if (!(await grant(handle))) throw new Error('permission denied');
+  } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
+  let files, file;
+  try { file = await handle.getFile(); files = await readZip(file); } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); return false; }
+  clearTimeout(saveT); resetStore();
+  const s = S.store; s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp.zip = file.lastModified;
+  return loadStore(handle);
+}
+async function reloadZip() { return openZipFile(S.store.handle); }
+async function openAny(handle) { return handle && handle.kind === 'file' ? openZipFile(handle) : openFolder(handle); }
+const ZIP_TYPES = [{ description: 'Promptbook', accept: { 'application/zip': ['.zip'] } }];
+const showName = handle => handle.name.replace(/(\.promptbook)?\.zip$/i, '');
+async function loadStore(handle) {
+  const s = S.store;
   try {
     const cfg = await readJSON('config.json'), text = await readText('script.md'), ink = await readJSON('script.ink.json');
     S.boards = new Map(); S.templates = new Map(); S.urls = new Map();
@@ -2623,15 +2751,26 @@ function startMemory(text, cfg, inkF, boards, templates) {
 }
 function loadBundle(b) { startMemory(b.script || '', b.config, b.ink, b.boards, b.templates); }
 async function dataURLBlob(u) { return (await fetch(u)).blob(); }
-async function saveToFolder() {
+async function folderFiles(dir, out) {
+  // only what a show uses: the picked save file, or anything else lying in the folder, must not end up inside the zip
+  for await (const [nm, h] of dir.entries()) {
+    if (h.kind === 'file' && /^(script\.md|script\.ink\.json|config\.json)$/.test(nm)) out.set(nm, await h.getFile());
+    else if (h.kind === 'directory' && (nm === 'boards' || nm === 'templates'))
+      for await (const [fn, fh] of h.entries()) if (fh.kind === 'file' && !/\.zip$/i.test(fn)) out.set(nm + '/' + fn, await fh.getFile());
+  }
+  return out;
+}
+async function saveToZip() {
   let handle;
-  try { handle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'promptbook' }); if (!(await grant(handle))) return; }
+  try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
   catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
-  const s = S.store, prev = s.dir; s.dir = handle;
-  let exists = null;
-  try { exists = await readFile('script.md'); } catch (e) { /* treated as absent */ }
-  if (exists && !(await confirmDlg(t('overwrite'), t('replace')))) { s.dir = prev; return; }
-  s.mode = 'folder'; s.name = handle.name; s.stamp = {}; s.err = null;
+  const s = S.store;
+  let files = new Map();
+  try {
+    if (s.mode === 'folder') files = await folderFiles(s.dir, new Map());   // keeps the images already in the folder
+    else if (s.mode === 'zip') files = new Map(s.files);
+  } catch (e) { saveError(e); return; }
+  s.mode = 'zip'; s.dir = null; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
       const blob = await dataURLBlob(B.imageData); await writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
@@ -2648,7 +2787,7 @@ async function saveToFolder() {
 }
 async function exportBundle() {
   const b = bundle(true);
-  if (S.store.mode === 'folder') {
+  if (onDisk()) {
     for (const o of b.boards) if (o.image && !o.imageData) { try { const f = await readFile(o.image, 'boards'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
     for (const o of b.templates) if (o.image && !o.imageData) { try { const f = await readFile(o.image, 'templates'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
     const db = b.config.defaultBoard;
@@ -2681,13 +2820,6 @@ function openDlg(title, build, narrow) {
   return close;
 }
 function dlgBtn(foot, label, cls, fn) { const b = h('button', 'btn' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.onclick = fn; foot.appendChild(b); return b; }
-function confirmDlg(msg, okLabel) {
-  return new Promise(res => openDlg('Promptbook', (body, foot, close) => {
-    body.appendChild(h('p', null, msg));
-    dlgBtn(foot, t('cancel'), '', () => { close(); res(false); });
-    dlgBtn(foot, okLabel, 'pri', () => { close(); res(true); });
-  }, true));
-}
 function openTextDialog(first) {
   openDlg(first ? t('pasteTitle') : t('textTitle'), (body, foot, close) => {
     body.appendChild(h('pre', 'fmt', t('fmtHelp')));
@@ -2770,14 +2902,15 @@ function setZoom(f) {
 function buildMenu() {
   const m = $('#menu'); m.textContent = '';
   const add = (label, fn, off) => { const b = h('button', null, label); b.type = 'button'; b.disabled = !!off; b.onclick = () => { m.hidden = true; fn(); }; m.appendChild(b); };
-  const fs = !!window.showDirectoryPicker;
+  const fs = !!window.showOpenFilePicker, fd = !!window.showDirectoryPicker;
   add(t('mText'), () => openTextDialog(false), !S.loaded);
   add(t('mSettings'), openSettings, !S.loaded);
   add(t('mTemplates'), () => { if (S.mode === 'templates') exitTemplates(); else enterTemplates(); }, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
-  if (S.store.mode === 'memory') add(t('mSaveTo'), saveToFolder, !fs);
-  add(t('mOpen'), () => openFolder(), !fs);
+  add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
+  add(t('mOpen'), () => openZipFile(), !fs);
+  add(t('mOpenFolder'), () => openFolder(), !fd);
   add(t('mClose'), async () => { await saveNow(); S.loaded = false; showStart(); }, !S.loaded);
 }
 function bindUI() {
@@ -2865,12 +2998,13 @@ async function showStart() {
   const el = $('#start'); el.textContent = ''; el.hidden = false;
   const card = h('div', 'card');
   card.append(h('h1', null, 'Promptbook'), h('div', 'sub', t('appSub') + ' · ' + VERSION));
-  const fs = !!window.showDirectoryPicker;
+  const fs = !!window.showOpenFilePicker, fd = !!window.showDirectoryPicker;
   const add = (label, fn, pri) => { const b = h('button', 'btn' + (pri ? ' pri' : ''), label); b.type = 'button'; b.onclick = fn; card.appendChild(b); return b; };
   el.appendChild(card);
   const last = fs ? await idbGet('dir') : null;
-  if (last && last.name) add(t('reopen', last.name), () => openFolder(last), true);
-  add(t('openFolder'), () => openFolder(), !(last && last.name)).disabled = !fs;
+  if (last && last.name) add(t('reopen', showName(last)), () => openAny(last), true);
+  add(t('openFile'), () => openZipFile(), !(last && last.name)).disabled = !fs;
+  add(t('openFolder'), () => openFolder()).disabled = !fd;
   const dr = loadDraft();
   if (dr) add(t('contDraft', new Date(dr.when).toLocaleString()), () => loadBundle(dr));
   add(t('trySample'), () => startMemory(SAMPLE, { title: 'Il molo' }));
@@ -2893,7 +3027,7 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
 init();
 
 </script>

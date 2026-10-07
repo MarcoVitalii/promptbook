@@ -2,7 +2,7 @@
 
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
-- **Use it:** open `promptbook.html` in Chrome or Edge. Pick a show folder (not the top level of Desktop, Documents or Downloads).
+- **Use it:** open `promptbook.html` in Chrome or Edge. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. Older show folders still open (Menu → “Open older show folder…”) and can be converted with “Save as show file…”.
 - **What it is meant to do:** `SPEC.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`.
 
 ## Layout of this repository
