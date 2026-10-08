@@ -1,5 +1,33 @@
 # Changelog
 
+## r1.6 — 2026-10-08
+
+Four changes asked for after the first rehearsals. They were checked in a simulated browser only: this release has not yet run on the rehearsal laptop, and nothing was printed on paper. Try moving a cue with your finger and with the pen before relying on it in a rehearsal.
+
+Boards
+- A facing page with three or more boards now sets them in two columns, row by row: 1 2, then 3 4, and so on. One or two boards stay in one column, at the size they had.
+- A page takes up to 8 boards. “+ Board”, “Board here” and pasting an image say so when the page is full. A page that already holds more, because they were typed in the script text, still shows them all.
+- The name of a board is now under its drawing and is always shown, in the Templates view too. A name longer than the drawing is cut with “…”; rest the pointer on it to read it in full. Tap the name to rename the board.
+- On small boards the buttons are behind one “⋯” button; tap it for the same list. That is every board on a page with three or more. On a page with one or two boards the buttons show as before, unless tall images make the boards small. Templates keep all their buttons.
+- Boards and templates have a light grey grid, over the image and under the ink, with every fourth line a little stronger for counting. Settings → “Board grid”: Off, Fine or Coarse. It is one setting for the whole show. The grid is only a guide: the ink does not snap to it and the eraser and “Clear ink” leave it alone. It prints when it is on.
+
+Cues
+- A cue can be moved: press its tag in the margin, drag it to a word and release. With the mouse or the pen, just drag. With a finger, hold the tag for a moment (a third of a second) until it lifts, then drag; a quick swipe that starts on a tag still scrolls the page.
+- While you drag, a copy of the tag follows the pointer and the word that will receive the cue is highlighted in the colour of the cue. Between words, the nearest word is taken. Near the top or bottom of the window the script scrolls, so a cue can go to another page.
+- The whole cue moves: number, margin text, description and what it ends. Ends and to-do notes can be dragged like any cue.
+- A cue always lands after a word, behind the cues already on that word. A cue that sat on a line of its own becomes a cue on the word and its line is removed; a cue cannot be dragged onto a line of its own.
+- If a move puts an end above its start, or a start below its end, the move is kept and a message says that the two no longer match.
+- Release away from the text, on the facing page or back on the tag itself, or press Esc, to leave the cue where it was. A tap on a tag still opens the cue editor. A move is one undo.
+- The pen leaves no ink while it drags a tag. A hand resting on a tag while the pen is near does not lift it.
+- Board tags cannot be dragged yet.
+
+Text
+- Removing a cue or a board whose token sits on a line of its own, with a blank line above and below, now leaves one blank line, not two.
+
+Compatibility
+- A show written by r1.5 opens unchanged. Its boards gain the fine grid and, where a page has three or more boards, the new arrangement, on screen and in print. Turn the grid off in Settings if you do not want it on paper.
+- r1.5 opens a show written by r1.6; it ignores the grid setting.
+
 ## r1.5 — 2026-10-08
 
 Show file

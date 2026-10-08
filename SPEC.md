@@ -1,6 +1,6 @@
 # Digital Prompt Book — Specification
 
-**Status:** v0.9 — 2026-10-07 — r1.1 built, not yet committed or tagged: frontmatter, front page, character page with aliases (§5.12) on top of r1.0. Checked in a simulated browser only; neither r1.0 nor r1.1 has run on the rehearsal laptop.
+**Status:** v1.0 — 2026-10-08 — r1.6 built, committed on branch r1.6, not yet tagged: four changes asked for after the first rehearsals (§5.14). Checked in a simulated browser only; nothing of r1.6 has run on the rehearsal laptop.
 **Rehearsal deadline:** 2026-10-08
 **Companion file:** `PLAN.md`
 
@@ -19,6 +19,8 @@ Change in v0.7: Q26 answered. Templates live in the configuration, not in the sc
 Change in v0.8: Q24 answered ("build it now"). R1 is built and released as r1.0. §5.10 and §5.11 each end with an "As built" list; §7 carries the test record. Releases are versioned in git (PLAN §8).
 
 Change in v0.9: the script can start with a frontmatter block: title and other details for a front page, and a character list that speeches are checked against (§5.12, D19). Built as r1.1.
+
+Change in v1.0: four requests from the first rehearsals, built as r1.6 (§5.14): boards on a facing page in two columns, board names under the drawing, a grid on boards, moving a cue by dragging its tag. §5.3, §5.5, §5.7 and §5.8 are extended; §6 is unchanged.
 
 ---
 
@@ -143,6 +145,15 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 - Duplicate, missing and out-of-order labels are allowed and shown as hints, not errors (D7).
 - Shown as a coloured tag in the right margin with a line to the word. A "clean" view hides them for the writer.
 - The cue word itself is boxed in the department colour with a light tint (build R0.1; it was an underline in R0). Cues from several departments on one word give nested boxes, up to three. The line to the margin leaves from the bottom corner of the box. The box is painted without taking space, so adding a cue still moves no text and flags no ink.
+- Since r1.6 a cue is moved by dragging its margin tag to a word (request and decisions in §5.14):
+  - Mouse and pen: the drag starts once the pointer has moved 8 px with the button or the tip down. Finger: the tag must be held for 0.3 s without moving more than 8 px; it then lifts (a shadow) and can be dragged. A finger that moves earlier scrolls the page as before.
+  - While dragging, a copy of the tag follows the pointer (14 px to the right and 36 px above it, scaled with the zoom), the tag itself is dimmed, and the target word is highlighted in the cue's colour. The target is the word under the pointer; otherwise the nearest word of the nearest line of text on that script page, if it is within 70 px at zoom 1. There is no target on the facing page, outside the pages, far from any text, or while the pointer is still over the tag being dragged.
+  - Within 48 px of the top or bottom of the work area the script scrolls, up to 14 px per frame and faster nearer the edge, so a cue can be carried to another page.
+  - Release on a target: the token is cut from its place and written after that word, behind the cues already there. Every field moves unchanged: number, margin text, description, links. One undo step. Release on the word the cue already follows as its last cue: nothing changes and no undo step is added.
+  - Release without a target, Escape, or a cancelled pointer: nothing changes. A press and release within 8 px still opens the cue editor.
+  - Every tag except a board tag can be dragged: cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was, and gets one after it where it lands, so words are never joined. A cue cannot be dropped onto a line of its own.
+  - A move that breaks a pair (an end above its start, a start below its end) is kept, and a message says the two no longer match (§5.11).
+  - Not while a block's text is being edited. While a drag runs, other pointers are ignored.
 
 ### 5.4 Ink
 
@@ -161,6 +172,11 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 - Ways to add one: "+ Board" on the facing page, "Board here" in the tap popover, or paste an image from the clipboard.
 - Images over 1.5 MB are reduced to 2000 px on the long side and stored as JPEG.
 - Removing a board removes its token from the script. Its file stays in `boards/`.
+- Arrangement on the facing page, since r1.6 (§5.14): one or two boards are stacked in one column, at the size they had before; three or more are set in two columns, filled row by row (1 2 / 3 4 / 5 –), in the order of their tokens. All boards of a page get one width; a row is as tall as its taller board; nothing leaves the page body and "+ Board" stays below the boards. Print uses the same arrangement.
+- At most 8 boards per page through the interface: "+ Board", "Board here" and image paste refuse a ninth with a message. A page whose text holds more `{BOARD}` tokens still shows them all, in two columns with more rows. A board added after the last block of a page can land on the next page; that edge is accepted.
+- A board figure is, top to bottom: a button row (26 px), the drawing, the name (20 px). The name is centred, always shown and printed, cut with an ellipsis when wider than the drawing; its tooltip gives the full name. A tap on the name opens the rename popover. The pen does not draw on the name. The Templates view uses the same figure.
+- A facing-page figure narrower than 420 px shows one "⋯" button instead of its buttons; it opens a popover headed by the board's name with the same actions. In two columns every figure is that narrow (about 360 px on A4). With one or two blank boards the figures are wider and the buttons show directly; two boards with tall images can fall under 420 px and then get the "⋯" too. Template sheets always show all their buttons. In print the button row is hidden but keeps its height, so paper and screen have the same layout.
+- Grid, since r1.6: every board and template shows a light grey grid, drawn over the board's image and the greyed template chain and under the ink; one grid per figure, not one per layer. The step is a show setting (Settings → "Board grid"): Off, Fine (25 board units, 1/40 of the width; the default) or Coarse (50 units). Every fourth line is a little stronger. Lines are hairlines at any size and zoom. The grid is display only: not stored in any board file, ignored by the pen, the eraser and "Clear ink", and the ink does not snap to it. It lines up through a template chain because all boards share coordinates. It prints when it is on, on boards (templates are never printed), and has its own strength for day, night and print, always lighter than a faded template.
 
 ### 5.6 Cue list
 
@@ -176,6 +192,8 @@ The laptop reports pen, finger and mouse as different pointers. The tool uses th
 | Pen eraser end or barrel button | Erases strokes it touches | Same |
 | Finger tap on a word | Opens the cue pin | — |
 | Finger drag | Scrolls | Scrolls |
+| Finger held 0.3 s on a cue tag, then dragged (r1.6) | Moves the cue to the word it is released on (§5.3) | — |
+| Pen or mouse dragged from a cue tag (r1.6) | Same, at once; the pen draws no ink | — |
 | Finger tap between blocks | Standalone cue or board | — |
 | Mouse | As finger. A toolbar toggle lets the mouse draw, for machines without a pen. | Same |
 
@@ -183,6 +201,9 @@ The laptop reports pen, finger and mouse as different pointers. The tool uses th
 - While the pen hovers near the screen, a touch can still tap quickly to pin a cue, but it cannot scroll, long-press, or be a large contact. This is the palm rule; it is untested on real hardware.
 - Because the page must not scroll under the pen, finger scrolling is done by the tool itself, not by the browser. Pinch-zoom is replaced by the zoom buttons.
 - The pen can tap margin tags, the ink flag and board buttons.
+- Finger hold on a tag (r1.6): a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts, also when the swipe starts on a tag. A quick finger tap on a tag opens the cue editor as before. Board tags do not lift.
+- The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. All of this is simulated only; it is untested on real hardware.
+- Escape cancels a drag. A system `pointercancel` ends it with no change.
 - The cue pin shows one button per department. One tap creates the cue; label and description fields are there but optional.
 - Double-tap, double-click or long-press on a block opens its text for editing. "Edit text" in the tap popover does the same.
 - Keyboard: undo/redo, and a letter per department to pin at the last tapped word.
@@ -216,6 +237,8 @@ As built, a block entry may also carry `inked` (the text as it was when the ink 
 `boards/<name>.json` has the same stroke shape plus `name`, `image` (file name), `w` (always 1000) and `h`. Board coordinates are in those units, so ink scales with the board.
 
 `config.json` also holds `title` and `defaultBoard` (`image`, `h`). Since r1.0: each department has `runs` (true/false); `templates` (names, in order), `defaultTemplate`, `recentTemplates` and `templateFade` (0.15–0.8). Board files may carry `base`; `templates/<name>.json` has the board shape plus `base`.
+
+Since r1.6: `config.json` holds `boardGrid`, the grid step in board units: `0` (off), `25` (fine) or `50` (coarse). A missing value, or any value that is not one of the three, is read as 25. Nothing else in the saved data changed in r1.6: moving a cue only rewrites `script.md`. An older release ignores `boardGrid`.
 
 ### 5.9 As built: differences from the v0.3 design
 
@@ -388,6 +411,37 @@ Older releases: r1.0 and r0.1 do not know frontmatter. They keep the text but sh
 | Cue list print | Only from the cue list panel. The top-bar Print offers book and script. | `[LOCKED]` |
 | Blank number | On a newly pinned cue only: last label of the department before that point, trailing number plus one; none before gives 1; a last label with no digits gives none. Ends and to-do notes get no number. No renumbering (D7 stands). | `[ASSUMED]` |
 
+### 5.14 Changes after the first rehearsals — built in r1.6
+
+**Requests as received (2026-10-08).** In them "block" means a blocking board, the reading of §5.10, and "cue" a cue token shown as a tag in the margin.
+
+1. "Adding blocks on a single page makes just a column with plenty of white space. Might be better to use fully the page by providing flexibility in their arrangements, for example limit to 8 per page in 2 columns. Would fill first a column, then moving on Z pattern with 2 columns. So 2 are 1 column, 3 are 1 - 2 / 3 - blank, 4 are 1 - 2 / 3 - 4, 5 are 1 - 2 / 3 - 4 / 5 - blank etc."
+2. "Add names to the blocks that don't disappear into the options when we have many on the page, like leaving menu on top and name at the bottom."
+3. "Having a light gray fine grid helps a lot when doing blockings."
+4. "Moving existing cues requires copy pasting the underlying annotation, would be much better to support press with mouse or finger and move it around until release."
+
+The client has seen the five decisions marked `[ASSUMED]` below and did not object, but did not confirm them either.
+
+| Point | Design | Status |
+|---|---|---|
+| Arrangement | One column up to two boards; two columns row by row from three; order of the tokens. Detail in §5.5. | `[LOCKED]` |
+| More than 8 boards | "+ Board", "Board here" and image paste refuse a ninth with a message. A page that already has more, typed in the script text, still shows them all in two columns with more rows. | `[ASSUMED]` |
+| Name | Under the drawing, always shown, printed; buttons above. | `[LOCKED]` |
+| Buttons on a narrow board | Under 420 px wide the buttons collapse into one "⋯" button that opens the same actions in a popover. Without this they are cut off in two columns. | `[ASSUMED]` |
+| Grid | A light grey fine grid behind the ink on every board and template. | `[LOCKED]` |
+| Grid control | A show setting (Off, Fine, Coarse; default Fine), not a toolbar button. It prints when it is on. | `[ASSUMED]` |
+| Moving a cue | Press the tag, drag, release on a word. Detail in §5.3. | `[LOCKED]` |
+| Finger | A finger must hold a tag for 0.3 s before it drags. A quick swipe that starts on a tag still scrolls. Mouse and pen drag at once. | `[ASSUMED]` |
+| Where a cue lands | Always after a word. Board tags are not draggable in this release. | `[ASSUMED]` |
+
+**As built — points beyond the requests**
+
+- Existing shows look different: a page with three or more boards is rearranged, and every board gains the fine grid, on screen and in print. No file format change.
+- The grid strengths were set on screenshots, lower than first planned, with separate values for night mode and print. How they look on the real screen and on paper is not known.
+- The shared text edit that removes a line now merges the blank lines above it with those below. This also changes deleting a cue or a board whose token sits on its own line: one blank line is left, not two.
+- A pen or mouse tap that slips more than 8 px but stays on the tag does nothing: neither a move nor the cue editor.
+- Not built: dragging board tags, dropping a cue onto a line of its own, dragging the boxed word instead of the tag, reordering boards, snap to grid, a grid step per board.
+
 ## 6. Page layout `[LOCKED]`
 
 Left page (script):
@@ -450,9 +504,28 @@ Test record for r1.1, 2026-10-07: 151 automated checks pass in Chromium 153 (Pla
 
 Test record for r1.4, 2026-10-07: 205 automated checks pass in Chromium (Playwright headless shell) on Linux: 166 existing, 39 new in `test/notes-todos.test.js`. Two test files, `parse-undo` and `zipshow`, stop with an error before their first check; they do the same on r1.3 as committed and were not investigated. Not printed on paper; the comment marker was not tried with a real pen or finger.
 
+### r1.6 — built 2026-10-08, committed on branch r1.6, not yet tagged
+
+| ID | Requirement | Spec | Built | Checked how |
+|---|---|---|---|---|
+| R1.12 | Facing page: one column up to two boards, two columns row by row from three; 8 per page through the interface. | §5.5, §5.14 | Yes | Automated, 1 to 9 boards, incl. a pen stroke on the second board of a row; screenshot |
+| R1.13 | Board name under the drawing, tap to rename; "⋯" button on figures under 420 px. | §5.5, §5.14 | Yes | Automated, incl. print layout in the browser and the Templates view; screenshots; PDF written, not opened |
+| R1.14 | Grid on boards and templates; show setting Off, Fine, Coarse; `boardGrid` in `config.json`. | §5.5, §5.8, §5.14 | Yes | Automated, incl. save and reopen, night and print styles; screenshots; PDF written, not opened |
+| R1.15 | Move a cue by dragging its tag to a word: mouse, pen, finger after a 0.3 s hold; edge scroll; one undo. | §5.3, §5.7, §5.14 | Yes | Automated with a real mouse drag and a simulated finger and pen; not on the device |
+
+Test record for r1.6, 2026-10-08: `npm test` reports "ok 376 checks, 13 files" for the browser checks (Chromium, Playwright headless shell, on Linux), with no file in `test/KNOWN_FAILING`: 243 existing, 72 new in `test/boards.test.js`, 61 new in `test/cue-move.test.js`. Before them the same run passes the 67 checks of `test/unit` (3 files, no browser; its totals line is not printed): 18 existing, 23 new in `boards`, 26 new in `cue-move`. 443 checks in all.
+
+Not verified:
+
+- Nothing of r1.6 has run on the rehearsal laptop.
+- The finger hold, the pen drag and the palm behaviour during a cue drag are simulated only (synthetic touch and pen events). Whether 0.3 s and 8 px suit a real finger is not known.
+- Nothing was printed on paper. The grid strength and the two-column arrangement on paper are unchecked; hairlines may print faint.
+- The PDFs the checks write (`boards-names.pdf`, `grid.pdf`) were not opened. Print was checked through the print styles in the browser only.
+- The real screen: grid lightness was judged on screenshots by the build agents, not on the laptop's display.
+
 ### Backlog — ordered after the first rehearsal
 
-A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Anything the first rehearsal shows.
+A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Dragging board tags and reordering boards. Dropping a cue onto a line of its own. Anything further that rehearsals show.
 
 ### R2 — later
 

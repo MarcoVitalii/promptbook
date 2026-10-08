@@ -146,7 +146,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.5';
+const VERSION = 'r1.6';
 
 function defaultConfig() {
   const it = LANG === 'it';

@@ -1,6 +1,6 @@
 # Digital Prompt Book — Plan
 
-**Status:** v0.8 — 2026-10-06 — r1.0 released (cue ends, board templates); releases now versioned in git
+**Status:** v0.9 — 2026-10-08 — r1.6 built, committed on branch r1.6, not yet tagged (fixes from the first rehearsals); not yet tried on the laptop
 **Rehearsal deadline:** 2026-10-08
 **Companion file:** `SPEC.md`
 
@@ -82,6 +82,7 @@ Items 1–2 alone already remove re-importing and hand-compiled cue lists. Ink i
 | R0.1 | Cue words boxed instead of underlined | Delivered 2026-10-06. Display only; no file or gesture changes. |
 | R1.3 | Linking cues, cue notes, exports per department (SPEC §5.11) | Built 2026-10-07 as r1.3. Not yet tried on the laptop. |
 | R1.4 | `%%` comments, to-do notes, cue list columns, automatic numbers (SPEC §5.13) | Built 2026-10-07 as r1.4. Not yet tried on the laptop. |
+| R1.6 | Fixes from the first rehearsals: boards in two columns, board names under the drawing, board grid, moving a cue by dragging its tag (SPEC §5.14) | Built 2026-10-08 as r1.6; committed on branch r1.6, not yet tagged. 376 browser checks and 67 unit checks pass. Not yet tried on the laptop: the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only. Nothing printed on paper; the PDF was not opened. Gate: the device trial in §7. |
 | R1 | Cue ends and board templates (SPEC §5.10, §5.11, §7) | Delivered 2026-10-06 as r1.0. 145 automated checks pass. Not yet tried on the laptop. |
 | Backlog | The former R1 list (SPEC §7) | Reordered by the first rehearsal's friction list |
 | R2 | Follow-along view for the stage manager, standbys | After R1. Single screen, so D12 is not reopened. |
@@ -133,6 +134,7 @@ Files written by R0 stay valid. R1 adds a token form, one folder (`templates/`) 
 | A show is opened with an older release after using ends or templates | Low | Medium | Version on the start screen; rule in §8 |
 | The repository is lost with the build session | High until Q27 is answered | Medium | Archive delivered with the release; Q27 |
 | "yes" to Q21 did not mean all four device checks passed | Medium | High | Stated in SPEC §9; the paper backup on day 2 stays |
+| The cue drag of r1.6 misbehaves under a real finger, pen or resting hand: it changed the pointer handling that also does palm rejection and finger scrolling | Medium | High | Simulated checks pass, incl. the older palm checks unchanged; device trial in §7 before a rehearsal relies on it; a wrong move is one undo; r1.5 stays available as a tag and opens r1.6 shows |
 
 ## 6. Not planned
 
@@ -145,6 +147,18 @@ Console or playback export. Real-time co-editing. Score or bar-number cueing. Ha
 3. Decide which release goes into the 2026-10-08 rehearsal: r0.1 (already tried) or r1.0. Do not switch a show back to r0.1 once it uses ends or templates.
 4. Veto the reading of "configurations" if the drawings must sit inside `config.json` itself.
 5. Correct the record if "yes" to Q21 or Q19 meant something else (SPEC §9).
+6. Try r1.6 on the laptop before a rehearsal relies on it. Nothing of r1.6 has run there; the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only; nothing was printed on paper and the PDF was not opened. Device trial of the cue drag, with finger and pen, and of the grid:
+   - Finger hold on a tag: does 0.3 s feel right, is the lift visible under the finger, does a real finger stay within 8 px during the hold (otherwise it scrolls).
+   - Finger swipe starting on a tag still scrolls and never lifts.
+   - Pen drag from a tag starts at once and leaves no ink; a pen tap with normal jitter still opens the cue editor.
+   - Writing hand resting on or near a tag while the pen hovers or writes: nothing lifts or drags.
+   - Palm landing during a pen drag: the drag continues and no ghost tag is left behind.
+   - Ghost tag position beside a real fingertip, also for a left-handed user and near the right edge.
+   - Edge scroll with finger and pen: is the band at the bottom reachable, is the speed usable.
+   - A system `pointercancel` in mid-drag ends the drag with no change.
+   - Grid lightness on the real screen and on paper; hairlines may print faint on a laser printer.
+7. Print one facing page with three or more boards from r1.6 and open the PDF: two columns, names under the drawings, grid.
+8. Confirm or change the five decisions of r1.6 marked `[ASSUMED]` in SPEC §5.14: the limit of 8 boards, the "⋯" button, the grid as a show setting, the 0.3 s finger hold, a cue always lands after a word.
 
 ## 8. Releases and versioning
 
@@ -157,6 +171,7 @@ Releases are kept in a git repository whose root is the project: `promptbook.htm
 | `r1.3` | 2026-10-07 | Linking cues (`{SND 6 / SND 5}`), cue notes, exports per department; "runs" removed |
 | `r1.4` | 2026-10-07 | `%%` comments, to-do notes as a review department, Margin and Description columns, automatic numbers |
 | `r1.5` | 2026-10-08 | Fix: a reopened show file saved only its first change; “Keep mine” failed |
+| `r1.6` | 2026-10-08 | Fixes from the first rehearsals: boards in two columns (8 per page), board names under the drawing, board grid, moving a cue by dragging its tag. Built; committed on branch r1.6, not yet tagged; not yet tried on the laptop |
 
 Rule for every release: change `src/`, set `VERSION`, run `python3 build.py`, run `sh test/run.sh` with every check passing, add the `CHANGELOG.md` entry, commit, tag. The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
 
