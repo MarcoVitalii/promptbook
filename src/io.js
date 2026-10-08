@@ -571,7 +571,7 @@ function bindUI() {
   };
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
+  if (e.key === 'Escape') { cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && k === 'f' && S.loaded && $('#dlg').hidden) { e.preventDefault(); $('#search').focus(); $('#search').select(); return; }
   const a = document.activeElement;

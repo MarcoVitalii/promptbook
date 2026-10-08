@@ -47,6 +47,7 @@ en: {
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
+  moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
   makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
   thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
   thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
@@ -98,6 +99,7 @@ it: {
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
+  moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
   makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
   thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
   thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
@@ -630,7 +632,7 @@ function cutToken(raw, s, e) {
 function textEdits(edits) {
   const by = new Map();
   for (const ed of edits) { let q = by.get(ed.b); if (!q) by.set(ed.b, q = []); q.push(ed); }
-  const out = [];
+  const out = []; let carry = 0;   // blank lines above a line that is removed: they merge with those below it
   for (const b of S.blocks) {
     let raw = b.raw; const q = by.get(b);
     if (q) {
@@ -638,10 +640,25 @@ function textEdits(edits) {
       for (const ed of q) raw = ed.text === null ? cutToken(raw, ed.s, ed.e) : raw.slice(0, ed.s) + ed.text + raw.slice(ed.e);
       raw = raw.replace(/^\n+|\s+$/g, '');
     }
-    for (let k = 0; k < b.gap; k++) out.push('');
-    if (raw.trim() !== '') out.push(raw);
+    const gap = Math.max(b.gap, carry);
+    if (raw.trim() === '') { carry = gap; continue; }
+    for (let k = 0; k < gap; k++) out.push('');
+    out.push(raw); carry = 0;
   }
   return out.join('\n') + '\n';
+}
+/* text with cue c moved to just after word wi of block tb (after the cues already there); null when that is where it is */
+function textMoveCue(c, tb, wi) {
+  const w = tb && tb.tokens[wi]; if (!w || w.k !== 'w' || !c || !c.b) return null;
+  const after = w.cues.filter(q => !q.before);
+  if (after[after.length - 1] === c) return null;
+  let pos = w.e; for (const q of after) if (q !== c) pos = Math.max(pos, q.e);
+  const raw = c.b.raw, sp = x => x === undefined || /\s/.test(x);
+  /* a token with text glued on both sides leaves a space, or its neighbours would become one word */
+  const cut = c.s > 0 && !sp(raw[c.s - 1]) && !sp(raw[c.e]) ? ' ' : null;
+  /* a token glued to the next word (uno{LX 1}due) is followed by text: keep the moved token apart from it */
+  const tail = sp(tb.raw[pos]) ? '' : ' ';
+  return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
 }
 
 /* ---------- ink bookkeeping ---------- */

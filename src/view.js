@@ -597,6 +597,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 
 desk.addEventListener('pointerdown', e => {
+  if (P && P.k === 'drag') { if (e.pointerId !== P.id) return; cancelDrag(); }   // a second contact never disturbs a cue being dragged
   stopMomentum();
   const tg = hit(e); if (!tg || !tg.closest) return;
   const page = tg.closest('.page'), ui = tg.closest('.pbtn,.tag');
@@ -627,6 +628,12 @@ desk.addEventListener('pointerdown', e => {
     const me = P;
     P.lp = setTimeout(() => { if (P === me && !me.moved) { P = null; longPress(me); } }, 560);
   }
+  const tag = !S.editing && tg.closest('.tag:not(.btag)');
+  if (tag) {   // a cue tag can be dragged to another word; a finger must hold it first, so that a swipe still scrolls
+    P.tag = tag;
+    if (P.lp) { clearTimeout(P.lp); P.lp = 0; }
+    if (e.pointerType === 'touch' && !nearPen) { const me = P; P.lp = setTimeout(() => { if (P === me && !me.moved && !me.nearPen) { me.held = true; tag.classList.add('lift'); } }, DRAG_HOLD); }
+  }
 });
 window.addEventListener('pointermove', e => {
   if (e.pointerType === 'pen') {
@@ -635,7 +642,11 @@ window.addEventListener('pointermove', e => {
   }
   if (!P || e.pointerId !== P.id) return;
   if (P.k === 'tap') {
-    if (!P.moved && Math.hypot(e.clientX - P.x0, e.clientY - P.y0) > 8) { P.moved = true; clearTimeout(P.lp); }
+    if (!P.moved && Math.hypot(e.clientX - P.x0, e.clientY - P.y0) > 8) {
+      P.moved = true; clearTimeout(P.lp);
+      if (P.tag && !P.nearPen && (P.type !== 'touch' || P.held) && beginDrag(e)) return;
+      if (P.tag) { P.tag.classList.remove('lift'); P.tag = null; }   // a finger that moved before the hold scrolls
+    }
     if (P.moved && P.type === 'touch' && !P.nearPen) {
       const dt = Math.max(1, e.timeStamp - P.tm), dx = e.clientX - P.x, dy = e.clientY - P.y;
       desk.scrollLeft -= dx; desk.scrollTop -= dy;
@@ -650,12 +661,15 @@ window.addEventListener('pointermove', e => {
     }
     P.path.setAttribute('d', pathD(P.pts));
   } else if (P.k === 'erase') eraseAt(e);
+  else if (P.k === 'drag') moveDrag(e);
 });
 function endPtr(e) {
   if (!P || e.pointerId !== P.id) return;
   const p = P; P = null;
   if (p.lp) clearTimeout(p.lp);
   if (p.pen) penUntil = Date.now() + 450;
+  if (p.tag) p.tag.classList.remove('lift');
+  if (p.k === 'drag') { endDrag(p, e.type !== 'pointercancel'); return; }
   if (p.k === 'tap') {
     if (e.type === 'pointercancel') return;
     if (!p.moved) {
@@ -757,6 +771,85 @@ function eraseAt(e) {
   }
   if (hitAny) { drawInk(P.pi); markDirty('ink'); }
 }
+
+/* ---------- drag a cue tag to another word ---------- */
+const DRAG_HOLD = 300, DRAG_EDGE = 48, DRAG_REACH = 70;
+function beginDrag(e) {
+  const tag = P.tag, b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
+  if (!c || c.board || !tag.isConnected) return false;
+  closePop();
+  const g = tag.cloneNode(true), z = S.view.zoom;
+  g.className = tag.className + ' ghost'; g.classList.remove('lift'); g.removeAttribute('title'); g.tabIndex = -1;
+  g.style.cssText = 'left:0;top:0;transform-origin:0 0;transform:scale(' + z + ')'; g.style.setProperty('--c', cueColour(c));
+  document.body.appendChild(g);
+  tag.classList.remove('lift'); tag.classList.add('moving');
+  Object.assign(P, { k: 'drag', cue: c, ghost: g, drop: null, raf: 0, pen: P.type === 'pen' });
+  try { desk.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ }
+  moveDrag(e);
+  return true;
+}
+function moveDrag(e) {
+  P.x = e.clientX; P.y = e.clientY;
+  placeDrag();
+  if (!P.raf && dragSpeed()) P.raf = requestAnimationFrame(dragScroll);
+}
+function placeDrag() {
+  P.ghost.style.left = (P.x + 14) + 'px'; P.ghost.style.top = (P.y - 36) + 'px';
+  const d = dropTarget(P.x, P.y);
+  if (P.drop && (!d || d.el !== P.drop.el)) clearDrop(P.drop);
+  if (d && (!P.drop || d.el !== P.drop.el)) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
+  P.drop = d;
+}
+function clearDrop(d) { d.el.classList.remove('drop'); d.el.style.removeProperty('--dc'); }
+/* px to scroll per frame while a cue is held near the top or bottom edge of the work area, faster nearer the edge */
+function dragSpeed() {
+  const r = desk.getBoundingClientRect(), a = P.y - r.top, z = r.bottom - P.y;
+  const f = d => 14 * clamp((DRAG_EDGE - d) / DRAG_EDGE, 0.15, 1);
+  return a < DRAG_EDGE ? -f(a) : z < DRAG_EDGE ? f(z) : 0;
+}
+function dragScroll() {
+  if (!P || P.k !== 'drag') return;
+  P.raf = 0;
+  const v = dragSpeed(); if (!v) return;
+  const st = desk.scrollTop; desk.scrollTop = st + v;
+  if (desk.scrollTop !== st) { renderVisible(); placeDrag(); }
+  P.raf = requestAnimationFrame(dragScroll);
+}
+/* the word a cue dropped at (x, y) would follow: the word under the pointer, else the nearest word of the nearest
+   line of text on that script page; none on the tag being dragged, far from any text or off the script pages */
+function dropTarget(x, y) {
+  const el = document.elementFromPoint(x, y); if (!el || !el.closest || el.closest('.tag.moving')) return null;
+  const pg = el.closest('.page.script'); if (!pg) return null;
+  const dist = (r, px, py) => Math.hypot(Math.max(r.left - px, 0, px - r.right), Math.max(r.top - py, 0, py - r.bottom));
+  let w = el.closest('.w'), tx = w && w.closest('.tx');
+  if (!tx) {
+    w = null; let best = Infinity, bx = Infinity;
+    for (const q of $$('.tx', pg)) {
+      if (!S.byId.has(+q.dataset.b) || !q.querySelector('.w')) continue;
+      const r = q.getBoundingClientRect(), dy = Math.max(r.top - y, 0, y - r.bottom), dx = Math.max(r.left - x, 0, x - r.right);
+      if (dy < best || (dy === best && dx < bx)) { best = dy; bx = dx; tx = q; }
+    }
+    if (!tx) return null;
+    best = Infinity;
+    for (const q of $$('.w', tx)) for (const r of q.getClientRects()) { const d = dist(r, x, y); if (d < best) { best = d; w = q; } }
+    if (!w || best > DRAG_REACH * S.view.zoom) return null;
+  }
+  const b = S.byId.get(+tx.dataset.b), wi = +w.dataset.i;
+  return b && b.tokens[wi] && b.tokens[wi].k === 'w' ? { b, wi, el: w } : null;
+}
+function endDrag(p, commit) {
+  if (p.raf) cancelAnimationFrame(p.raf);
+  p.ghost.remove(); p.tag.classList.remove('moving', 'lift');
+  if (p.drop) clearDrop(p.drop);
+  S.lastTap = null;   // the next tap is not the second half of a double tap
+  if (!commit || !p.drop) return;
+  /* looked up again: the script may have been parsed anew while the tag was in the air */
+  const b = S.byId.get(+p.tag.dataset.b), c = b && b.cues.find(q => q.s === +p.tag.dataset.s);
+  const tb = S.byId.get(p.drop.b.id), nt = c && !c.board && tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
+  if (nt) { const n = S.pairs.length; if (commitText(nt) && S.pairs.length < n) toast(t('moveUnpaired')); }
+}
+function cancelDrag() { if (P && P.k === 'drag') { const p = P; P = null; endDrag(p, false); } }
+
 function blockAt(tg) {
   if (!tg || !tg.closest) return null;
   const w = tg.closest('.w');

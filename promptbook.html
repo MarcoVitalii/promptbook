@@ -124,6 +124,13 @@ body:not(.facing) .page.facing{display:none}
 .tag.etag{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--c)}
 .tag.etag b::before{content:"";display:inline-block;width:7px;height:7px;background:var(--c);margin-right:5px}
 .tag .nd{color:var(--c);font-weight:700}
+/* a cue tag being dragged to another word: lifted under a finger, dimmed in place, a copy at the pointer */
+.tag.lift{box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.tag.etag.lift{box-shadow:inset 0 0 0 1.5px var(--c),0 2px 8px rgba(0,0,0,.35)}
+.tag.moving{opacity:.35}
+.tag.ghost{position:fixed;z-index:28;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:.95}
+.tag.etag.ghost{box-shadow:inset 0 0 0 1.5px var(--c),0 4px 14px rgba(0,0,0,.35)}
+.w.drop,.w.cued.drop{box-shadow:0 0 0 2px var(--dc);background:color-mix(in srgb,var(--dc) 30%,transparent)}
 .tag.btag b::before{content:"";display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;margin-right:5px}
 .links,.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .links path{fill:none;stroke-width:1.2}
@@ -246,7 +253,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,.noprint,.flag{display:none!important}
+  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,.noprint,.flag,.ghost{display:none!important}
   #work{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}
@@ -364,6 +371,7 @@ en: {
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
+  moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
   makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
   thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
   thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
@@ -415,6 +423,7 @@ it: {
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
+  moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
   makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
   thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
   thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
@@ -947,7 +956,7 @@ function cutToken(raw, s, e) {
 function textEdits(edits) {
   const by = new Map();
   for (const ed of edits) { let q = by.get(ed.b); if (!q) by.set(ed.b, q = []); q.push(ed); }
-  const out = [];
+  const out = []; let carry = 0;   // blank lines above a line that is removed: they merge with those below it
   for (const b of S.blocks) {
     let raw = b.raw; const q = by.get(b);
     if (q) {
@@ -955,10 +964,25 @@ function textEdits(edits) {
       for (const ed of q) raw = ed.text === null ? cutToken(raw, ed.s, ed.e) : raw.slice(0, ed.s) + ed.text + raw.slice(ed.e);
       raw = raw.replace(/^\n+|\s+$/g, '');
     }
-    for (let k = 0; k < b.gap; k++) out.push('');
-    if (raw.trim() !== '') out.push(raw);
+    const gap = Math.max(b.gap, carry);
+    if (raw.trim() === '') { carry = gap; continue; }
+    for (let k = 0; k < gap; k++) out.push('');
+    out.push(raw); carry = 0;
   }
   return out.join('\n') + '\n';
+}
+/* text with cue c moved to just after word wi of block tb (after the cues already there); null when that is where it is */
+function textMoveCue(c, tb, wi) {
+  const w = tb && tb.tokens[wi]; if (!w || w.k !== 'w' || !c || !c.b) return null;
+  const after = w.cues.filter(q => !q.before);
+  if (after[after.length - 1] === c) return null;
+  let pos = w.e; for (const q of after) if (q !== c) pos = Math.max(pos, q.e);
+  const raw = c.b.raw, sp = x => x === undefined || /\s/.test(x);
+  /* a token with text glued on both sides leaves a space, or its neighbours would become one word */
+  const cut = c.s > 0 && !sp(raw[c.s - 1]) && !sp(raw[c.e]) ? ' ' : null;
+  /* a token glued to the next word (uno{LX 1}due) is followed by text: keep the moved token apart from it */
+  const tail = sp(tb.raw[pos]) ? '' : ' ';
+  return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
 }
 
 /* ---------- ink bookkeeping ---------- */
@@ -1872,6 +1896,7 @@ document.addEventListener('pointerdown', e => {
 }, true);
 
 desk.addEventListener('pointerdown', e => {
+  if (P && P.k === 'drag') { if (e.pointerId !== P.id) return; cancelDrag(); }   // a second contact never disturbs a cue being dragged
   stopMomentum();
   const tg = hit(e); if (!tg || !tg.closest) return;
   const page = tg.closest('.page'), ui = tg.closest('.pbtn,.tag');
@@ -1902,6 +1927,12 @@ desk.addEventListener('pointerdown', e => {
     const me = P;
     P.lp = setTimeout(() => { if (P === me && !me.moved) { P = null; longPress(me); } }, 560);
   }
+  const tag = !S.editing && tg.closest('.tag:not(.btag)');
+  if (tag) {   // a cue tag can be dragged to another word; a finger must hold it first, so that a swipe still scrolls
+    P.tag = tag;
+    if (P.lp) { clearTimeout(P.lp); P.lp = 0; }
+    if (e.pointerType === 'touch' && !nearPen) { const me = P; P.lp = setTimeout(() => { if (P === me && !me.moved && !me.nearPen) { me.held = true; tag.classList.add('lift'); } }, DRAG_HOLD); }
+  }
 });
 window.addEventListener('pointermove', e => {
   if (e.pointerType === 'pen') {
@@ -1910,7 +1941,11 @@ window.addEventListener('pointermove', e => {
   }
   if (!P || e.pointerId !== P.id) return;
   if (P.k === 'tap') {
-    if (!P.moved && Math.hypot(e.clientX - P.x0, e.clientY - P.y0) > 8) { P.moved = true; clearTimeout(P.lp); }
+    if (!P.moved && Math.hypot(e.clientX - P.x0, e.clientY - P.y0) > 8) {
+      P.moved = true; clearTimeout(P.lp);
+      if (P.tag && !P.nearPen && (P.type !== 'touch' || P.held) && beginDrag(e)) return;
+      if (P.tag) { P.tag.classList.remove('lift'); P.tag = null; }   // a finger that moved before the hold scrolls
+    }
     if (P.moved && P.type === 'touch' && !P.nearPen) {
       const dt = Math.max(1, e.timeStamp - P.tm), dx = e.clientX - P.x, dy = e.clientY - P.y;
       desk.scrollLeft -= dx; desk.scrollTop -= dy;
@@ -1925,12 +1960,15 @@ window.addEventListener('pointermove', e => {
     }
     P.path.setAttribute('d', pathD(P.pts));
   } else if (P.k === 'erase') eraseAt(e);
+  else if (P.k === 'drag') moveDrag(e);
 });
 function endPtr(e) {
   if (!P || e.pointerId !== P.id) return;
   const p = P; P = null;
   if (p.lp) clearTimeout(p.lp);
   if (p.pen) penUntil = Date.now() + 450;
+  if (p.tag) p.tag.classList.remove('lift');
+  if (p.k === 'drag') { endDrag(p, e.type !== 'pointercancel'); return; }
   if (p.k === 'tap') {
     if (e.type === 'pointercancel') return;
     if (!p.moved) {
@@ -2032,6 +2070,85 @@ function eraseAt(e) {
   }
   if (hitAny) { drawInk(P.pi); markDirty('ink'); }
 }
+
+/* ---------- drag a cue tag to another word ---------- */
+const DRAG_HOLD = 300, DRAG_EDGE = 48, DRAG_REACH = 70;
+function beginDrag(e) {
+  const tag = P.tag, b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
+  if (!c || c.board || !tag.isConnected) return false;
+  closePop();
+  const g = tag.cloneNode(true), z = S.view.zoom;
+  g.className = tag.className + ' ghost'; g.classList.remove('lift'); g.removeAttribute('title'); g.tabIndex = -1;
+  g.style.cssText = 'left:0;top:0;transform-origin:0 0;transform:scale(' + z + ')'; g.style.setProperty('--c', cueColour(c));
+  document.body.appendChild(g);
+  tag.classList.remove('lift'); tag.classList.add('moving');
+  Object.assign(P, { k: 'drag', cue: c, ghost: g, drop: null, raf: 0, pen: P.type === 'pen' });
+  try { desk.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ }
+  moveDrag(e);
+  return true;
+}
+function moveDrag(e) {
+  P.x = e.clientX; P.y = e.clientY;
+  placeDrag();
+  if (!P.raf && dragSpeed()) P.raf = requestAnimationFrame(dragScroll);
+}
+function placeDrag() {
+  P.ghost.style.left = (P.x + 14) + 'px'; P.ghost.style.top = (P.y - 36) + 'px';
+  const d = dropTarget(P.x, P.y);
+  if (P.drop && (!d || d.el !== P.drop.el)) clearDrop(P.drop);
+  if (d && (!P.drop || d.el !== P.drop.el)) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
+  P.drop = d;
+}
+function clearDrop(d) { d.el.classList.remove('drop'); d.el.style.removeProperty('--dc'); }
+/* px to scroll per frame while a cue is held near the top or bottom edge of the work area, faster nearer the edge */
+function dragSpeed() {
+  const r = desk.getBoundingClientRect(), a = P.y - r.top, z = r.bottom - P.y;
+  const f = d => 14 * clamp((DRAG_EDGE - d) / DRAG_EDGE, 0.15, 1);
+  return a < DRAG_EDGE ? -f(a) : z < DRAG_EDGE ? f(z) : 0;
+}
+function dragScroll() {
+  if (!P || P.k !== 'drag') return;
+  P.raf = 0;
+  const v = dragSpeed(); if (!v) return;
+  const st = desk.scrollTop; desk.scrollTop = st + v;
+  if (desk.scrollTop !== st) { renderVisible(); placeDrag(); }
+  P.raf = requestAnimationFrame(dragScroll);
+}
+/* the word a cue dropped at (x, y) would follow: the word under the pointer, else the nearest word of the nearest
+   line of text on that script page; none on the tag being dragged, far from any text or off the script pages */
+function dropTarget(x, y) {
+  const el = document.elementFromPoint(x, y); if (!el || !el.closest || el.closest('.tag.moving')) return null;
+  const pg = el.closest('.page.script'); if (!pg) return null;
+  const dist = (r, px, py) => Math.hypot(Math.max(r.left - px, 0, px - r.right), Math.max(r.top - py, 0, py - r.bottom));
+  let w = el.closest('.w'), tx = w && w.closest('.tx');
+  if (!tx) {
+    w = null; let best = Infinity, bx = Infinity;
+    for (const q of $$('.tx', pg)) {
+      if (!S.byId.has(+q.dataset.b) || !q.querySelector('.w')) continue;
+      const r = q.getBoundingClientRect(), dy = Math.max(r.top - y, 0, y - r.bottom), dx = Math.max(r.left - x, 0, x - r.right);
+      if (dy < best || (dy === best && dx < bx)) { best = dy; bx = dx; tx = q; }
+    }
+    if (!tx) return null;
+    best = Infinity;
+    for (const q of $$('.w', tx)) for (const r of q.getClientRects()) { const d = dist(r, x, y); if (d < best) { best = d; w = q; } }
+    if (!w || best > DRAG_REACH * S.view.zoom) return null;
+  }
+  const b = S.byId.get(+tx.dataset.b), wi = +w.dataset.i;
+  return b && b.tokens[wi] && b.tokens[wi].k === 'w' ? { b, wi, el: w } : null;
+}
+function endDrag(p, commit) {
+  if (p.raf) cancelAnimationFrame(p.raf);
+  p.ghost.remove(); p.tag.classList.remove('moving', 'lift');
+  if (p.drop) clearDrop(p.drop);
+  S.lastTap = null;   // the next tap is not the second half of a double tap
+  if (!commit || !p.drop) return;
+  /* looked up again: the script may have been parsed anew while the tag was in the air */
+  const b = S.byId.get(+p.tag.dataset.b), c = b && b.cues.find(q => q.s === +p.tag.dataset.s);
+  const tb = S.byId.get(p.drop.b.id), nt = c && !c.board && tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
+  if (nt) { const n = S.pairs.length; if (commitText(nt) && S.pairs.length < n) toast(t('moveUnpaired')); }
+}
+function cancelDrag() { if (P && P.k === 'drag') { const p = P; P = null; endDrag(p, false); } }
+
 function blockAt(tg) {
   if (!tg || !tg.closest) return null;
   const w = tg.closest('.w');
@@ -3183,7 +3300,7 @@ function bindUI() {
   };
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
+  if (e.key === 'Escape') { cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && k === 'f' && S.loaded && $('#dlg').hidden) { e.preventDefault(); $('#search').focus(); $('#search').select(); return; }
   const a = document.activeElement;
