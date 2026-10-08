@@ -57,7 +57,8 @@ en: {
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
-  pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…'
+  pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
+  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -107,7 +108,8 @@ it: {
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
-  pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…'
+  pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
+  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga'
 }};
 let LANG = 'en';
 function t(k) {
@@ -151,7 +153,7 @@ function defaultConfig() {
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
     { code: 'VID', name: 'Video', colour: '#7a3fd1' },
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
-    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4 };
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25 };
 }
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
@@ -166,6 +168,8 @@ function normCfg(c) {
   o.templates = Array.from(new Set(names(o.templates))); o.recentTemplates = names(o.recentTemplates);
   o.defaultTemplate = typeof o.defaultTemplate === 'string' && o.defaultTemplate ? o.defaultTemplate : null;
   o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
+  const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
+  o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
   return o;
 }
 

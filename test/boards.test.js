@@ -1,4 +1,5 @@
 // Boards on a facing page: one column up to two boards, two columns from three on, at most 8 through the interface.
+// Then the names and buttons of a figure, and the grid behind the ink.
 const { ok, open, serve } = require('./_util');
 const OUT = process.env.OUT || '.';
 (async () => {
@@ -152,6 +153,105 @@ const OUT = process.env.OUT || '.';
   await page.locator('#tpl .bname').first().click();
   ok(await page.locator('#pop input').inputValue() === 'Pianta', 'Templates view: a click on the name opens the rename popover');
   await page.keyboard.press('Escape');
+
+  // ---- a light grid behind the ink: a setting of the show, display only ----
+  const plan = await ev(() => { const c = document.createElement('canvas'); c.width = 400; c.height = 300; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 400, 300); x.lineWidth = 3; x.strokeRect(40, 40, 320, 220); return c.toDataURL('image/png'); });
+  const line = (pts, colour) => ({ points: pts, colour, width: 3.4 });
+  const gridShow = [{ title: 'Griglia' }, null,
+    [{ name: 'Vuota', strokes: [] }, { name: 'Pianta', imageData: plan, strokes: [] }, { name: 'Sopra', base: 'Fondo', strokes: [line([[150, 500], [500, 560], [850, 500]], '#1f6fd6')] }],
+    [{ name: 'Radice', strokes: [line([[100, 100], [900, 100], [900, 650], [100, 650], [100, 100]], '#d62828')] }, { name: 'Fondo', base: 'Radice', strokes: [line([[300, 200], [700, 200]], '#1b1a17')] }]];
+  await ev(a => PB.startMemory('## Scena 1\n\nANNA: Ciao.\n{BOARD Vuota}\n{BOARD Pianta}\n{BOARD Sopra}\n', ...a), gridShow);
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 3);
+  const gfig = name => page.locator('.page.facing .board', { has: page.locator('.bname', { hasText: new RegExp('^' + name + '$') }) });
+  // the layers of a figure, in order, and the lines of its grid counted by their M commands
+  const grid = f => f.locator('svg').evaluate(svg => {
+    const d = Array.from(svg.querySelectorAll('path.bgrid')).map(p => p.getAttribute('d')).join('');
+    return { kids: Array.from(svg.children).map(c => c.tagName + (c.getAttribute('class') ? '.' + c.getAttribute('class').replace(/ /g, '.') : '')).join(' '), n: svg.querySelectorAll('.bgrid').length, v: (d.match(/M\d+ 0V/g) || []).length, h: (d.match(/M0 \d+H/g) || []).length, vb: svg.getAttribute('viewBox') };
+  });
+  ok(await ev(() => PB.S.cfg.boardGrid) === 25, 'a show starts with the fine grid');
+  let G = await grid(gfig('Vuota'));
+  ok(G.kids === 'path.bgrid path.bgrid.maj g.bstrokes', 'a new board shows two grid paths, before its ink: ' + G.kids);
+  ok(G.vb === '0 0 1000 750' && G.v === 39 && G.h === 29, 'the fine grid of a blank board has 39 vertical and 29 horizontal lines: ' + G.v + ' and ' + G.h);
+  G = await grid(gfig('Pianta'));
+  ok(G.kids === 'image path.bgrid path.bgrid.maj g.bstrokes', 'on a board with an image the grid is over the image and under the ink: ' + G.kids);
+  G = await grid(gfig('Sopra'));
+  ok(G.kids === 'g.bbase path.bgrid path.bgrid.maj g.bstrokes' && G.n === 2 && await gfig('Sopra').locator('.bbase .bstatic').count() === 2, 'a board on a chain of two templates shows one grid, not one per layer: ' + G.kids);
+  const gcs = await ev(() => Array.from(document.querySelectorAll('.page.facing .board .bgrid')).map(p => { const c = getComputedStyle(p); return [c.pointerEvents, c.fill, +c.opacity, c.vectorEffect]; }));
+  ok(gcs.length === 6 && gcs.every(c => c[0] === 'none' && c[1] === 'none' && c[3] === 'non-scaling-stroke'), 'the grid takes no pointer, has no fill and keeps hairline lines at any size');
+  const fadeOp = await ev(() => +getComputedStyle(document.querySelector('.page.facing .bbase')).opacity);
+  ok(gcs.every(c => c[2] < fadeOp) && gcs[0][2] < gcs[1][2], 'the grid is lighter than a faded template, every fourth line a little stronger: ' + gcs[0][2] + ' and ' + gcs[1][2] + ' against ' + fadeOp);
+
+  // the pen and the eraser do not see it
+  const vb = await gfig('Vuota').locator('svg').boundingBox(), u = vb.width / 1000;
+  const at = (x, y) => [vb.x + x * u, vb.y + y * u];
+  const nV = () => ev(() => PB.S.boards.get('Vuota').strokes.length);
+  await pen([at(100, 212), at(400, 300), at(900, 388)]);
+  ok(await nV() === 1 && await gfig('Vuota').locator('.bstrokes path').count() === 1 && await gfig('Vuota').locator('.bgrid').count() === 2, 'a pen stroke across the grid stores one stroke, and the grid stays');
+  const p0 = await ev(() => PB.S.boards.get('Vuota').strokes[0].points[0]);
+  ok(near(p0[0], 100) && near(p0[1], 212), 'the stroke starts where the pen went down, not on a grid line: ' + p0.map(Math.round));
+  await pen([at(100, 600), at(300, 600), at(500, 600), at(700, 600)], { button: 'right', buttons: 2 });   // along a major grid line, away from the ink
+  ok(await nV() === 1 && await gfig('Vuota').locator('.bgrid').count() === 2, 'the eraser over an empty part of the grid removes nothing');
+  await gfig('Vuota').locator('.bcap button').click();
+  await page.locator('#pop .btn', { hasText: 'Clear ink' }).click();
+  ok(await nV() === 0 && await gfig('Vuota').locator('.bstrokes path').count() === 0 && await gfig('Vuota').locator('.bgrid').count() === 2, '"Clear ink" empties the board and leaves the grid');
+  ok(await ev(() => !JSON.stringify(PB.bundle(true).boards).includes('grid')), 'nothing about the grid is stored in a board file');
+
+  // pictures: day, night, print
+  await pen([at(150, 150), at(300, 420), at(520, 260), at(820, 480)]);
+  await shot('grid-day.png');
+  await page.locator('#bNight').click();
+  const nop = await ev(() => Array.from(document.querySelectorAll('.page.facing .board .bgrid')).map(p => +getComputedStyle(p).opacity));
+  ok(await ev(() => document.body.classList.contains('night')) && nop.length === 6 && nop.every(o => o > 0.1 && o < fadeOp), 'night mode keeps the grid, still lighter than a faded template: ' + nop.slice(0, 2).join(' and '));
+  await shot('grid-night.png');
+  await page.locator('#bNight').click();
+  await page.emulateMedia({ media: 'print' });
+  await ev(() => document.body.classList.add('pr-book'));
+  ok(await ev(() => Array.from(document.querySelectorAll('.page.facing .board .bgrid')).every(p => { const c = getComputedStyle(p); return c.visibility === 'visible' && c.display !== 'none' && c.stroke === 'rgb(102, 102, 102)' && +c.opacity > 0.1 && +c.opacity < 0.4; })), 'in print the grid shows, in the print grey and lighter than a faded template');
+  await shot('grid-print.png');
+  await page.pdf({ path: OUT + '/grid.pdf', format: 'A4', landscape: true, printBackground: true, preferCSSPageSize: true });
+  await ev(() => document.body.classList.remove('pr-book'));
+  await page.emulateMedia({ media: 'screen' });
+
+  // the setting
+  const setGrid = async label => {
+    await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+    const sel = page.locator('#dlg label:text-is("Board grid") + select');
+    const seen = [await sel.inputValue(), (await sel.locator('option').allTextContents()).join('|')];
+    await sel.selectOption({ label });
+    await page.locator('#dlg footer button', { hasText: 'Save' }).click();
+    return seen;
+  };
+  const seen = await setGrid('Off');
+  ok(seen[0] === '25' && seen[1] === 'Off|Fine|Coarse', 'Settings has "Board grid" with Off, Fine and Coarse, on Fine: ' + seen.join(' '));
+  ok(await page.locator('.page.facing .bgrid').count() === 0 && await ev(() => PB.S.cfg.boardGrid) === 0, 'Off: no grid left on the facing page, and the setting is 0');
+  ok(await gfig('Vuota').locator('.bstrokes path').count() === 1 && await gfig('Sopra').locator('.bbase path').count() === 2, 'Off: the ink and the template under it still show');
+  let rt = await ev(() => PB.bundle(true));
+  await ev(b => PB.loadBundle(b), rt);
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 3);
+  ok(rt.config.boardGrid === 0 && await ev(() => PB.S.cfg.boardGrid) === 0 && await page.locator('.page.facing .bgrid').count() === 0, 'a show saved with the grid off reopens with the grid off');
+  ok((await setGrid('Coarse'))[0] === '0', 'Settings shows Off when the grid is off');
+  G = await grid(gfig('Vuota'));
+  ok(await ev(() => PB.S.cfg.boardGrid) === 50 && G.n === 2 && G.v === 19 && G.h === 14, 'Coarse: 19 vertical and 14 horizontal lines: ' + G.v + ' and ' + G.h);
+  rt = await ev(() => PB.bundle(true));
+  await ev(b => PB.loadBundle(b), rt);
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 3);
+  ok(await ev(() => PB.S.cfg.boardGrid) === 50 && (await grid(gfig('Vuota'))).v === 19, 'the coarse grid survives saving and reopening');
+  delete rt.config.boardGrid;
+  await ev(b => PB.loadBundle(b), rt);
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 3);
+  ok(await ev(() => PB.S.cfg.boardGrid) === 25 && (await grid(gfig('Vuota'))).v === 39, 'a show saved by an older release, without the setting, opens with the fine grid');
+
+  // templates
+  await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Templates' }).click();
+  const tg = page.locator('#tpl .board');
+  ok(await tg.count() === 2 && await tg.nth(0).locator('.bgrid').count() === 2 && await tg.nth(1).locator('.bgrid').count() === 2, 'Templates view: each template sheet shows the grid');
+  const tk = await tg.nth(1).locator('svg').evaluate(svg => Array.from(svg.children).map(c => c.tagName).join(' '));
+  ok(tk === 'g path path g', 'Templates view: on a template built on another the grid is between the base and its own ink: ' + tk);
+  await setGrid('Off');
+  ok(await page.locator('#tpl .board').count() === 2 && await page.locator('#tpl .bgrid').count() === 0, 'Templates view: turning the grid off in Settings redraws the sheets without it');
+  await setGrid('Fine');
+  ok(await page.locator('#tpl .bgrid').count() === 4, 'Templates view: and Fine brings it back');
+  await page.locator('#tpl').screenshot({ path: OUT + '/grid-templates.png' });
 
   await done(); srv.close();
 })();

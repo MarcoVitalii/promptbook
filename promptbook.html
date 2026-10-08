@@ -130,6 +130,9 @@ body:not(.facing) .page.facing{display:none}
 .links path.rail{stroke-width:2.4;opacity:.8;stroke-linejoin:round}
 .ink path,.bstrokes path,.bstatic path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .bbase{opacity:var(--tfade,.4);filter:grayscale(1)}
+.bgrid{fill:none;stroke:var(--muted);stroke-width:.5px;opacity:.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.bgrid.maj{opacity:.36}
+@media screen{body.night .bgrid{opacity:.24}body.night .bgrid.maj{opacity:.38}}
 path.kblack{stroke:var(--tx)}
 body.nocues .w.cued{box-shadow:none;background:none}
 body.nocues .tags,body.nocues .links,body.nocues .row.mark .rule{visibility:hidden}
@@ -251,6 +254,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   .spread{display:block;margin:0}
   .page{box-shadow:none;break-after:page;break-inside:avoid}
   .bcap{visibility:hidden}
+  .bgrid{opacity:.24}.bgrid.maj{opacity:.38}
   body.pr-book .page.facing{display:block!important}
   body.pr-script .page.facing{display:none!important}
   .spread:last-child .page:last-child,body.pr-script .spread:last-child .page.script{break-after:auto}
@@ -370,7 +374,8 @@ en: {
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
-  pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…'
+  pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
+  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -420,7 +425,8 @@ it: {
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
-  pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…'
+  pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
+  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga'
 }};
 let LANG = 'en';
 function t(k) {
@@ -464,7 +470,7 @@ function defaultConfig() {
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
     { code: 'VID', name: 'Video', colour: '#7a3fd1' },
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
-    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4 };
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25 };
 }
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
@@ -479,6 +485,8 @@ function normCfg(c) {
   o.templates = Array.from(new Set(names(o.templates))); o.recentTemplates = names(o.recentTemplates);
   o.defaultTemplate = typeof o.defaultTemplate === 'string' && o.defaultTemplate ? o.defaultTemplate : null;
   o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
+  const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
+  o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
   return o;
 }
 
@@ -1514,6 +1522,13 @@ function fillBoard(svg, B) {
     svg.appendChild(g);
   }
   const im = img(B); if (im) svg.appendChild(im);
+  const st = S.cfg.boardGrid;   // display only: over the images, under the ink, never in B.strokes
+  if (st) {
+    let d = '', D = '';
+    for (let x = st; x < BOARD_W; x += st) { if (x % (st * 4)) d += 'M' + x + ' 0V' + H; else D += 'M' + x + ' 0V' + H; }
+    for (let y = st; y < H; y += st) { if (y % (st * 4)) d += 'M0 ' + y + 'H' + BOARD_W; else D += 'M0 ' + y + 'H' + BOARD_W; }
+    svg.append(sv('path', { class: 'bgrid', d }), sv('path', { class: 'bgrid maj', d: D }));
+  }
   const g = sv('g', { class: 'bstrokes' }); svg.appendChild(g); drawStrokes(B, g);
 }
 function boardFig(B, w, acts) {
@@ -3061,9 +3076,10 @@ function openSettings() {
     const ls = h('select'); for (const [k, n] of [['en', 'English'], ['it', 'Italiano']]) { const o = h('option', null, n); o.value = k; ls.appendChild(o); } ls.value = LANG;
     const fs2 = h('select'); for (const v of [0.25, 0.4, 0.55, 0.7]) { const o = h('option', null, Math.round(v * 100) + '%'); o.value = v; fs2.appendChild(o); }
     fs2.value = [0.25, 0.4, 0.55, 0.7].reduce((a, v) => Math.abs(v - S.cfg.templateFade) < Math.abs(a - S.cfg.templateFade) ? v : a, 0.4);
+    const gs = h('select'); for (const [v, k] of [[0, 'gridOff'], [25, 'gridFine'], [50, 'gridCoarse']]) { const o = h('option', null, t(k)); o.value = v; gs.appendChild(o); } gs.value = S.cfg.boardGrid;
     const tb = h('button', 'btn sm', t('tplManage') + ' (' + S.templates.size + ')'); tb.type = 'button'; tb.onclick = () => { close(); enterTemplates(); };
     body.append(h('label', null, t('showTitle')), ti, h('label', null, t('paperL')), ps, h('label', null, t('langL')), ls,
-      h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('deptsL')));
+      h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
       const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input');
@@ -3079,7 +3095,7 @@ function openSettings() {
     dlgBtn(foot, t('save'), 'pri', () => {
       const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked }; });
       const paperChanged = ps.value !== S.cfg.paper;
-      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value }));
+      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
       close();
       if (paperChanged) S.meas = new Map();

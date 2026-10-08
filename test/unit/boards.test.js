@@ -1,5 +1,5 @@
 // Arrangement of the boards on a facing page, checked without a browser.
-const { ok, facingLayout, FIG_EXTRA, FIG_GAP, MAX_BOARDS } = require('./_core');
+const { ok, normCfg, facingLayout, FIG_EXTRA, FIG_GAP, MAX_BOARDS } = require('./_core');
 const W = 733, H = 966;   // A4: page body less the "+ Board" button
 const blank = n => Array(n).fill(0.75);
 const cols = n => facingLayout(blank(n), W, H).cols;
@@ -16,3 +16,9 @@ ok(facingLayout(blank(3), W, H).w === facingLayout(blank(4), W, H).w, 'a half-em
 ok(used([0.75, 1.5, 0.5]) <= H && used([1.7, 0.25, 0.25, 1.7, 0.75]) <= H, 'boards of mixed shapes still fit: a row is as tall as its taller board');
 ok(facingLayout([], W, H).cols === 1 && facingLayout([], W, H).w === W, 'no board gives one column and no division by zero');
 ok(MAX_BOARDS === 8, 'the interface stops at 8 boards per page');
+
+// the grid behind the ink is a setting of the show: a step in board units, 0 for none
+ok(normCfg({}).boardGrid === 25, 'a show without the setting, as an older release wrote it, gets the fine grid');
+ok(normCfg({ boardGrid: 0 }).boardGrid === 0, 'grid off stays off');
+ok(normCfg({ boardGrid: 50 }).boardGrid === 50 && normCfg({ boardGrid: '50' }).boardGrid === 50, 'the coarse grid is kept');
+ok(normCfg({ boardGrid: 'x' }).boardGrid === 25 && normCfg({ boardGrid: 30 }).boardGrid === 25 && normCfg({ boardGrid: null }).boardGrid === 25, 'an unknown step falls back to the fine grid');

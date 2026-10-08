@@ -247,6 +247,13 @@ function fillBoard(svg, B) {
     svg.appendChild(g);
   }
   const im = img(B); if (im) svg.appendChild(im);
+  const st = S.cfg.boardGrid;   // display only: over the images, under the ink, never in B.strokes
+  if (st) {
+    let d = '', D = '';
+    for (let x = st; x < BOARD_W; x += st) { if (x % (st * 4)) d += 'M' + x + ' 0V' + H; else D += 'M' + x + ' 0V' + H; }
+    for (let y = st; y < H; y += st) { if (y % (st * 4)) d += 'M0 ' + y + 'H' + BOARD_W; else D += 'M0 ' + y + 'H' + BOARD_W; }
+    svg.append(sv('path', { class: 'bgrid', d }), sv('path', { class: 'bgrid maj', d: D }));
+  }
   const g = sv('g', { class: 'bstrokes' }); svg.appendChild(g); drawStrokes(B, g);
 }
 function boardFig(B, w, acts) {

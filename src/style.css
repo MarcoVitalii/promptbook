@@ -112,6 +112,9 @@ body:not(.facing) .page.facing{display:none}
 .links path.rail{stroke-width:2.4;opacity:.8;stroke-linejoin:round}
 .ink path,.bstrokes path,.bstatic path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .bbase{opacity:var(--tfade,.4);filter:grayscale(1)}
+.bgrid{fill:none;stroke:var(--muted);stroke-width:.5px;opacity:.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.bgrid.maj{opacity:.36}
+@media screen{body.night .bgrid{opacity:.24}body.night .bgrid.maj{opacity:.38}}
 path.kblack{stroke:var(--tx)}
 body.nocues .w.cued{box-shadow:none;background:none}
 body.nocues .tags,body.nocues .links,body.nocues .row.mark .rule{visibility:hidden}
@@ -233,6 +236,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   .spread{display:block;margin:0}
   .page{box-shadow:none;break-after:page;break-inside:avoid}
   .bcap{visibility:hidden}
+  .bgrid{opacity:.24}.bgrid.maj{opacity:.38}
   body.pr-book .page.facing{display:block!important}
   body.pr-script .page.facing{display:none!important}
   .spread:last-child .page:last-child,body.pr-script .spread:last-child .page.script{break-after:auto}
