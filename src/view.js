@@ -274,14 +274,15 @@ function renderFacing(i) {
   const bs = P.boards.map(ensureBoard);
   if (!bs.length) body.appendChild(h('div', 'fempty noprint', t('facingEmpty')));
   else {
-    const availW = pp.w - 60, availH = pp.h - GEO.top - GEO.bot, capH = 26, gap = 12;
-    const sum = bs.reduce((a, B) => a + availW * effH(B) / BOARD_W, 0);
-    const f = Math.min(1, (availH - bs.length * (capH + gap) - 44) / sum);
+    const availW = pp.w - 60, availH = pp.h - GEO.top - GEO.bot - 44;   // 44: the "+ Board" button and its gap
+    const L = facingLayout(bs.map(B => effH(B) / BOARD_W), availW, availH);
+    const grid = h('div', 'fgrid'); grid.style.setProperty('--cols', L.cols);
     for (const B of bs) {
       const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
       acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
-      body.appendChild(boardFig(B, Math.floor(availW * f), acts));
+      grid.appendChild(boardFig(B, L.w, acts));
     }
+    body.appendChild(grid);
   }
   const add = h('button', 'addboard pbtn noprint', t('addBoard')); add.type = 'button'; add.dataset.act = 'addboard';
   body.appendChild(add);
@@ -313,6 +314,7 @@ function newBoard(mkText, init) {
 }
 function lastOfGroup(b) { const bs = gBlocks(b.g); return bs[bs.length - 1]; }
 function addBoardAfter(b, init) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init); }
+function pageFull(pi) { const P = S.pages[pi]; if (!P || P.boards.length < MAX_BOARDS) return false; toast(t('boardsFull', MAX_BOARDS)); return true; }
 function addBoardOnPage(pi, init) {
   const P = S.pages[pi], selB = S.sel && S.byId.get(S.sel.id);
   if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init);
@@ -360,7 +362,7 @@ function pickImage(cb) {
 }
 function boardAction(btn, x, y) {
   const act = btn.dataset.act, page = btn.closest('.page');
-  if (act === 'addboard') { const pi = +page.dataset.pi; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
+  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
   const B = figBoard(btn.closest('.board')); if (!B) return;
   if (act === 'bimage' || act === 'timage') pickImage(f => setBoardImage(B, f));
   else if (act === 'bbase' || act === 'tbase') openBasePop(B, x, y);
@@ -890,7 +892,7 @@ function openPin(b, wi, x, y) {
       cb.onchange = () => { own = cb.checked; setTitle(); fillEnds(); };
       lb.append(cb, t('ownLine')); row.appendChild(lb);
     } else row.appendChild(h('span', 'grow'));
-    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); addBoardFlow(init => addBoardAfter(b, init), x, y); };
+    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow(init => addBoardAfter(b, init), x, y); };
     const eb = h('button', 'btn sm', t('editText')); eb.type = 'button'; eb.onclick = () => { closePop(); editGroup(b.g); };
     row.append(bb, eb); p.appendChild(row);
     pop.key = ev => {

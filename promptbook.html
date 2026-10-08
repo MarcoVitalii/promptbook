@@ -138,6 +138,7 @@ body.noink .ink,body.noink .bstrokes,body.noink .flag{visibility:hidden}
 
 /* facing page */
 .fbody{position:absolute;left:30px;right:30px;top:54px;bottom:58px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.fgrid{display:grid;grid-template-columns:repeat(var(--cols,1),max-content);gap:12px;justify-content:center;align-items:start;justify-items:center}
 .board{margin:0;display:flex;flex-direction:column}
 .bcap{display:flex;align-items:center;gap:6px;height:26px;font-size:12px;line-height:16px;color:var(--tx2)}
 .bcap b{font-weight:700;margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -339,7 +340,7 @@ en: {
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
-  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bName: 'Board name', facingEmpty: 'No board on this page',
+  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
   rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
   rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
@@ -389,7 +390,7 @@ it: {
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
-  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina',
+  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
   rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
   rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
@@ -449,6 +450,9 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
+const MAX_BOARDS = 8;   // per facing page, through the interface
+const FIG_EXTRA = 26;   // height a board figure takes besides its drawing
+const FIG_GAP = 12;
 const VERSION = 'r1.5';
 
 function defaultConfig() {
@@ -1166,6 +1170,15 @@ function lineStarts(b) {
   M.textContent = '';
   return (m.ls = starts);
 }
+/* boards on a facing page: one column up to two boards, then two columns filled row by row.
+   hs: height of each board for a width of 1. Returns the columns and the one width all boards get. */
+function facingLayout(hs, availW, availH) {
+  const n = hs.length, cols = n > 2 ? 2 : 1, cw = (availW - (cols - 1) * FIG_GAP) / cols;
+  let sum = 0, rows = 0;
+  for (let k = 0; k < n; k += cols) { sum += cw * Math.max(...hs.slice(k, k + cols)); rows++; }
+  const f = sum ? Math.min(1, (availH - rows * (FIG_EXTRA + FIG_GAP)) / sum) : 1;
+  return { cols, w: Math.floor(cw * f) };
+}
 function paginate() {
   const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
   let cur = null, y = 0, act = '', scene = '';
@@ -1526,14 +1539,15 @@ function renderFacing(i) {
   const bs = P.boards.map(ensureBoard);
   if (!bs.length) body.appendChild(h('div', 'fempty noprint', t('facingEmpty')));
   else {
-    const availW = pp.w - 60, availH = pp.h - GEO.top - GEO.bot, capH = 26, gap = 12;
-    const sum = bs.reduce((a, B) => a + availW * effH(B) / BOARD_W, 0);
-    const f = Math.min(1, (availH - bs.length * (capH + gap) - 44) / sum);
+    const availW = pp.w - 60, availH = pp.h - GEO.top - GEO.bot - 44;   // 44: the "+ Board" button and its gap
+    const L = facingLayout(bs.map(B => effH(B) / BOARD_W), availW, availH);
+    const grid = h('div', 'fgrid'); grid.style.setProperty('--cols', L.cols);
     for (const B of bs) {
       const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
       acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
-      body.appendChild(boardFig(B, Math.floor(availW * f), acts));
+      grid.appendChild(boardFig(B, L.w, acts));
     }
+    body.appendChild(grid);
   }
   const add = h('button', 'addboard pbtn noprint', t('addBoard')); add.type = 'button'; add.dataset.act = 'addboard';
   body.appendChild(add);
@@ -1565,6 +1579,7 @@ function newBoard(mkText, init) {
 }
 function lastOfGroup(b) { const bs = gBlocks(b.g); return bs[bs.length - 1]; }
 function addBoardAfter(b, init) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init); }
+function pageFull(pi) { const P = S.pages[pi]; if (!P || P.boards.length < MAX_BOARDS) return false; toast(t('boardsFull', MAX_BOARDS)); return true; }
 function addBoardOnPage(pi, init) {
   const P = S.pages[pi], selB = S.sel && S.byId.get(S.sel.id);
   if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init);
@@ -1612,7 +1627,7 @@ function pickImage(cb) {
 }
 function boardAction(btn, x, y) {
   const act = btn.dataset.act, page = btn.closest('.page');
-  if (act === 'addboard') { const pi = +page.dataset.pi; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
+  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
   const B = figBoard(btn.closest('.board')); if (!B) return;
   if (act === 'bimage' || act === 'timage') pickImage(f => setBoardImage(B, f));
   else if (act === 'bbase' || act === 'tbase') openBasePop(B, x, y);
@@ -2142,7 +2157,7 @@ function openPin(b, wi, x, y) {
       cb.onchange = () => { own = cb.checked; setTitle(); fillEnds(); };
       lb.append(cb, t('ownLine')); row.appendChild(lb);
     } else row.appendChild(h('span', 'grow'));
-    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); addBoardFlow(init => addBoardAfter(b, init), x, y); };
+    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow(init => addBoardAfter(b, init), x, y); };
     const eb = h('button', 'btn sm', t('editText')); eb.type = 'button'; eb.onclick = () => { closePop(); editGroup(b.g); };
     row.append(bb, eb); p.appendChild(row);
     pop.key = ev => {
@@ -3149,6 +3164,7 @@ document.addEventListener('paste', e => {
   e.preventDefault();
   const f = it.getAsFile(), init = { image: null, imageData: null, h: 750, base: null };
   const selB = S.sel && S.byId.get(S.sel.id);
+  if (pageFull(selB ? pageIndexOf(lastOfGroup(selB))[0] : currentPage())) return;
   const B = selB ? addBoardAfter(selB, init) : addBoardOnPage(currentPage(), init);
   setBoardImage(B, f); toast(t('pastedImg'));
 });

@@ -591,6 +591,7 @@ document.addEventListener('paste', e => {
   e.preventDefault();
   const f = it.getAsFile(), init = { image: null, imageData: null, h: 750, base: null };
   const selB = S.sel && S.byId.get(S.sel.id);
+  if (pageFull(selB ? pageIndexOf(lastOfGroup(selB))[0] : currentPage())) return;
   const B = selB ? addBoardAfter(selB, init) : addBoardOnPage(currentPage(), init);
   setBoardImage(B, f); toast(t('pastedImg'));
 });

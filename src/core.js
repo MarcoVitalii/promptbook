@@ -28,7 +28,7 @@ en: {
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
-  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bName: 'Board name', facingEmpty: 'No board on this page',
+  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
   rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
   rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
@@ -78,7 +78,7 @@ it: {
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
-  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina',
+  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
   rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
   rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
@@ -138,6 +138,9 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
+const MAX_BOARDS = 8;   // per facing page, through the interface
+const FIG_EXTRA = 26;   // height a board figure takes besides its drawing
+const FIG_GAP = 12;
 const VERSION = 'r1.5';
 
 function defaultConfig() {
@@ -854,6 +857,15 @@ function lineStarts(b) {
   }
   M.textContent = '';
   return (m.ls = starts);
+}
+/* boards on a facing page: one column up to two boards, then two columns filled row by row.
+   hs: height of each board for a width of 1. Returns the columns and the one width all boards get. */
+function facingLayout(hs, availW, availH) {
+  const n = hs.length, cols = n > 2 ? 2 : 1, cw = (availW - (cols - 1) * FIG_GAP) / cols;
+  let sum = 0, rows = 0;
+  for (let k = 0; k < n; k += cols) { sum += cw * Math.max(...hs.slice(k, k + cols)); rows++; }
+  const f = sum ? Math.min(1, (availH - rows * (FIG_EXTRA + FIG_GAP)) / sum) : 1;
+  return { cols, w: Math.floor(cw * f) };
 }
 function paginate() {
   const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
