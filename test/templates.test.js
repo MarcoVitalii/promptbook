@@ -8,7 +8,7 @@ const OUT = process.env.OUT || '.';
   const ev = f => page.evaluate(f);
   const box = async sel => page.locator(sel).first().boundingBox();
   const menu = async label => { await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: label }).click(); };
-  const fig = name => page.locator('.board', { has: page.locator('.bcap b', { hasText: new RegExp('^' + name + '$') }) });
+  const fig = name => page.locator('.board', { has: page.locator('.bname', { hasText: new RegExp('^' + name + '$') }) });
   const draw = async (f, pts) => { const b = await f.locator('svg').boundingBox(); await pen(pts.map(p => [b.x + p[0], b.y + p[1]])); };
 
   // 1. templates live in their own view, outside the script

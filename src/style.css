@@ -122,8 +122,8 @@ body.noink .ink,body.noink .bstrokes,body.noink .flag{visibility:hidden}
 .fbody{position:absolute;left:30px;right:30px;top:54px;bottom:58px;display:flex;flex-direction:column;align-items:center;gap:12px}
 .fgrid{display:grid;grid-template-columns:repeat(var(--cols,1),max-content);gap:12px;justify-content:center;align-items:start;justify-items:center}
 .board{margin:0;display:flex;flex-direction:column}
-.bcap{display:flex;align-items:center;gap:6px;height:26px;font-size:12px;line-height:16px;color:var(--tx2)}
-.bcap b{font-weight:700;margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bcap{display:flex;align-items:center;justify-content:flex-end;gap:6px;height:26px;font-size:12px;line-height:16px;color:var(--tx2)}
+.bname{display:block;width:100%;height:20px;padding:0;border:0;background:transparent;font:inherit;font-size:12px;line-height:20px;font-weight:700;color:var(--tx2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .bcap button,.addboard{font:inherit;font-size:11px;min-height:22px;padding:0 7px;border:1px solid var(--rule);background:transparent;color:var(--tx2);border-radius:4px;cursor:pointer}
 .board svg{display:block;background:var(--paper);outline:1px solid var(--rule)}
 .bcap{flex-wrap:nowrap;overflow:hidden}
@@ -232,6 +232,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   #spreads{transform:none!important;position:static;width:auto!important}
   .spread{display:block;margin:0}
   .page{box-shadow:none;break-after:page;break-inside:avoid}
+  .bcap{visibility:hidden}
   body.pr-book .page.facing{display:block!important}
   body.pr-script .page.facing{display:none!important}
   .spread:last-child .page:last-child,body.pr-script .spread:last-child .page.script{break-after:auto}

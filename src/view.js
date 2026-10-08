@@ -251,11 +251,23 @@ function fillBoard(svg, B) {
 }
 function boardFig(B, w, acts) {
   const fig = h('figure', 'board'); fig.dataset.name = B.name; if (B.tpl) fig.dataset.tpl = '1'; fig.style.width = w + 'px';
-  const cap = h('div', 'bcap'); cap.appendChild(h('b', null, B.name));
-  for (const [act, label] of acts) { const bt = h('button', 'pbtn noprint', label); bt.type = 'button'; bt.dataset.act = act; cap.appendChild(bt); }
+  const cap = h('div', 'bcap');
+  const add = (act, label, title) => { const bt = h('button', 'pbtn', label); bt.type = 'button'; bt.dataset.act = act; if (title) bt.title = title; cap.appendChild(bt); };
+  if (B.tpl || w >= FIG_WIDE) for (const [act, label] of acts) add(act, label);
+  else add('bmore', '\u22ef', t('bMore'));   // a narrow figure: one button that opens the list
   fig.appendChild(cap);
   const svg = sv('svg', { width: w, height: Math.round(w * effH(B) / BOARD_W) }); fillBoard(svg, B); fig.appendChild(svg);
+  // the name is a button so that the pen does not draw on it and a tap renames
+  const nm = h('button', 'bname pbtn', B.name); nm.type = 'button'; nm.dataset.act = 'bname'; nm.title = B.name; fig.appendChild(nm);
   return fig;
+}
+/* the buttons of a figure: [action, label] */
+function boardActs(B) {
+  if (B.tpl) return [['tname', t('bRename')], ['tbase', t('tplBase', B.base || t('tplNone'))], ['timage', t('bImage')],
+    ['tdefault', (S.cfg.defaultTemplate === B.name ? '\u2605 ' : '\u2606 ') + t('tplDefault')], ['tchild', t('tplChild')], ['tclear', t('bClear')], ['tdelete', t('del')]];
+  const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
+  acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
+  return acts;
 }
 function figBoard(fig) { return fig ? (fig.dataset.tpl ? S.templates.get(fig.dataset.name) : S.boards.get(fig.dataset.name)) || null : null; }
 /* redraw every figure that shows B, itself or through its chain */
@@ -277,11 +289,7 @@ function renderFacing(i) {
     const availW = pp.w - 60, availH = pp.h - GEO.top - GEO.bot - 44;   // 44: the "+ Board" button and its gap
     const L = facingLayout(bs.map(B => effH(B) / BOARD_W), availW, availH);
     const grid = h('div', 'fgrid'); grid.style.setProperty('--cols', L.cols);
-    for (const B of bs) {
-      const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
-      acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
-      grid.appendChild(boardFig(B, L.w, acts));
-    }
+    for (const B of bs) grid.appendChild(boardFig(B, L.w, boardActs(B)));
     body.appendChild(grid);
   }
   const add = h('button', 'addboard pbtn noprint', t('addBoard')); add.type = 'button'; add.dataset.act = 'addboard';
@@ -363,7 +371,14 @@ function pickImage(cb) {
 function boardAction(btn, x, y) {
   const act = btn.dataset.act, page = btn.closest('.page');
   if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
-  const B = figBoard(btn.closest('.board')); if (!B) return;
+  const B = figBoard(btn.closest('.board')); if (B) boardAct(act, B, x, y);
+}
+/* the token of a board in the script: its block and its cue */
+function boardCue(B) {
+  const b = S.blocks.find(q => q.cues.some(c => c.board && c.label === B.name));
+  return b ? { b, c: b.cues.find(q => q.board && q.label === B.name) } : null;
+}
+function boardAct(act, B, x, y) {
   if (act === 'bimage' || act === 'timage') pickImage(f => setBoardImage(B, f));
   else if (act === 'bbase' || act === 'tbase') openBasePop(B, x, y);
   else if (act === 'btotpl') copyToTemplates(B);
@@ -373,9 +388,17 @@ function boardAction(btn, x, y) {
     pushHist({ undo: () => { B.strokes = old; boardChanged(B); }, redo: () => { B.strokes = []; boardChanged(B); } });
     boardChanged(B);
   } else if (act === 'bremove') {
-    const b = S.blocks.find(q => q.cues.some(c => c.board && c.label === B.name));
-    const c = b && b.cues.find(q => q.board && q.label === B.name);
-    if (c) removeCue(b.id, c.s);
+    const at = boardCue(B); if (at) removeCue(at.b.id, at.c.s);
+  } else if (act === 'bname') {
+    if (B.tpl) openTplName(B, x, y);
+    else { const at = boardCue(B); if (at) openBoardPop(at.b, at.c, x, y); }
+  } else if (act === 'bmore') {
+    openPop(x, y, p => {
+      p.appendChild(h('p', 'pt', B.name));
+      const col = h('div', 'pcol');
+      for (const [a, label] of boardActs(B)) { const bt = h('button', 'btn', label); bt.type = 'button'; bt.onclick = () => { closePop(); boardAct(a, B, x, y); }; col.appendChild(bt); }
+      p.appendChild(col);
+    });
   } else if (act === 'tname') openTplName(B, x, y);
   else if (act === 'tdefault') { S.cfg.defaultTemplate = S.cfg.defaultTemplate === B.name ? null : B.name; markDirty('cfg'); renderTemplates(); }
   else if (act === 'tchild') newTemplate(B.name);
@@ -519,8 +542,7 @@ function renderTemplates() {
   const w = clamp(desk.clientWidth - 90, 360, 940);
   for (const T of list) {
     const sheet = h('div', 'page tsheet');
-    sheet.appendChild(boardFig(T, w, [['tname', t('bRename')], ['tbase', t('tplBase', T.base || t('tplNone'))], ['timage', t('bImage')],
-      ['tdefault', (S.cfg.defaultTemplate === T.name ? '\u2605 ' : '\u2606 ') + t('tplDefault')], ['tchild', t('tplChild')], ['tclear', t('bClear')], ['tdelete', t('del')]]));
+    sheet.appendChild(boardFig(T, w, boardActs(T)));
     host.appendChild(sheet);
   }
   desk.scrollTop = top;

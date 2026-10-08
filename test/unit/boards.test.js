@@ -9,7 +9,7 @@ const used = hs => { const L = facingLayout(hs, W, H); let s = 0; for (let k = 0
 ok(cols(1) === 1 && cols(2) === 1, 'one or two boards take one column');
 ok([3, 4, 5, 8].every(n => cols(n) === 2), 'three boards or more take two columns');
 ok(facingLayout(blank(1), W, H).w === 733, 'one blank board on A4 is 733 wide, as before');
-ok(facingLayout(blank(2), W, H).w === Math.floor(W * (H - 2 * 38) / (2 * W * 0.75)), 'two boards keep the size the single column gave them');
+ok(facingLayout(blank(2), W, H).w === Math.floor(W * (H - 2 * (FIG_EXTRA + FIG_GAP)) / (2 * W * 0.75)), 'two boards keep the size the single column gave them');
 for (let n = 1; n <= 10; n++) ok(used(blank(n)) <= H, n + ' blank boards fit the page height: ' + Math.round(used(blank(n))));
 ok(facingLayout(blank(3), W, H).w * 2 + FIG_GAP <= W && facingLayout(blank(8), W, H).w * 2 + FIG_GAP <= W, 'two columns and their gap fit the page width');
 ok(facingLayout(blank(3), W, H).w === facingLayout(blank(4), W, H).w, 'a half-empty row does not change the size');
