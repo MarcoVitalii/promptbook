@@ -151,7 +151,7 @@ function big() {
   // conflict: unsaved local change + outside change
   await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); const fh = await d.getFileHandle('script.md'); const tx = await (await fh.getFile()).text(); await new Promise(r => setTimeout(r, 30)); const w = await fh.createWritable(); await w.write(tx + '\nANNA: aggiunta fuori.\n'); await w.close(); PB.commitText(PB.serialize() + '\nMARCO: aggiunta dentro.\n'); });
   await page.waitForTimeout(1500);
-  ok(await page.locator('#banner').isVisible() && (await page.locator('#banner').textContent()).includes('script.md'), 'conflict banner instead of overwriting: ' + await page.locator('#banner').textContent());
+  ok(await page.locator('#banner').isVisible() && await page.evaluate(() => PB.S.store.conflict) && (await page.locator('#banner button').count()) === 2, 'conflict banner instead of overwriting: ' + await page.locator('#banner').textContent());
   const disk = await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); return (await (await d.getFileHandle('script.md')).getFile()).text(); });
   ok(disk.includes('aggiunta fuori') && !disk.includes('aggiunta dentro'), 'file on disk untouched while the conflict is open');
 

@@ -11,7 +11,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   // file:// storage facilities used by "reopen last folder"
   console.log('file:// idb', await page.evaluate(async () => { await idbSet('probe', { a: 1 }); const v = await idbGet('probe'); let opfs = 'n/a'; try { const d = await navigator.storage.getDirectory(); await idbSet('h', d); const hh = await idbGet('h'); opfs = hh && hh.kind; } catch (e) { opfs = 'err ' + e.name; } return [JSON.stringify(v), opfs]; }));
   // start from pasted text with messy input
-  await page.getByText('Start from pasted text').click();
+  await page.getByRole('button', { name: 'Start from pasted text' }).click();
   await page.waitForSelector('#dlg textarea');
   const messy = 'ATTO PRIMO\r\n\r\nSCENA 1: Il porto\r\n\r\n(Entra ANNA.)\r\nANNA:Chi è là?   \r\nmarco: sono io\r\nMARCO : Sono io.\r\nANNA E MARCO: Insieme!\r\nPoi una riga che continua la battuta.\r\n\r\nUna riga orfana dopo uno spazio.\r\n(un’azione che\r\ncontinua su due righe)\r\nSOLDATO 1: Alt! Sono le 10:30.\r\nNOTA: questo è un commento del regista\r\n';
   await page.locator('#dlg textarea').fill(messy);

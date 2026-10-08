@@ -156,6 +156,7 @@ Releases are kept in a git repository whose root is the project: `promptbook.htm
 | `r1.0` | 2026-10-06 | Cue ends, board templates |
 | `r1.3` | 2026-10-07 | Linking cues (`{SND 6 / SND 5}`), cue notes, exports per department; "runs" removed |
 | `r1.4` | 2026-10-07 | `%%` comments, to-do notes as a review department, Margin and Description columns, automatic numbers |
+| `r1.5` | 2026-10-08 | Fix: a reopened show file saved only its first change; “Keep mine” failed |
 
 Rule for every release: change `src/`, set `VERSION`, run `python3 build.py`, run `sh test/run.sh` with every check passing, add the `CHANGELOG.md` entry, commit, tag. The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
 

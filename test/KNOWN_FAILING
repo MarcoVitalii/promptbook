@@ -1,0 +1,2 @@
+# Test files that fail for a known reason. They still run; test/run.js names them in its totals without failing.
+# One path per line. Remove a line when the file passes again.

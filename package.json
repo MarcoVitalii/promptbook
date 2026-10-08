@@ -1,0 +1,22 @@
+{
+  "name": "promptbook",
+  "version": "1.5.0",
+  "private": true,
+  "description": "A prompt book for theatre in one self-contained HTML file",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "setup": "npm ci && playwright install chromium && git config core.hooksPath scripts/githooks",
+    "build": "python3 build.py",
+    "check": "sh scripts/check.sh full",
+    "check:fast": "sh scripts/check.sh fast",
+    "test": "sh scripts/check.sh full --force",
+    "test:unit": "node test/run.js test/unit",
+    "test:browser": "node test/run.js test"
+  },
+  "devDependencies": {
+    "playwright": "1.64.0"
+  }
+}

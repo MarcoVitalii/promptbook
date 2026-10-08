@@ -109,7 +109,8 @@ async function readZip(file) {
     if (name.endsWith('/') || (flags & 1)) continue;
     const lh = new DataView(await file.slice(lo, lo + 30).arrayBuffer());
     const start = lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), body = file.slice(start, start + csz);
-    if (method === 0) out.set(name, body);
+    // copied into memory: a slice of the file can no longer be read once the file is rewritten
+    if (method === 0) out.set(name, new Blob([await body.arrayBuffer()]));
     else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error('damaged zip file'); out.set(name, new Blob([z])); }
     else throw new Error('unsupported zip compression');
   }

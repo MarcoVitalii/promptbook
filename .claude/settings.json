@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 build.py)",
+      "Bash(sh scripts/check.sh *)",
+      "Bash(node test/run.js *)",
+      "Bash(node test/*.test.js)",
+      "Bash(node test/unit/*.test.js)",
+      "Bash(npm run *)",
+      "Bash(npm test)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/hooks/guard.py\"", "timeout": 5 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/hooks/post-edit.sh\"", "timeout": 30, "statusMessage": "Build and fast checks" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/hooks/stop.sh\"", "timeout": 300, "statusMessage": "Browser checks" }]
+      }
+    ]
+  }
+}

@@ -138,7 +138,7 @@ const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.pad
 const BLACK = '#1b1a17';
 const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
 const BOARD_W = 1000;
-const VERSION = 'r1.4';
+const VERSION = 'r1.5';
 
 function defaultConfig() {
   const it = LANG === 'it';

@@ -1,14 +1,16 @@
 // Show file: one .zip instead of a folder. Private browser files stand in for the real file dialogs.
-const { ok, open } = require('./_util');
+const { ok, open, serve } = require('./_util');
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 (async () => {
-  const { page, done } = await open();
+  // private browser files are refused on file://, so the page is served over http
+  const { srv, url } = await serve();
+  const { page, errs, done } = await open({ url });
   const ev = (fn, a) => page.evaluate(fn, a);
   const settle = () => page.waitForFunction(() => !PB.S.store.saving && !PB.S.store.dirty.script && !PB.S.store.dirty.cfg && !PB.S.store.dirty.boards.size);
   const bytes = name => ev(async n => Array.from(new Uint8Array(await (await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile()).arrayBuffer())), name).then(a => Buffer.from(a));
 
   // 1. a show built in memory, with a board that has an image, saved as a show file
-  await ev(() => PB.startMemory('# ATTO\n\nANNA: Ciao {LX 1 | luce}.\n{BOARD Pianta}\nMARCO: Ecco.\n', { title: 'Zip' }, null, [{ name: 'Pianta', image: 'p.png', w: 1000, h: 500, strokes: [{ c: '#000', w: 2, p: [[1, 1], [50, 50]] }], imageData: (() => { const c = document.createElement('canvas'); c.width = 40; c.height = 20; c.getContext('2d').fillRect(0, 0, 20, 10); return c.toDataURL('image/png'); })() }]));
+  await ev(() => PB.startMemory('# ATTO\n\nANNA: Ciao {LX 1 | luce}.\n{BOARD Pianta}\nMARCO: Ecco.\n', { title: 'Zip' }, null, [{ name: 'Pianta', image: 'p.png', w: 1000, h: 500, strokes: [{ colour: '#000', width: 2, points: [[1, 1], [50, 50]] }], imageData: (() => { const c = document.createElement('canvas'); c.width = 40; c.height = 20; c.getContext('2d').fillRect(0, 0, 20, 10); return c.toDataURL('image/png'); })() }]));
   await ev(async () => { const root = await navigator.storage.getDirectory(); window.showSaveFilePicker = async () => root.getFileHandle('zip.promptbook.zip', { create: true }); });
   await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Save as show file' }).click();
   await page.waitForFunction(() => PB.S.store.mode === 'zip' && !PB.S.store.saving && PB.S.store.lastSave);
@@ -32,6 +34,10 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   await settle(); await page.waitForTimeout(100);
   const back = await ev(async () => (await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle('zip.promptbook.zip')).getFile())).get('script.md').text());
   ok(back.includes('ANNA: Ancora.'), 'an edit is saved into the zip');
+  await ev(() => PB.commitText(PB.serialize() + '\nMARCO: E ancora.\n'));
+  await settle(); await page.waitForTimeout(100);
+  const back2 = await ev(async () => (await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle('zip.promptbook.zip')).getFile())).get('script.md').text());
+  ok(back2.includes('MARCO: E ancora.') && await ev(() => !PB.S.store.err), 'a second edit after reopening is saved too');
 
   // 4. changed outside: clean tab reloads, dirty tab asks
   const rewrite = txt => ev(async tx => {
@@ -63,5 +69,8 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   // 6. garbage is refused, current show stays
   await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip', { create: true }); const w = await fh.createWritable(); await w.write('not a zip at all'); await w.close(); window.showOpenFilePicker = async () => [fh]; });
   ok(await ev(() => PB.openZipFile()) === false && await ev(() => PB.S.loaded && PB.serialize().includes('Da cartella')), 'a file that is not a zip is refused and the open show stays open');
-  await done();
+  // the refusal is logged to the console on purpose; anything else there is still a failure
+  ok(errs.length === 1 && /not a zip file/.test(errs[0]), 'the refused file is the only error logged');
+  errs.length = 0;
+  await done(); srv.close();
 })();

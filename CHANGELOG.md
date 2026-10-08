@@ -1,5 +1,17 @@
 # Changelog
 
+## r1.5 — 2026-10-08
+
+Show file
+- Fixed: after a show file was opened, only the first change was saved. Every later save failed, the status showed a save error and the changes stayed in the open tab only. It happened whenever the show held a very small file, such as the ink file of a show with nothing drawn yet.
+- Fixed: “Keep mine”, offered when another program has changed the show file, failed in the same way and left the file as the other program wrote it.
+- The parts of a show file are now read into memory when it is opened, board images included.
+
+If you worked in r1.2 to r1.4 on a show opened from its file, open it again and check that your last changes are there. What was not saved has to be entered again.
+
+Compatibility
+- A show written by r1.4 opens unchanged, and r1.4 opens a show written by r1.5.
+
 ## r1.4 — 2026-10-07
 
 Comments
