@@ -40,6 +40,7 @@ Three properties of the method to keep in mind when reading a green result:
 | r1.6 | 2026-10-08 | 443 pass: 376 browser in 13 files (243 existing, 72 new in `boards`, 61 new in `cue-move`), 67 unit in 3 files (18 existing, 23 new in `boards`, 26 new in `cue-move`). Nothing in `test/KNOWN_FAILING`. | See §4. |
 | r1.7 | 2026-10-09 | 33 new browser checks in `history`, 15 new unit checks in `compare`. The history was read back with git itself (`git fsck`, `git log`, `git diff`). | See §4. |
 | r1.8 | 2026-10-10 | 530 pass, none fail: 448 browser in 15 files (413 existing, 35 new in `shortcuts`), 82 unit in 4 files. Nothing in `test/KNOWN_FAILING`. Node 24.21.0, Playwright headless Chromium on Linux (WSL2). | No existing check had to change for the new toolbar. Day and night were looked at on screenshots at 1500 px; one row of toolbar was measured at 1500 and 1280 px. Not printed, PDF not opened. See §4. |
+| r1.9 | 2026-10-10 | 602 pass, none fail: 504 browser in 16 files (34 new in `block-move`; new checks in `boards`, `templates`, `shortcuts`, `interact`, `cue-move`), 98 unit in 5 files (16 new in `unit/block-move`). Nothing in `test/KNOWN_FAILING`. Node from `.node-version`, Playwright headless Chromium on Linux (WSL2). | Checks that stated the old behaviour were rewritten: "+ Board" as a single tap (`templates`, and an Enter added in five files), "Remove" on boards (`boards`), a board tag that cannot be dragged (`cue-move`). The drag of a block was looked at on one screenshot. On a real show: the client reported "all working as expected" (2026-10-10). Not printed. |
 
 **Measured on 2026-10-09 for this restructuring**, at git `953336a`, Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2): **495 checks pass, none fail**: 413 browser checks in 14 files and 82 unit checks in 4 files. `test/KNOWN_FAILING` is empty. The 4 browser checks beyond the r1.7 record are those added to `test/misc` with the Eraser and Finger fix (`ad08c1e`).
 
@@ -47,6 +48,7 @@ Three properties of the method to keep in mind when reading a green result:
 |---|---|---|
 | `unit/parse` | 18 | TXT (format, frontmatter, comments, undo), CUE-1, CUE-9, UI-5 |
 | `unit/cue-move` | 26 | CUE-30 to CUE-33 |
+| `unit/block-move` | 16 | TXT-31 |
 | `unit/boards` | 23 | BRD-7, BRD-8, BRD-12, STO-13 |
 | `unit/compare` | 15 | HIS-8 to HIS-10, PAG-15 |
 | `parse-undo` | 9 | TXT-2, TXT-5 to TXT-7, TXT-10, BRD-3 |
@@ -59,10 +61,11 @@ Three properties of the method to keep in mind when reading a green result:
 | `frontmatter` | 24 | TXT-11 to TXT-21, PAG-7 to PAG-9, INK-10, CUE-17 |
 | `cue-ends` | 46 | CUE-9 to CUE-20, CUE-37 to CUE-39, CUE-41, INK-6 |
 | `notes-todos` | 39 | TXT-22 to TXT-27, CUE-21 to CUE-24, CUE-35, CUE-36, CUE-40, INK-9, PAG-11 |
-| `templates` | 38 | BRD-14 to BRD-27, PAG-11, PAG-12, STO-8, STO-13 |
-| `boards` | 72 | BRD-5, BRD-7 to BRD-13, BRD-26, STO-13, UI-6 |
-| `cue-move` | 61 | CUE-25 to CUE-34, INP-8 to INP-10 |
-| `shortcuts` | 35 | UI-9 to UI-11, CUE-7 |
+| `templates` | 41 | BRD-14 to BRD-28, PAG-11, PAG-12, STO-8, STO-13 |
+| `boards` | 78 | BRD-5, BRD-7 to BRD-13, BRD-26, BRD-28, UI-12, STO-13, UI-6 |
+| `cue-move` | 62 | CUE-25 to CUE-34, INP-8 to INP-10, TXT-28 |
+| `block-move` | 34 | TXT-28 to TXT-31 |
+| `shortcuts` | 44 | UI-9 to UI-11, CUE-7, CUE-42, UI-12 |
 | `history` | 33 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19, STO-6 |
 
 Requirements with no automated check: TXT-9, TXT-18, TXT-20, CUE-4, INK-11, BRD-4, BRD-6, BRD-19, PAG-3, PAG-20, STO-9, STO-10, STO-14, HIS-4, HIS-12, UI-8. Six of these state that something does not exist or is not done (BRD-6, BRD-19, PAG-3, PAG-20, STO-10, HIS-4) and are checked by reading the code. CUE-4 is a timing with a person. The others are gaps: BRD-4 (image reduction), STO-9 (unused images dropped), HIS-12 (the message for packed history), TXT-9, TXT-20, INK-11, UI-8.
@@ -75,8 +78,9 @@ Collected from every release. Nothing in this list has a recorded trial.
 
 **On the device**
 
+- r1.9 has a recorded trial: the client used it on a real show and reported "all working as expected" (2026-10-10). The report names no machine, pointer or keyboard, so these stay unrecorded for r1.9: the grip under a finger with the pen hovering (palm rule), the name box with the on-screen keyboard, and print.
 - r1.8: the colours by day and in a dark room, the filled tag labels, and whether the corner dock gets under a hand or the pen. The shortcuts on a real keyboard, an Italian one in particular (/ and ? need Shift). The filled labels on paper, in colour and on a black-and-white printer.
-- Nothing of r1.6, r1.7 or r1.8 has run on the rehearsal laptop. r1.0, r1.3 and r1.4 are each recorded as "not yet tried on the laptop". r0.1 is recorded as tried. Which release ran in the rehearsal of 2026-10-08, the one the r1.6 requests came from, is not recorded.
+- Nothing of r1.6, r1.7 or r1.8 is recorded as tried on the rehearsal laptop on its own; r1.9, which contains them, was used on a real show (see above), and that report speaks of the r1.9 features only. r1.0, r1.3 and r1.4 are each recorded as "not yet tried on the laptop". r0.1 is recorded as tried. Which release ran in the rehearsal of 2026-10-08, the one the r1.6 requests came from, is not recorded.
 - A real pen. The pen's eraser end could not even be simulated.
 - The palm rule: a hand resting on the screen while the pen writes or hovers (INP-3).
 - The finger hold on a cue tag, the pen drag from a tag, and a palm landing during a drag (INP-8, INP-9). Whether 0.3 s and 8 px suit a real finger is not known.

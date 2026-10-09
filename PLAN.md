@@ -1,7 +1,7 @@
 # Promptbook — Plan
 
 **Plan:** v1.0, 2026-10-09. Restructured with `SPEC.md` v2.0: this file now holds only what is ahead. What the tool must do is in `SPEC.md` and `docs/specs/`; why it is built this way is in `docs/decisions.md`; how each release was checked is in `docs/verification.md`.
-**State:** r1.8 is built, committed on `master` and tagged. r1.7 is on `master` without a tag. r1.6, r1.7 and r1.8 are checked in a simulated browser only.
+**State:** r1.9 is built, committed on `master` and tagged, and its features were tried by the client on a real show (2026-10-10). r1.8 is tagged. r1.7 is on `master` without a tag. r1.6, r1.7 and r1.8 are checked in a simulated browser only.
 
 ---
 
@@ -20,6 +20,7 @@ The first rehearsal with the tool was on 2026-10-08. The plan since then is driv
 | r1.6 | Fixes from the first rehearsals | Device trial (§3, action 4). Tag. Confirmation of five `[ASSUMED]` decisions. |
 | r1.7 | History, variants, locked pages, changes | Device trial (§3, action 5). Tag. Confirmation of its `[ASSUMED]` rows. |
 | r1.8 | Look, cue labels, toolbar and dock, shortcuts | Device trial (§3, action 5a). Confirmation of the keys (UI-9). |
+| r1.9 | Moving blocks, board name box, "Delete" and its key | Reported as working on a real show. Print not tried. |
 
 Which release ran in the rehearsal of 2026-10-08 is not recorded. The earlier question of whether to take r0.1 or r1.0 into it is overtaken.
 
@@ -105,7 +106,7 @@ Console or playback export. Real-time co-editing. Score or bar-number cueing. Ha
 
 ## 9. Releases and versioning
 
-Releases are kept in a git repository whose root is the project. Tags that exist: `r1.1` to `r1.6` and `r1.8`. r0 and r0.1 are not in this repository; r1.0 is its first commit (`33118d4`) and has no tag; r1.7 is committed and has no tag; the tag `r1.6` is on `a3d735b`, later than the r1.6 release. The table of releases is in `SPEC.md` §6.
+Releases are kept in a git repository whose root is the project. Tags that exist: `r1.1` to `r1.6`, `r1.8` and `r1.9`. r0 and r0.1 are not in this repository; r1.0 is its first commit (`33118d4`) and has no tag; r1.7 is committed and has no tag; the tag `r1.6` is on `a3d735b`, later than the r1.6 release. The table of releases is in `SPEC.md` §6.
 
 Rule for every release:
 

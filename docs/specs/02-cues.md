@@ -20,6 +20,8 @@ Later requests, as received:
 - **Ends, r1.0:** "support for end of cues (e.g. when a music should stop)". Until then a stop could only be written as another cue with "stop" in its description, which keeps the list flat: it cannot show what is running at a given line, or what was never stopped.
 - **Change request, r1.3:** "not all video/audio cues need an end"; "fading can be another cue to signal the change or something an operator needs to remember"; a longer optional description shown only in the cue list; exports per department.
 - **Change request, r1.8:** "cues more visible", part of a request about the look of the page (quoted in full in `09-workbench.md`). Read as: the tag and the box round the cue word must be found by colour at a glance; nothing about where a cue sits changes.
+- **Change request, 2026-10-10:** "once one label for the cue is selected, cursor should be already to margin text as it's the most frequent field to fill, then tab should move to description".
+- **Change request, 2026-10-10 (second):** "keep consisten the terms, now boards have remove and cues have delete. keep one and make a hotkey for it for when the cue is selected." Read as `[ASSUMED]`: "selected" is the cue whose box is open, since that is the only way a cue is picked.
 - **Change request, r1.4:** quick notes to review after rehearsals; cue list printed only from its panel; separate columns for the margin text and the description; a shorter cue line with the cue word marked; a blank number becomes the last plus one.
 - **After the first rehearsals, 2026-10-08, r1.6:** "Moving existing cues requires copy pasting the underlying annotation, would be much better to support press with mouse or finger and move it around until release."
 
@@ -36,7 +38,7 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 |---|---|---|---|---|
 | CUE-1 | A cue is a token in the script text, `{DEPT label \| margin text \| description}`. Label, margin text and description are all optional. Being in the text, it survives every edit and is readable without the tool. | D4 `[LOCKED]` | r0; third field r1.3 | unit/parse, cue-ends |
 | CUE-2 | A cue is attached to the word it follows, in dialogue or in an action, or stands alone on its own line. | D4 `[LOCKED]` | r0 | interact, unit/parse |
-| CUE-3 | The stage manager never types the token. Tapping a word opens a pin with one button per department; one tap creates the cue. Label and texts can be added then or later. With the pin open, the first letter of a department code pins from the keyboard. | K3 `[ASSUMED]` | r0 | interact |
+| CUE-3 | The stage manager never types the token. Tapping a word opens a pin with one button per department; one tap creates the cue. Label and texts can be added then or later. On a cue just pinned the cursor is already in the margin text, the field filled most often; Tab goes on to the description, Shift+Tab back to the number, Enter accepts (r1.9). With the pin open, the first letter of a department code pins from the keyboard. | K3 `[ASSUMED]` | r0 | interact |
 | CUE-4 | Pinning takes the stage manager under 3 seconds. | K3 `[ASSUMED]` | r0 | not measured with a person; the tool's own part was 60 ms on a 375-page script |
 | CUE-5 | Duplicate, missing and out-of-order labels are allowed. They are hints, never errors, and the tool never changes a number on its own. | D7 `[LOCKED]` | r0 | cue-ends (duplicates) |
 | CUE-6 | Departments are configurable in Settings: code, name, colour. Changing a code does not rewrite cues already in the script. A cue whose department is not in the list is shown in grey and listed in Review. | D7 `[LOCKED]` | r0 | misc |
@@ -85,7 +87,7 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 | CUE-29 | Within 48 px of the top or bottom of the work area the script scrolls, up to 14 px per frame and faster nearer the edge, so a cue can be carried to another page. | as built | r1.6 | cue-move |
 | CUE-30 | Release on a target: the token is cut from its place and written after that word, behind the cues already there. Every field moves unchanged: number, margin text, description, links. One undo step. Release on the word the cue already follows as its last cue: nothing changes and no undo step is added. | "always after a word" `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
 | CUE-31 | Release without a target, Escape, or a cancelled pointer: nothing changes. A press and release within 8 px still opens the cue editor. A pen or mouse tap that slips more than 8 px but stays on the tag does nothing. | as built | r1.6 | cue-move |
-| CUE-32 | Every tag except a board tag can be dragged: cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was and gets one where it lands, so words are never joined. A cue cannot be dropped onto a line of its own. | `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
+| CUE-32 | Every cue tag can be dragged (a board tag moves its whole line instead, TXT-28): cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was and gets one where it lands, so words are never joined. A cue cannot be dropped onto a line of its own. | `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
 | CUE-33 | A move that breaks a pair (an end above its start, a start below its end) is kept, and a message says the two no longer match. | as built | r1.6 | cue-move, unit/cue-move |
 | CUE-34 | No drag while a block's text is being edited. While a drag runs, other pointers are ignored. | as built | r1.6 | cue-move |
 
@@ -100,8 +102,13 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 | CUE-39 | Per department: "By dept (.zip)" saves one CSV per department in one file; "Print by dept" prints one sheet per department. A cue ended by another department's cue says so on its own sheet. | request r1.3 `[ASSUMED]` | r1.3 | cue-ends |
 | CUE-40 | The cue list is printed from its own panel only. The Print button in the top bar offers the book and the script pages. | request r1.4 `[LOCKED]` | r1.4 | notes-todos |
 | CUE-41 | Review lists ends with no cue to close and links whose target is not found, counted in the badge. | `[ASSUMED]` | r1.0, r1.3 | cue-ends |
+| CUE-42 | With the box of a cue open and the cursor in none of its fields, the Delete key deletes the cue, as the "Delete" button does (one undo; an end goes with its cue as before). With the cursor in a field Delete removes a letter. The tooltip of the button names the key. | request 2026-10-10 `[ASSUMED]` | r1.9 | shortcuts |
 
 ## 3. Consequences
+
+**Delete acts only when no field has the cursor.** A cue just pinned opens with the cursor in the margin text (CUE-3), so there Delete edits the text; the cue is deleted with the button, or after Tab has left the fields. Backspace never deletes a cue. The client tried the r1.9 features on a real show and reported "all working as expected" (2026-10-10). Which machine, pointer and keyboard were used is not recorded.
+
+**The cursor starts in the margin text, not the number.** Since CUE-24 a new cue numbers itself, so the number is the field typed least. The cost: whoever does type the number now presses Shift+Tab first, and a field with the focus may bring up the on-screen keyboard on a laptop used without its keys; whether it does is not recorded.
 
 **A cue has no identity beyond its place in the text.** It is found by its block and its offset in that block. Every popover that edits a cue looks it up again after each change. Moving, renumbering and deleting are all text edits, so each is one undo step and each is saved as part of `script.md`.
 

@@ -20,6 +20,7 @@ Requests, as received:
   1. "Adding blocks on a single page makes just a column with plenty of white space. Might be better to use fully the page by providing flexibility in their arrangements, for example limit to 8 per page in 2 columns. Would fill first a column, then moving on Z pattern with 2 columns. So 2 are 1 column, 3 are 1 - 2 / 3 - blank, 4 are 1 - 2 / 3 - 4, 5 are 1 - 2 / 3 - 4 / 5 - blank etc."
   2. "Add names to the blocks that don't disappear into the options when we have many on the page, like leaving menu on top and name at the bottom."
   3. "Having a light gray fine grid helps a lot when doing blockings."
+- **Change request, 2026-10-10:** "When a board is added, allow to enter its name before creating it by opening the text box with the default name selected, so that if i type i overwrite it." And, on words: "now boards have remove and cues have delete. keep one".
 
 **Reading applied** `[ASSUMED]`: a template is a board that other boards are drawn on top of; underneath, it shows greyed out.
 
@@ -33,7 +34,7 @@ Requests, as received:
 | BRD-2 | A standalone `{BOARD name}` token in the script marks where a board applies. It is shown on the facing page of the script page its token falls on. | R0.6 | r0 | interact, scale-folder |
 | BRD-3 | Ways to add one: "+ Board" on the facing page, "Board here" in the tap popover, or pasting an image from the clipboard. | R0.6 | r0 | interact, parse-undo |
 | BRD-4 | Images over 1.5 MB are reduced to 2000 px on the long side and stored as JPEG. As built, so are images longer than 2600 px and images that are not JPEG, PNG or WebP. | as built | r0 | — |
-| BRD-5 | Removing a board removes its token from the script. Its file stays in `boards/`. | as built | r0 | boards |
+| BRD-5 | Deleting a board ("Delete", the word used for cues and templates; "Remove" until r1.8) takes its token out of the script. With the box of a board open and the cursor outside the name, the Delete key does the same. Its file stays in `boards/`. | as built | r0 | boards |
 | BRD-6 | Boards have the pen only: no shapes, arrows, text objects, selection or movable props. | D16 `[LOCKED]` | r0 | — |
 
 ### 2.2 Arrangement, name, grid
@@ -60,14 +61,17 @@ Requests, as received:
 | BRD-19 | Props are drawn with the pen into a template. A different arrangement is another template, usually based on the first. No objects to select, move or rotate. | D16, K9 `[LOCKED]` | r1.0 | — |
 | BRD-20 | A board with a base takes the proportions of the root of its chain, so coordinates line up through the chain. | `[ASSUMED]` | r1.0 | templates |
 | BRD-21 | Making a template: in the Templates view, new blank, new from an image, or new based on another template. From the script: "To templates" on any board copies its image and ink into a new template and leaves the board as it is. | `[ASSUMED]` | r1.0 | templates |
-| BRD-22 | Using one: with no templates, or with a default template, adding a board is one tap. With templates and no default, a short list asks what to draw on: templates, last used first, then "Blank". A board's base can be changed later ("Base…") without losing its ink. | `[ASSUMED]` | r1.0 | templates |
+| BRD-22 | Using one: with no templates, or with a default template, adding a board asks only its name (BRD-28; one tap until r1.8). With templates and no default, a short list asks what to draw on: templates, last used first, then "Blank"; the name is asked after the choice. A board's base can be changed later ("Base…") without losing its ink. | `[ASSUMED]` | r1.0 | templates |
 | BRD-23 | A board cannot be based on itself, directly or through the chain. The picker does not offer choices that would close a loop. | `[ASSUMED]` | r1.0 | templates |
 | BRD-24 | Renaming a template updates everything based on it. A template that something is based on cannot be deleted; the tool names what depends on it. Deleting an unused template can be undone. Two templates cannot have names that would be saved under the same file name. | `[ASSUMED]` | r1.0 | templates |
 | BRD-25 | Templates live in the configuration and are edited in a Templates view (menu → "Templates…", or the button in Settings), which replaces the script on screen: each template on a sheet of its own, with its chain greyed beneath, the usual pen, eraser and undo, "+ Template" and "Back to script" on a bar that stays in view. Templates never appear on a facing page, in the cue list, or in any print. | Q26 `[LOCKED]`; the view itself `[ASSUMED]` | r1.0 | templates |
 | BRD-26 | Each template sheet has: Rename, Base, Image…, Default (star), New based on this, Clear ink, Delete. | as built | r1.0 | templates, boards |
 | BRD-27 | A default background set with "Use as default" before r1.0 keeps working until a default template is chosen, which then takes its place. Nothing is converted. | `[ASSUMED]` | r1.0 | templates |
+| BRD-28 | "+ Board" and "Board here" open a box with the name of the new board: the next free "Board n" is written and selected, so typing replaces it. Enter, "Add board" or a tap elsewhere adds the board; Escape or "Cancel" adds nothing. An empty name, or one already in use, gives the next free name. Adding is one undo step. A pasted image still makes its board at once. | request 2026-10-10 | r1.9 | boards, templates |
 
 ## 3. Consequences
+
+**Adding a board is now two actions, tap and Enter.** The cost of asking the name first is one key for whoever keeps "Board n". A tap outside the box adds the board, as closing a cue box keeps the cue; only Escape and "Cancel" give up. `{`, `}` and `|` in a name are written as `/`. The client tried the r1.9 features on a real show and reported "all working as expected" (2026-10-10). Which machine, pointer and keyboard were used is not recorded.
 
 **Less than Excalidraw, on purpose (K5).** Pen, eraser, colours, images. No shapes, arrows, text objects or selection. Accepted for now (Q18), with templates as the condition (D16).
 

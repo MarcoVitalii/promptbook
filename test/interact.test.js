@@ -31,6 +31,12 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok((await page.locator('#pop .pt').textContent()).includes('Rispondi!'), 'pin popover names the word');
   await page.locator('#pop .depts .dbtn', { hasText: 'LX' }).click();
   ok((await text()).includes('Rispondi! {LX}'), 'one tap creates the cue in the text');
+  const at = () => page.evaluate(() => { const a = document.activeElement, f = Array.from(document.querySelectorAll('#pop .pin')); return f.indexOf(a); });
+  ok(await at() === 1, 'on a cue just pinned the cursor waits in the margin text');
+  await page.keyboard.press('Tab');
+  ok(await at() === 2, 'Tab goes on to the description');
+  await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Shift+Tab');
+  ok(await at() === 0, 'Shift+Tab goes back to the number');
   await page.keyboard.type('12');
   await page.keyboard.press('Tab');
   await page.keyboard.type('cambio luce');
@@ -105,7 +111,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(await page.evaluate(() => PB.S.ink.size) === 1 && await page.locator('.ink path').count() === 1, 'undo brings the stroke back');
 
   // 9. boards
-  await page.locator('.addboard').first().click();
+  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
   await page.waitForSelector('.board svg');
   ok(/\{BOARD Board 1\}/.test(await text()), 'board token inserted: ' + (await text()).match(/\{BOARD[^}]*\}/)[0]);
   bb = await box('.board svg');

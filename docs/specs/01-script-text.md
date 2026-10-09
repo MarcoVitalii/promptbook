@@ -17,6 +17,7 @@ Later requests, as received:
 
 - **Frontmatter, r1.1:** "host a frontmatter with metadata to display on the first page like title, author, company and year of the representation. display just the values on the frontpage in the order described in the frontmatter itself, title with bigger fonts, the rest smaller. Allow to define characters to validate the rest of the script and potentially define call list later on. […] some expressions are used to quickly refer to groupings of characters without explicit enumeration, like ALL BUT x, or ALL OTHERS or OTHERS, exclude this by checks." Then: "personaggi should be printed on a separate page, with name/alias - description collected in the metadata".
 - **Comments, r1.4:** commented-out blocks to stage changes without losing content.
+- **Change request, 2026-10-10:** "Also implement movement for blocks with the same dynamics of cues" (the whole request is quoted in `09-workbench.md`). Read as `[ASSUMED]`: a block of the script (a speech, an action, a heading, a cue or a board on its own line) is pressed, dragged and released at another place, with the gestures of CUE-25 to CUE-34. The client has also said "blocks" for boards (`04-boards.md` §1); a board is covered, because it is the line that holds its token.
 
 ## 2. Requirements
 
@@ -52,6 +53,10 @@ MARCO: Sono io.
 | TXT-8 | Any block's text is edited in place: double-tap, double-click or long press on the block, or "Edit text" in the tap popover. Ctrl+Enter saves, Esc cancels. | R0.3 | r0 | interact, misc |
 | TXT-9 | "Edit whole script…" in the menu opens the full text. A new show can start from pasted text. | R0.1 | r0 | — |
 | TXT-10 | Every change to the text is one undo step, and undo returns the text exactly. Undo and redo: toolbar, Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z. | R0.5 | r0 | unit/parse, parse-undo, interact |
+| TXT-28 | A block is moved by pressing the grip in its left gutter, dragging, and releasing between two blocks. Every row has one grip: speech, action, heading, unrecognised line, a cue or board on its own line; speeches said together move as one. None on the frontmatter, on a comment, or on the part of a block carried over from the page before. The grip is faint (shown on hover with a mouse), never printed, and the pen draws no ink on it. A board is also moved by dragging its tag in the margin. | request 2026-10-10 `[ASSUMED]` | r1.9 | block-move, cue-move |
+| TXT-29 | The gestures are those of a cue tag (CUE-26, CUE-29, CUE-31, CUE-34, INP-8 to INP-10): mouse and pen drag after 8 px, a finger holds 0.3 s first and otherwise scrolls; the script scrolls near the top and bottom edge; Escape, a cancelled pointer or a release with no place marked change nothing; no drag while a text is edited. A press and release on a grip does nothing. | same | r1.9 | block-move |
+| TXT-30 | While dragging, a label with the start of the block follows the pointer, the block is dimmed, and a line marks the place: the nearest edge between two blocks of the script page under the pointer. No place is marked on the facing page, above the frontmatter, inside a block that runs over two pages, or where the block already is. | as built | r1.9 | block-move |
+| TXT-31 | Release: the lines of the block are cut and written at the marked place, unchanged, with their cues; ink stays on the block. One undo step. The moved block keeps the blank lines above it; the block that followed it keeps at least as many; an unrecognised line that would touch the line above gets a blank line, so that it is not read as part of it (TXT-5). A move that leaves an end above its cue is kept and a message says so (as CUE-33). | as built | r1.9 | unit/block-move, block-move |
 
 ### 2.3 Frontmatter and character list
 
@@ -97,6 +102,8 @@ The front page and the character page are specified in `06-pages-print.md` (PAG-
 | TXT-27 | A comment covers whole lines. Review lists "Commented out", not counted in the badge. | `[ASSUMED]` | r1.4 | notes-todos |
 
 ## 3. Consequences
+
+**Moving a block is a text edit like any other.** Nothing is stored about the move; `script.md` simply has the lines in another order, so an older release opens the result. The grip takes an 18 px strip of the gutter from the pen, on the first line of each block; ink flags sit in the same gutter and cover part of the grip while they show. A block cannot be dropped between two speeches said together, nor can one of them be taken out by dragging: that is done in the text. Not built: dragging the board figure itself on the facing page, moving several blocks at once, keyboard movement. Tried: The client tried the r1.9 features on a real show and reported "all working as expected" (2026-10-10). Which machine, pointer and keyboard were used is not recorded.
 
 **The block is the unit of everything else.** The parser turns the text into blocks of seven kinds: heading, speech, action, unrecognised line (`para`), a line holding only tokens (`mark`), comment (`note`), frontmatter (`meta`). Ink is anchored to a block (INK-2), pages are filled with blocks (PAG), two revisions are compared block by block (HIS-8), and a page lock records blocks (PAG-12).
 

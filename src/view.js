@@ -274,7 +274,7 @@ function boardActs(B) {
   if (B.tpl) return [['tname', t('bRename')], ['tbase', t('tplBase', B.base || t('tplNone'))], ['timage', t('bImage')],
     ['tdefault', (S.cfg.defaultTemplate === B.name ? '\u2605 ' : '\u2606 ') + t('tplDefault')], ['tchild', t('tplChild')], ['tclear', t('bClear')], ['tdelete', t('del')]];
   const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
-  acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
+  acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('del')]);
   return acts;
 }
 function figBoard(fig) { return fig ? (fig.dataset.tpl ? S.templates.get(fig.dataset.name) : S.boards.get(fig.dataset.name)) || null : null; }
@@ -318,8 +318,11 @@ function uniqueBoardName() {
   do { nm = t('board') + ' ' + n++; } while (names.has(nm));
   return nm;
 }
-function newBoard(mkText, init) {
-  const name = uniqueBoardName(), dt = S.templates.get(S.cfg.defaultTemplate), def = dt ? null : S.cfg.defaultBoard;
+function boardNameTaken(nm) { return S.boards.has(nm) || S.blocks.some(b => b.cues.some(c => c.board && c.label === nm)); }
+/* name: the one typed when the board was added; the next free "Board n" when it is empty or already taken */
+function newBoard(mkText, init, name) {
+  if (!name || boardNameTaken(name)) name = uniqueBoardName();
+  const dt = S.templates.get(S.cfg.defaultTemplate), def = dt ? null : S.cfg.defaultBoard;
   const B = Object.assign(mkBoard(name, def ? { h: def.h, image: def.image, imageData: def.imageData } : { base: dt ? dt.name : null }), init || {});
   if (B.base) touchRecent(B.base);
   S.boards.set(name, B); markDirty('board', name);
@@ -329,16 +332,16 @@ function newBoard(mkText, init) {
   return B;
 }
 function lastOfGroup(b) { const bs = gBlocks(b.g); return bs[bs.length - 1]; }
-function addBoardAfter(b, init) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init); }
+function addBoardAfter(b, init, name) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init, name); }
 function pageFull(pi) { const P = S.pages[pi]; if (!P || P.boards.length < MAX_BOARDS) return false; toast(t('boardsFull', MAX_BOARDS)); return true; }
-function addBoardOnPage(pi, init) {
+function addBoardOnPage(pi, init, name) {
   const P = S.pages[pi], selB = S.sel && S.byId.get(S.sel.id);
-  if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init);
+  if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init, name);
   const it = P.items.find(q => (q.whole || q.first) && !(q.g.kind === 'single' && q.g.b.type === 'h'));
-  if (it) { const first = gBlocks(it.g)[0]; return newBoard(name => textInsertBefore(S.blocks.indexOf(first), '{BOARD ' + name + '}'), init); }
+  if (it) { const first = gBlocks(it.g)[0]; return newBoard(name => textInsertBefore(S.blocks.indexOf(first), '{BOARD ' + name + '}'), init, name); }
   const lastIt = P.items[P.items.length - 1];
-  if (lastIt) return addBoardAfter(gBlocks(lastIt.g)[0], init);
-  return newBoard(name => textInsertAfter(-1, '{BOARD ' + name + '}'), init);
+  if (lastIt) return addBoardAfter(gBlocks(lastIt.g)[0], init, name);
+  return newBoard(name => textInsertAfter(-1, '{BOARD ' + name + '}'), init, name);
 }
 function currentPage() {
   const z = S.view.zoom, unit = (paper().h + GAP) * z;
@@ -378,7 +381,7 @@ function pickImage(cb) {
 }
 function boardAction(btn, x, y) {
   const act = btn.dataset.act, page = btn.closest('.page');
-  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
+  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow((init, name) => addBoardOnPage(pi, init, name), x, y); return; }
   const B = figBoard(btn.closest('.board')); if (B) boardAct(act, B, x, y);
 }
 /* the token of a board in the script: its block and its cue */
@@ -514,14 +517,30 @@ function openTplName(T, x, y) {
     setTimeout(() => { ni.focus(); ni.select(); }, 0);
   });
 }
-/* adding a board: one tap when there are no templates or a default one, otherwise pick what to draw on */
+/* the last step of adding a board: its name, with the next free one written and selected so that typing replaces it.
+   Enter, the button or a tap elsewhere adds the board; Escape or Cancel adds nothing. */
+function askBoardName(place, init, x, y) {
+  openPop(x, y, (p, pop) => {
+    p.appendChild(h('p', 'pt', t('bName')));
+    const ni = h('input', 'pin'); ni.type = 'text'; ni.value = uniqueBoardName(); ni.style.marginTop = '0'; p.appendChild(ni);
+    const row = h('div', 'prow');
+    const no = h('button', 'btn sm', t('cancel')); no.type = 'button'; no.onclick = () => { pop.onclose = null; closePop(); };
+    const add = h('button', 'btn sm pri', t('bCreate')); add.type = 'button'; add.onclick = closePop;
+    row.append(no, h('span', 'grow'), add); p.appendChild(row);
+    pop.onclose = () => place(init, cleanField(ni.value));
+    pop.esc = () => { pop.onclose = null; };
+    ni.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
+    setTimeout(() => { ni.focus(); ni.select(); }, 0);
+  });
+}
+/* adding a board: pick what to draw on when there are templates and no default one, then name it */
 function addBoardFlow(place, x, y) {
   const list = baseChoices({});
-  if (!list.length || S.templates.get(S.cfg.defaultTemplate)) { place(); return; }
+  if (!list.length || S.templates.get(S.cfg.defaultTemplate)) { askBoardName(place, undefined, x, y); return; }
   openPop(x, y, p => {
     p.appendChild(h('p', 'pt', t('pickBase')));
     const col = h('div', 'pcol');
-    const add = (label, init) => { const bt = h('button', 'btn', label); bt.type = 'button'; bt.onclick = () => { closePop(); place(init); }; col.appendChild(bt); };
+    const add = (label, init) => { const bt = h('button', 'btn', label); bt.type = 'button'; bt.onclick = () => { closePop(); askBoardName(place, init, x, y); }; col.appendChild(bt); };
     for (const T of list) add(T.name, { base: T.name, image: null, imageData: null });
     add(t('blank'), { base: null, image: null, imageData: null, h: 750 });
     p.appendChild(col);
@@ -635,8 +654,8 @@ desk.addEventListener('pointerdown', e => {
     const me = P;
     P.lp = setTimeout(() => { if (P === me && !me.moved) { P = null; longPress(me); } }, 560);
   }
-  const tag = !S.editing && tg.closest('.tag:not(.btag)');
-  if (tag) {   // a cue tag can be dragged to another word; a finger must hold it first, so that a swipe still scrolls
+  const tag = !S.editing && tg.closest('.tag,.grip');
+  if (tag) {   // a cue tag can be dragged to another word, a grip or a board tag moves its block; a finger must hold it first, so that a swipe still scrolls
     P.tag = tag;
     if (P.lp) { clearTimeout(P.lp); P.lp = 0; }
     if (e.pointerType === 'touch' && !nearPen) { const me = P; P.lp = setTimeout(() => { if (P === me && !me.moved && !me.nearPen) { me.held = true; tag.classList.add('lift'); } }, DRAG_HOLD); }
@@ -779,9 +798,10 @@ function eraseAt(e) {
   if (hitAny) { drawInk(P.pi); markDirty('ink'); }
 }
 
-/* ---------- drag a cue tag to another word ---------- */
+/* ---------- drag a cue tag to another word, or a block by its grip to another place ---------- */
 const DRAG_HOLD = 300, DRAG_EDGE = 48, DRAG_REACH = 70;
 function beginDrag(e) {
+  if (P.tag.matches('.grip,.btag')) return beginBlockDrag(e);   // a board is moved as the line that holds it
   const tag = P.tag, b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
   if (!c || c.board || !tag.isConnected) return false;
   closePop();
@@ -795,6 +815,54 @@ function beginDrag(e) {
   moveDrag(e);
   return true;
 }
+function beginBlockDrag(e) {
+  const tag = P.tag, b = S.byId.get(+tag.dataset.b), board = tag.classList.contains('btag');
+  if (!b || !tag.isConnected || (board && b.type !== 'mark')) return false;
+  const row = board ? tag.closest('.page').querySelector('.row[data-b="' + b.id + '"]') : tag.closest('.row');
+  if (!row) return false;
+  closePop();
+  const words = b.tokens.filter(q => q.k === 'w').map(q => q.text);
+  const g = h('div', 'bghost ghost', (b.name ? b.name + ': ' : '') + (words.length ? words.slice(0, 8).join(' ') + (words.length > 8 ? ' \u2026' : '') : b.raw));
+  document.body.appendChild(g);
+  tag.classList.remove('lift'); row.classList.add('moving'); if (board) tag.classList.add('moving');
+  Object.assign(P, { k: 'drag', bid: b.id, row, ghost: g, drop: null, raf: 0, pen: P.type === 'pen' });
+  try { desk.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ }
+  moveDrag(e);
+  return true;
+}
+/* [i0, n, j] for textMoveBlocks: the group of block bid put before or after group g; null when it is there already */
+function blockSpan(bid, g, after) {
+  const mb = S.byId.get(bid), tb = gBlocks(g); if (!mb || !S.blocks.includes(tb[0])) return null;
+  const ms = gBlocks(mb.g), i0 = S.blocks.indexOf(ms[0]), j = after ? S.blocks.indexOf(tb[tb.length - 1]) + 1 : S.blocks.indexOf(tb[0]);
+  return j >= i0 && j <= i0 + ms.length ? null : [i0, ms.length, j];
+}
+/* where a block dropped at (x, y) would go: the nearest edge between two blocks of that script page. Never above the
+   frontmatter, never inside a block that runs over two pages, and none where the block already is. */
+function blockDrop(x, y) {
+  const el = document.elementFromPoint(x, y), pg = el && el.closest && el.closest('.page.script'); if (!pg) return null;
+  let best = null, bd = Infinity;
+  for (const row of $$('.pbody > .row', pg)) {
+    if (row.classList.contains('front')) continue;
+    const q = row.querySelector('.tx'), b = S.byId.get(q ? +q.dataset.b : +row.dataset.b); if (!b) continue;
+    const fl = q && q.dataset.off !== undefined ? (q.dataset.fl || '') : 'fl', r = row.getBoundingClientRect();
+    for (const after of [false, true]) {
+      if (!fl.includes(after ? 'l' : 'f')) continue;
+      const ey = after ? r.bottom : r.top, d = Math.abs(y - ey);
+      if (d < bd) { bd = d; best = { g: b.g, after, pg, y: ey }; }
+    }
+  }
+  return best && blockSpan(P.bid, best.g, best.after) ? best : null;
+}
+function placeBlockDrop() {
+  const d = blockDrop(P.x, P.y), o = P.drop;
+  if (o && d && o.g === d.g && o.after === d.after && o.pg === d.pg) return;
+  if (o) o.el.remove();
+  if (d) {
+    const pr = d.pg.getBoundingClientRect();
+    d.el = h('div', 'dropline noprint'); d.el.style.top = r1((d.y - pr.top) / pageScale(d.pg)) + 'px'; d.pg.appendChild(d.el);
+  }
+  P.drop = d;
+}
 function moveDrag(e) {
   P.x = e.clientX; P.y = e.clientY;
   placeDrag();
@@ -802,6 +870,7 @@ function moveDrag(e) {
 }
 function placeDrag() {
   P.ghost.style.left = (P.x + 14) + 'px'; P.ghost.style.top = (P.y - 36) + 'px';
+  if (P.row) { placeBlockDrop(); return; }
   const d = dropTarget(P.x, P.y);
   if (P.drop && (!d || d.el !== P.drop.el)) clearDrop(P.drop);
   if (d && (!P.drop || d.el !== P.drop.el)) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
@@ -847,9 +916,15 @@ function dropTarget(x, y) {
 function endDrag(p, commit) {
   if (p.raf) cancelAnimationFrame(p.raf);
   p.ghost.remove(); p.tag.classList.remove('moving', 'lift');
-  if (p.drop) clearDrop(p.drop);
+  if (p.row) p.row.classList.remove('moving');
+  if (p.drop) { if (p.row) p.drop.el.remove(); else clearDrop(p.drop); }
   S.lastTap = null;   // the next tap is not the second half of a double tap
   if (!commit || !p.drop) return;
+  if (p.row) {
+    const sp = blockSpan(p.bid, p.drop.g, p.drop.after), nt = sp && textMoveBlocks(sp[0], sp[1], sp[2]), n = S.pairs.length;
+    if (nt && commitText(nt)) { if (S.pairs.length < n) toast(t('blockUnpaired')); const nb = S.byId.get(p.bid); if (nb) jumpTo(nb, true); }
+    return;
+  }
   /* looked up again: the script may have been parsed anew while the tag was in the air */
   const b = S.byId.get(+p.tag.dataset.b), c = b && b.cues.find(q => q.s === +p.tag.dataset.s);
   const tb = S.byId.get(p.drop.b.id), nt = c && !c.board && tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
@@ -873,6 +948,7 @@ function longPress(p) {
 function handleTap(tg, x, y) {
   if (!tg || !tg.closest || S.editing || !tg.closest('.page')) return;
   const act = tg.closest('[data-act]'); if (act) { boardAction(act, x, y); return; }
+  if (tg.closest('.grip')) return;   // a grip is only for dragging
   const tag = tg.closest('.tag');
   if (tag) {
     const b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
@@ -1021,7 +1097,7 @@ function openPin(b, wi, x, y) {
       cb.onchange = () => { own = cb.checked; setTitle(); fillEnds(); };
       lb.append(cb, t('ownLine')); row.appendChild(lb);
     } else row.appendChild(h('span', 'grow'));
-    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow(init => addBoardAfter(b, init), x, y); };
+    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow((init, name) => addBoardAfter(b, init, name), x, y); };
     const eb = h('button', 'btn sm', t('editText')); eb.type = 'button'; eb.onclick = () => { closePop(); editGroup(b.g); };
     row.append(bb, eb); p.appendChild(row);
     pop.key = ev => {
@@ -1074,7 +1150,7 @@ function openCueEdit(b, c, x, y, fresh) {
     p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); setPh(); }));
     p.append(li, di, ni);
     const row = h('div', 'prow');
-    const del = h('button', 'btn sm danger', t('del')); del.type = 'button';
+    const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)';
     del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
     row.append(del, h('span', 'grow'), done);
@@ -1092,10 +1168,13 @@ function openCueEdit(b, c, x, y, fresh) {
     for (const inp of [li, di, ni]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
     pop.key = ev => {
       if (ev.key === 'Enter') { closePop(); return true; }   // nothing typed: Enter accepts the cue as it is
+      if (ev.key === 'Delete') { del.click(); return true; }   // the cursor is in no field: Delete is for the cue, not for a letter
       if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length !== 1) return false;
       if (document.activeElement === li || document.activeElement === di || document.activeElement === ni) return false;
       li.focus(); return false;   // let the key land in the label field
     };
+    /* a cue just pinned: the number fills itself, so the cursor waits in the margin text; Tab goes on to the description */
+    if (fresh) di.focus({ preventScroll: true });
   });
 }
 function openBoardPop(b, c, x, y) {
@@ -1112,7 +1191,8 @@ function openBoardPop(b, c, x, y) {
       commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)));
     };
     const row = h('div', 'prow');
-    const del = h('button', 'btn sm danger', t('bRemove')); del.type = 'button'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
+    const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
+    pop.key = ev => { if (ev.key === 'Delete') { del.click(); return true; } return false; };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
     row.append(del, h('span', 'grow'), done); p.appendChild(row);
     pop.onclose = apply;

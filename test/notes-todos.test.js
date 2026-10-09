@@ -74,7 +74,6 @@ const { ok, open } = require('./_util');
   const ends = await page.locator('#pop .ends .ebtn').allTextContents();
   ok(ends.join() === 'SND 1,LX 1', 'a note is never offered as something to end: ' + ends.join());
   await page.locator('#pop .depts .dbtn', { hasText: 'TODO' }).click();
-  await page.keyboard.type('x'); await page.keyboard.press('Backspace'); await page.keyboard.press('Tab');
   await page.keyboard.type('entra prima'); await page.keyboard.press('Enter');
   ok((await text()).includes('{TODO | entra prima}') && !/TODO \d/.test(await text()), 'a note gets no number: ' + (await text()).split('\n')[1]);
 
@@ -104,7 +103,7 @@ const { ok, open } = require('./_util');
     await page.locator('.w', { hasText: word }).first().click();
     await page.locator('#pop .depts .dbtn', { hasText: dept }).click();
     const ph = await page.locator('#pop input').first().getAttribute('placeholder');
-    if (typed) await page.keyboard.type(typed);
+    if (typed) { await page.keyboard.press('Shift+Tab'); await page.keyboard.type(typed); }
     await page.keyboard.press('Enter');
     return ph;
   };

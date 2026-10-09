@@ -65,9 +65,27 @@ const OUT = process.env.OUT || '.';
 
   // a page with room still takes a board
   L = await set(7);
-  await page.locator('.page.facing .addboard').first().click();
+  const nameBox = () => ev(() => { const i = document.querySelector('#pop input'); return i ? { v: i.value, all: document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length } : { v: 'none' }; });
+  const steps = await ev(() => PB.S.hist.length);
+  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
+  const nbx = await nameBox();
+  ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v);
+  await page.keyboard.press('Escape');
+  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'Escape closes the box and no board is added');
+  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
+  await page.keyboard.type('Pianta atto 2'); await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 8);
-  ok(await ev(() => PB.S.pages[0].boards.length) === 8, 'with 7 boards "+ Board" adds the eighth');
+  ok(await ev(() => PB.S.pages[0].boards.length) === 8 && await ev(() => PB.S.boards.has('Pianta atto 2') && PB.serialize().includes('{BOARD Pianta atto 2}')), 'typing replaces the selected name; Enter adds the eighth board under the typed name');
+  await page.keyboard.press('Control+z');
+  ok(await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'adding a named board is one undo step');
+  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
+  await page.keyboard.type('b1'); await page.locator('#pop .btn.pri').click();
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 8);
+  ok(await ev(() => PB.S.pages[0].boards.length) === 8 && await ev(() => PB.serialize().split('{BOARD b1}').length) === 2, 'a name already in use is not given twice: the board gets the next free name');
+  await page.locator('.page.facing .bname').last().click(); await page.waitForTimeout(50);
+  ok(await page.locator('#pop .btn.danger').textContent() === 'Delete', 'the box of a board says "Delete", the word used for cues');
+  await page.keyboard.press('Delete');
+  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.pages[0].boards.length) === 7, 'the Delete key, with the box of a board open, deletes that board');
 
   // ---- names under the drawings, buttons above (one "⋯" when the figure is narrow) ----
   const names = () => page.locator('.page.facing .bname');
@@ -75,7 +93,7 @@ const OUT = process.env.OUT || '.';
   const shot = async file => { await page.setViewportSize({ width: 1500, height: 1300 }); await page.locator('.page.facing').first().screenshot({ path: OUT + '/' + file }); await page.setViewportSize({ width: 1500, height: 900 }); };
 
   L = await set(1);
-  ok((await figs.first().locator('.bcap button').allTextContents()).join('|') === 'Image…|To templates|Clear ink|Remove', '1 board: the four buttons are shown directly, no "⋯"');
+  ok((await figs.first().locator('.bcap button').allTextContents()).join('|') === 'Image…|To templates|Clear ink|Delete', '1 board: the four buttons are shown directly, no "⋯"');
   ok(await below(figs.first()) && await names().first().textContent() === 'b1', '1 board: its name is under the drawing');
   L = await set(2);
   ok(await figs.nth(1).locator('.bcap button').count() === 4 && L.bx.every(b => inside(b, L.body)), '2 boards: the buttons are still shown directly, and both figures fit the page');
@@ -91,14 +109,14 @@ const OUT = process.env.OUT || '.';
   await pen([[s2.x + 40, s2.y + 40], [s2.x + 90, s2.y + 60], [s2.x + 140, s2.y + 40]]);
   ok(await ev(() => PB.S.boards.get('b2').strokes.length) === had + 1, 'a stroke is drawn on the second board');
   await figs.nth(1).locator('.bcap button').click();
-  ok(await page.locator('#pop').isVisible() && (await page.locator('#pop .pcol .btn').allTextContents()).join('|') === 'Image…|To templates|Clear ink|Remove', '"⋯" opens a list with Image…, To templates, Clear ink, Remove');
+  ok(await page.locator('#pop').isVisible() && (await page.locator('#pop .pcol .btn').allTextContents()).join('|') === 'Image…|To templates|Clear ink|Delete', '"⋯" opens a list with Image…, To templates, Clear ink, Delete');
   await page.locator('#pop .btn', { hasText: 'Clear ink' }).click();
   ok(await ev(() => PB.S.boards.get('b2').strokes.length) === 0 && await page.locator('#pop').isHidden(), '"Clear ink" from the list empties that board and closes the list');
   await figs.nth(2).locator('.bcap button').click();
-  await page.locator('#pop .btn', { hasText: 'Remove' }).click();
+  await page.locator('#pop .btn', { hasText: 'Delete' }).click();
   await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 3);
   const txt = await ev(() => PB.serialize());
-  ok(!txt.includes('{BOARD b3}') && txt.includes('{BOARD b2}') && txt.includes('{BOARD b4}'), '"Remove" from the list takes that board\'s token out of the text, and no other');
+  ok(!txt.includes('{BOARD b3}') && txt.includes('{BOARD b2}') && txt.includes('{BOARD b4}'), '"Delete" from the list takes that board\'s token out of the text, and no other');
 
   // a tap on a name renames
   L = await set(4);

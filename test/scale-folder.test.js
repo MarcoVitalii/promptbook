@@ -110,10 +110,10 @@ function big() {
   };
   await page.locator('.w', { hasText: 'Rispondi!' }).click();
   await page.locator('#pop .depts .dbtn', { hasText: 'LX' }).click();
-  await page.keyboard.type('1'); await page.keyboard.press('Enter');
+  await page.keyboard.press('Shift+Tab'); await page.keyboard.type('1'); await page.keyboard.press('Enter');
   let bb = await page.locator('.w', { hasText: 'Sono' }).boundingBox();
   await pen([[bb.x, bb.y + 20], [bb.x + 40, bb.y + 24], [bb.x + 90, bb.y + 20]]);
-  await page.locator('.addboard').first().click();
+  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
   await page.waitForSelector('.board svg');
   bb = await page.locator('.board svg').boundingBox();
   await pen([[bb.x + 50, bb.y + 50], [bb.x + 150, bb.y + 150]]);

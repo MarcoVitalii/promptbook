@@ -94,7 +94,7 @@ body:not(.facing) .page.facing{display:none}
 .pfoot{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:12px;line-height:14px;color:var(--muted)}
 .pbody{position:absolute;left:0;top:54px;width:100%}
 
-.row{display:grid;grid-template-columns:118px var(--text-w);column-gap:12px;padding:0 0 8px 38px;align-items:start}
+.row{display:grid;grid-template-columns:118px var(--text-w);column-gap:12px;padding:0 0 8px 38px;align-items:start;position:relative}
 .nm{font-weight:700;font-size:13px;letter-spacing:.02em;overflow-wrap:anywhere;min-height:22px}
 .nm.cont{font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tx{overflow-wrap:break-word;min-height:22px;min-width:0}
@@ -151,6 +151,16 @@ body:not(.facing) .page.facing{display:none}
 .tag.lift{box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .tag.etag.lift{box-shadow:inset 0 0 0 1.5px var(--c),0 2px 8px rgba(0,0,0,.35)}
 .tag.moving{opacity:.35}
+.grip{position:absolute;left:20px;top:0;width:18px;height:22px;border:0;cursor:grab;touch-action:none;opacity:0;transition:opacity .12s;
+  background:radial-gradient(circle,var(--muted) 1.2px,transparent 1.7px) 0 0/6px 6px content-box;padding:2px 3px;box-sizing:border-box;border-radius:4px}
+.row.h1 .grip{top:18px}.row.h2 .grip{top:8px}
+.row:hover>.grip{opacity:.75}
+.grip.lift{opacity:1;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+@media (any-pointer:coarse){.grip{opacity:.3}}
+.row.moving{opacity:.35}
+.bghost{position:fixed;z-index:28;pointer-events:none;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--paper);color:var(--tx);
+  font:400 13px/20px "PB","Segoe UI",Arial,sans-serif;padding:2px 9px;border-radius:5px;border-left:3px solid var(--acc);box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:.95}
+.dropline{position:absolute;left:38px;width:calc(130px + var(--text-w));height:3px;margin-top:-5px;border-radius:2px;background:var(--acc);pointer-events:none;z-index:3}
 .tag.ghost{position:fixed;z-index:28;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:.95}
 .tag.etag.ghost{box-shadow:inset 0 0 0 1.5px var(--c),0 4px 14px rgba(0,0,0,.35)}
 .w.drop,.w.cued.drop{box-shadow:0 0 0 2px var(--dc);background:color-mix(in srgb,var(--dc) 30%,transparent)}
@@ -408,12 +418,12 @@ en: {
   boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
   save: 'Save', cancel: 'Cancel', close: 'Close',
   keys: 'Keyboard shortcuts', kHint: 'Single keys work when no text field has the focus and no cue box is open.', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
-  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu',
+  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu; leave Find',
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
-  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
+  bClear: 'Clear ink', bRename: 'Rename', bCreate: 'Add board', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
   rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
   rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
@@ -433,6 +443,7 @@ en: {
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
   moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
+  moveBlock: 'Drag to move this block', blockUnpaired: 'Moved. A cue and its end no longer match: check the order.', kDel: 'Delete the cue or the board whose box is open',
   makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
   thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
   thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
@@ -475,12 +486,12 @@ it: {
   boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
   keys: 'Scorciatoie da tastiera', kHint: 'I tasti singoli funzionano quando nessun campo di testo è attivo e nessun riquadro dei cue è aperto.', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
-  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu',
+  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu; esci da Cerca',
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
-  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
+  bClear: 'Cancella inchiostro', bRename: 'Rinomina', bCreate: 'Aggiungi tavola', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
   rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
   rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
@@ -500,6 +511,7 @@ it: {
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
   moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
+  moveBlock: 'Trascina per spostare il blocco', blockUnpaired: 'Spostato. Un cue e la sua fine non corrispondono più: controlla l’ordine.', kDel: 'Elimina il cue o la tavola del riquadro aperto',
   makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
   thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
   thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
@@ -559,7 +571,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.8';
+const VERSION = 'r1.9';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -1078,6 +1090,30 @@ function textMoveCue(c, tb, wi) {
   return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
 }
 
+/* text with blocks [i0, i0+n) moved to stand before block j (j = S.blocks.length puts them last); null when that is
+   where they are. The moved blocks keep the blank lines above them and the block that followed them keeps at least as
+   many. An unrecognised line that would touch the line above it gets a blank line, or it would be read as part of it. */
+function textMoveBlocks(i0, n, j) {
+  const bl = S.blocks;
+  if (i0 < 0 || n < 1 || i0 + n > bl.length || j < 0 || j > bl.length || (j >= i0 && j <= i0 + n)) return null;
+  const mv = bl.slice(i0, i0 + n), seq = [];
+  const put = () => { for (const m of mv) seq.push([m, m.gap]); };
+  bl.forEach((b, i) => {
+    if (i === j) put();
+    if (i < i0 || i >= i0 + n) seq.push([b, i === i0 + n ? Math.max(b.gap, mv[0].gap) : b.gap]);
+  });
+  if (j === bl.length) put();
+  const out = [];
+  seq.forEach(([b, gap], k) => {
+    const up = k ? seq[k - 1][0] : null;
+    if (!up && b !== bl[0]) gap = 0;   // a new first line brings no blank line to the top
+    if (up && !gap && b.type === 'para' && up.type !== 'mark' && up.type !== 'h') gap = 1;
+    for (let q = 0; q < gap; q++) out.push('');
+    out.push(b.raw);
+  });
+  return out.join('\n') + '\n';
+}
+
 /* ---------- ink bookkeeping ---------- */
 function lineCount(b) {
   const g = b.g;
@@ -1357,10 +1393,15 @@ function inkOn(col) {
   return 0.2126 * lin(n >> 16) + 0.7152 * lin(n >> 8 & 255) + 0.0722 * lin(n & 255) > 0.179 ? '#16150f' : '#fff';
 }
 
+/* the handle in the gutter by which a block is dragged to another place; never printed */
+function grip(row, b) {
+  const k = h('button', 'grip pbtn noprint'); k.type = 'button'; k.tabIndex = -1; k.dataset.b = b.id; k.title = t('moveBlock');
+  row.appendChild(k);
+}
 /* fr: null for the whole block, or { from, to, off, cont, first, last } for a page fragment */
 function buildRow(g, fr) {
   if (g.kind === 'simul') {
-    const row = h('div', 'row simul');
+    const row = h('div', 'row simul'); grip(row, g.blocks[0]);
     row.appendChild(h('div', 'nm simnm', t('together')));
     const cols = h('div', 'simcols'); cols.style.setProperty('--n', g.blocks.length);
     for (const b of g.blocks) {
@@ -1375,7 +1416,7 @@ function buildRow(g, fr) {
   const b = g.b;
   if (b.type === 'mark') {
     const row = h('div', 'row mark'); row.dataset.b = b.id;
-    row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule'));
+    row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule')); grip(row, b);
     return row;
   }
   if (b.type === 'note') {   // takes no room: only a marker in the gutter, never printed
@@ -1406,6 +1447,7 @@ function buildRow(g, fr) {
     return row;
   }
   const row = h('div', 'row ' + (b.type === 'h' ? 'h' + b.level : b.type)); row.dataset.b = b.id;
+  if (!fr || fr.first) grip(row, b);
   if (b.type === 'h') { row.appendChild(elTx(b, 0, b.tokens.length)); return row; }
   const nm = h('div', 'nm');
   if (b.type === 'speech') {
@@ -1846,7 +1888,7 @@ function boardActs(B) {
   if (B.tpl) return [['tname', t('bRename')], ['tbase', t('tplBase', B.base || t('tplNone'))], ['timage', t('bImage')],
     ['tdefault', (S.cfg.defaultTemplate === B.name ? '\u2605 ' : '\u2606 ') + t('tplDefault')], ['tchild', t('tplChild')], ['tclear', t('bClear')], ['tdelete', t('del')]];
   const acts = S.templates.size ? [['bbase', t('bBase')]] : [];
-  acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('bRemove')]);
+  acts.push(['bimage', t('bImage')], ['btotpl', t('bToTpl')], ['bclear', t('bClear')], ['bremove', t('del')]);
   return acts;
 }
 function figBoard(fig) { return fig ? (fig.dataset.tpl ? S.templates.get(fig.dataset.name) : S.boards.get(fig.dataset.name)) || null : null; }
@@ -1890,8 +1932,11 @@ function uniqueBoardName() {
   do { nm = t('board') + ' ' + n++; } while (names.has(nm));
   return nm;
 }
-function newBoard(mkText, init) {
-  const name = uniqueBoardName(), dt = S.templates.get(S.cfg.defaultTemplate), def = dt ? null : S.cfg.defaultBoard;
+function boardNameTaken(nm) { return S.boards.has(nm) || S.blocks.some(b => b.cues.some(c => c.board && c.label === nm)); }
+/* name: the one typed when the board was added; the next free "Board n" when it is empty or already taken */
+function newBoard(mkText, init, name) {
+  if (!name || boardNameTaken(name)) name = uniqueBoardName();
+  const dt = S.templates.get(S.cfg.defaultTemplate), def = dt ? null : S.cfg.defaultBoard;
   const B = Object.assign(mkBoard(name, def ? { h: def.h, image: def.image, imageData: def.imageData } : { base: dt ? dt.name : null }), init || {});
   if (B.base) touchRecent(B.base);
   S.boards.set(name, B); markDirty('board', name);
@@ -1901,16 +1946,16 @@ function newBoard(mkText, init) {
   return B;
 }
 function lastOfGroup(b) { const bs = gBlocks(b.g); return bs[bs.length - 1]; }
-function addBoardAfter(b, init) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init); }
+function addBoardAfter(b, init, name) { return newBoard(name => textInsertAfter(S.blocks.indexOf(lastOfGroup(b)), '{BOARD ' + name + '}'), init, name); }
 function pageFull(pi) { const P = S.pages[pi]; if (!P || P.boards.length < MAX_BOARDS) return false; toast(t('boardsFull', MAX_BOARDS)); return true; }
-function addBoardOnPage(pi, init) {
+function addBoardOnPage(pi, init, name) {
   const P = S.pages[pi], selB = S.sel && S.byId.get(S.sel.id);
-  if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init);
+  if (selB && P.items.some(it => gBlocks(it.g).includes(selB))) return addBoardAfter(selB, init, name);
   const it = P.items.find(q => (q.whole || q.first) && !(q.g.kind === 'single' && q.g.b.type === 'h'));
-  if (it) { const first = gBlocks(it.g)[0]; return newBoard(name => textInsertBefore(S.blocks.indexOf(first), '{BOARD ' + name + '}'), init); }
+  if (it) { const first = gBlocks(it.g)[0]; return newBoard(name => textInsertBefore(S.blocks.indexOf(first), '{BOARD ' + name + '}'), init, name); }
   const lastIt = P.items[P.items.length - 1];
-  if (lastIt) return addBoardAfter(gBlocks(lastIt.g)[0], init);
-  return newBoard(name => textInsertAfter(-1, '{BOARD ' + name + '}'), init);
+  if (lastIt) return addBoardAfter(gBlocks(lastIt.g)[0], init, name);
+  return newBoard(name => textInsertAfter(-1, '{BOARD ' + name + '}'), init, name);
 }
 function currentPage() {
   const z = S.view.zoom, unit = (paper().h + GAP) * z;
@@ -1950,7 +1995,7 @@ function pickImage(cb) {
 }
 function boardAction(btn, x, y) {
   const act = btn.dataset.act, page = btn.closest('.page');
-  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow(init => addBoardOnPage(pi, init), x, y); return; }
+  if (act === 'addboard') { const pi = +page.dataset.pi; if (pageFull(pi)) return; addBoardFlow((init, name) => addBoardOnPage(pi, init, name), x, y); return; }
   const B = figBoard(btn.closest('.board')); if (B) boardAct(act, B, x, y);
 }
 /* the token of a board in the script: its block and its cue */
@@ -2086,14 +2131,30 @@ function openTplName(T, x, y) {
     setTimeout(() => { ni.focus(); ni.select(); }, 0);
   });
 }
-/* adding a board: one tap when there are no templates or a default one, otherwise pick what to draw on */
+/* the last step of adding a board: its name, with the next free one written and selected so that typing replaces it.
+   Enter, the button or a tap elsewhere adds the board; Escape or Cancel adds nothing. */
+function askBoardName(place, init, x, y) {
+  openPop(x, y, (p, pop) => {
+    p.appendChild(h('p', 'pt', t('bName')));
+    const ni = h('input', 'pin'); ni.type = 'text'; ni.value = uniqueBoardName(); ni.style.marginTop = '0'; p.appendChild(ni);
+    const row = h('div', 'prow');
+    const no = h('button', 'btn sm', t('cancel')); no.type = 'button'; no.onclick = () => { pop.onclose = null; closePop(); };
+    const add = h('button', 'btn sm pri', t('bCreate')); add.type = 'button'; add.onclick = closePop;
+    row.append(no, h('span', 'grow'), add); p.appendChild(row);
+    pop.onclose = () => place(init, cleanField(ni.value));
+    pop.esc = () => { pop.onclose = null; };
+    ni.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
+    setTimeout(() => { ni.focus(); ni.select(); }, 0);
+  });
+}
+/* adding a board: pick what to draw on when there are templates and no default one, then name it */
 function addBoardFlow(place, x, y) {
   const list = baseChoices({});
-  if (!list.length || S.templates.get(S.cfg.defaultTemplate)) { place(); return; }
+  if (!list.length || S.templates.get(S.cfg.defaultTemplate)) { askBoardName(place, undefined, x, y); return; }
   openPop(x, y, p => {
     p.appendChild(h('p', 'pt', t('pickBase')));
     const col = h('div', 'pcol');
-    const add = (label, init) => { const bt = h('button', 'btn', label); bt.type = 'button'; bt.onclick = () => { closePop(); place(init); }; col.appendChild(bt); };
+    const add = (label, init) => { const bt = h('button', 'btn', label); bt.type = 'button'; bt.onclick = () => { closePop(); askBoardName(place, init, x, y); }; col.appendChild(bt); };
     for (const T of list) add(T.name, { base: T.name, image: null, imageData: null });
     add(t('blank'), { base: null, image: null, imageData: null, h: 750 });
     p.appendChild(col);
@@ -2207,8 +2268,8 @@ desk.addEventListener('pointerdown', e => {
     const me = P;
     P.lp = setTimeout(() => { if (P === me && !me.moved) { P = null; longPress(me); } }, 560);
   }
-  const tag = !S.editing && tg.closest('.tag:not(.btag)');
-  if (tag) {   // a cue tag can be dragged to another word; a finger must hold it first, so that a swipe still scrolls
+  const tag = !S.editing && tg.closest('.tag,.grip');
+  if (tag) {   // a cue tag can be dragged to another word, a grip or a board tag moves its block; a finger must hold it first, so that a swipe still scrolls
     P.tag = tag;
     if (P.lp) { clearTimeout(P.lp); P.lp = 0; }
     if (e.pointerType === 'touch' && !nearPen) { const me = P; P.lp = setTimeout(() => { if (P === me && !me.moved && !me.nearPen) { me.held = true; tag.classList.add('lift'); } }, DRAG_HOLD); }
@@ -2351,9 +2412,10 @@ function eraseAt(e) {
   if (hitAny) { drawInk(P.pi); markDirty('ink'); }
 }
 
-/* ---------- drag a cue tag to another word ---------- */
+/* ---------- drag a cue tag to another word, or a block by its grip to another place ---------- */
 const DRAG_HOLD = 300, DRAG_EDGE = 48, DRAG_REACH = 70;
 function beginDrag(e) {
+  if (P.tag.matches('.grip,.btag')) return beginBlockDrag(e);   // a board is moved as the line that holds it
   const tag = P.tag, b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
   if (!c || c.board || !tag.isConnected) return false;
   closePop();
@@ -2367,6 +2429,54 @@ function beginDrag(e) {
   moveDrag(e);
   return true;
 }
+function beginBlockDrag(e) {
+  const tag = P.tag, b = S.byId.get(+tag.dataset.b), board = tag.classList.contains('btag');
+  if (!b || !tag.isConnected || (board && b.type !== 'mark')) return false;
+  const row = board ? tag.closest('.page').querySelector('.row[data-b="' + b.id + '"]') : tag.closest('.row');
+  if (!row) return false;
+  closePop();
+  const words = b.tokens.filter(q => q.k === 'w').map(q => q.text);
+  const g = h('div', 'bghost ghost', (b.name ? b.name + ': ' : '') + (words.length ? words.slice(0, 8).join(' ') + (words.length > 8 ? ' \u2026' : '') : b.raw));
+  document.body.appendChild(g);
+  tag.classList.remove('lift'); row.classList.add('moving'); if (board) tag.classList.add('moving');
+  Object.assign(P, { k: 'drag', bid: b.id, row, ghost: g, drop: null, raf: 0, pen: P.type === 'pen' });
+  try { desk.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer */ }
+  moveDrag(e);
+  return true;
+}
+/* [i0, n, j] for textMoveBlocks: the group of block bid put before or after group g; null when it is there already */
+function blockSpan(bid, g, after) {
+  const mb = S.byId.get(bid), tb = gBlocks(g); if (!mb || !S.blocks.includes(tb[0])) return null;
+  const ms = gBlocks(mb.g), i0 = S.blocks.indexOf(ms[0]), j = after ? S.blocks.indexOf(tb[tb.length - 1]) + 1 : S.blocks.indexOf(tb[0]);
+  return j >= i0 && j <= i0 + ms.length ? null : [i0, ms.length, j];
+}
+/* where a block dropped at (x, y) would go: the nearest edge between two blocks of that script page. Never above the
+   frontmatter, never inside a block that runs over two pages, and none where the block already is. */
+function blockDrop(x, y) {
+  const el = document.elementFromPoint(x, y), pg = el && el.closest && el.closest('.page.script'); if (!pg) return null;
+  let best = null, bd = Infinity;
+  for (const row of $$('.pbody > .row', pg)) {
+    if (row.classList.contains('front')) continue;
+    const q = row.querySelector('.tx'), b = S.byId.get(q ? +q.dataset.b : +row.dataset.b); if (!b) continue;
+    const fl = q && q.dataset.off !== undefined ? (q.dataset.fl || '') : 'fl', r = row.getBoundingClientRect();
+    for (const after of [false, true]) {
+      if (!fl.includes(after ? 'l' : 'f')) continue;
+      const ey = after ? r.bottom : r.top, d = Math.abs(y - ey);
+      if (d < bd) { bd = d; best = { g: b.g, after, pg, y: ey }; }
+    }
+  }
+  return best && blockSpan(P.bid, best.g, best.after) ? best : null;
+}
+function placeBlockDrop() {
+  const d = blockDrop(P.x, P.y), o = P.drop;
+  if (o && d && o.g === d.g && o.after === d.after && o.pg === d.pg) return;
+  if (o) o.el.remove();
+  if (d) {
+    const pr = d.pg.getBoundingClientRect();
+    d.el = h('div', 'dropline noprint'); d.el.style.top = r1((d.y - pr.top) / pageScale(d.pg)) + 'px'; d.pg.appendChild(d.el);
+  }
+  P.drop = d;
+}
 function moveDrag(e) {
   P.x = e.clientX; P.y = e.clientY;
   placeDrag();
@@ -2374,6 +2484,7 @@ function moveDrag(e) {
 }
 function placeDrag() {
   P.ghost.style.left = (P.x + 14) + 'px'; P.ghost.style.top = (P.y - 36) + 'px';
+  if (P.row) { placeBlockDrop(); return; }
   const d = dropTarget(P.x, P.y);
   if (P.drop && (!d || d.el !== P.drop.el)) clearDrop(P.drop);
   if (d && (!P.drop || d.el !== P.drop.el)) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
@@ -2419,9 +2530,15 @@ function dropTarget(x, y) {
 function endDrag(p, commit) {
   if (p.raf) cancelAnimationFrame(p.raf);
   p.ghost.remove(); p.tag.classList.remove('moving', 'lift');
-  if (p.drop) clearDrop(p.drop);
+  if (p.row) p.row.classList.remove('moving');
+  if (p.drop) { if (p.row) p.drop.el.remove(); else clearDrop(p.drop); }
   S.lastTap = null;   // the next tap is not the second half of a double tap
   if (!commit || !p.drop) return;
+  if (p.row) {
+    const sp = blockSpan(p.bid, p.drop.g, p.drop.after), nt = sp && textMoveBlocks(sp[0], sp[1], sp[2]), n = S.pairs.length;
+    if (nt && commitText(nt)) { if (S.pairs.length < n) toast(t('blockUnpaired')); const nb = S.byId.get(p.bid); if (nb) jumpTo(nb, true); }
+    return;
+  }
   /* looked up again: the script may have been parsed anew while the tag was in the air */
   const b = S.byId.get(+p.tag.dataset.b), c = b && b.cues.find(q => q.s === +p.tag.dataset.s);
   const tb = S.byId.get(p.drop.b.id), nt = c && !c.board && tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
@@ -2445,6 +2562,7 @@ function longPress(p) {
 function handleTap(tg, x, y) {
   if (!tg || !tg.closest || S.editing || !tg.closest('.page')) return;
   const act = tg.closest('[data-act]'); if (act) { boardAction(act, x, y); return; }
+  if (tg.closest('.grip')) return;   // a grip is only for dragging
   const tag = tg.closest('.tag');
   if (tag) {
     const b = S.byId.get(+tag.dataset.b), c = b && b.cues.find(q => q.s === +tag.dataset.s);
@@ -2593,7 +2711,7 @@ function openPin(b, wi, x, y) {
       cb.onchange = () => { own = cb.checked; setTitle(); fillEnds(); };
       lb.append(cb, t('ownLine')); row.appendChild(lb);
     } else row.appendChild(h('span', 'grow'));
-    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow(init => addBoardAfter(b, init), x, y); };
+    const bb = h('button', 'btn sm', t('boardHere')); bb.type = 'button'; bb.onclick = () => { closePop(); if (pageFull(pageIndexOf(lastOfGroup(b))[0])) return; addBoardFlow((init, name) => addBoardAfter(b, init, name), x, y); };
     const eb = h('button', 'btn sm', t('editText')); eb.type = 'button'; eb.onclick = () => { closePop(); editGroup(b.g); };
     row.append(bb, eb); p.appendChild(row);
     pop.key = ev => {
@@ -2646,7 +2764,7 @@ function openCueEdit(b, c, x, y, fresh) {
     p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); setPh(); }));
     p.append(li, di, ni);
     const row = h('div', 'prow');
-    const del = h('button', 'btn sm danger', t('del')); del.type = 'button';
+    const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)';
     del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
     row.append(del, h('span', 'grow'), done);
@@ -2664,10 +2782,13 @@ function openCueEdit(b, c, x, y, fresh) {
     for (const inp of [li, di, ni]) inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); closePop(); } });
     pop.key = ev => {
       if (ev.key === 'Enter') { closePop(); return true; }   // nothing typed: Enter accepts the cue as it is
+      if (ev.key === 'Delete') { del.click(); return true; }   // the cursor is in no field: Delete is for the cue, not for a letter
       if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length !== 1) return false;
       if (document.activeElement === li || document.activeElement === di || document.activeElement === ni) return false;
       li.focus(); return false;   // let the key land in the label field
     };
+    /* a cue just pinned: the number fills itself, so the cursor waits in the margin text; Tab goes on to the description */
+    if (fresh) di.focus({ preventScroll: true });
   });
 }
 function openBoardPop(b, c, x, y) {
@@ -2684,7 +2805,8 @@ function openBoardPop(b, c, x, y) {
       commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)));
     };
     const row = h('div', 'prow');
-    const del = h('button', 'btn sm danger', t('bRemove')); del.type = 'button'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
+    const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
+    pop.key = ev => { if (ev.key === 'Delete') { del.click(); return true; } return false; };
     const done = h('button', 'btn sm pri', t('done')); done.type = 'button'; done.onclick = closePop;
     row.append(del, h('span', 'grow'), done); p.appendChild(row);
     pop.onclose = apply;
@@ -3890,7 +4012,7 @@ const KEYS = [
   ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
   ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
   ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Esc', 'kEsc'], ['?', 'keys']
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['?', 'keys']
 ];
 let keysClose = null;
 function openKeys() {
@@ -3916,7 +4038,9 @@ const KEYMAP = {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
-    cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
+    const q = $('#search');   // leaving Find empties it, so that it folds back to the magnifier
+    if (document.activeElement === q) { e.preventDefault(); q.value = ''; S.findAt = null; q.blur(); return; }
+    cancelDrag(); if (POP) { if (POP.esc) POP.esc(); closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
   }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && !e.altKey && !e.shiftKey && S.loaded && $('#dlg').hidden) {
@@ -4010,7 +4134,7 @@ async function init() {
   showStart();
 }
 window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
-  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint };
+  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks };
 init();
 
 </script>

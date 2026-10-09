@@ -61,7 +61,30 @@ const OUT = process.env.OUT;
   ok(await ev(() => document.activeElement.id) === 'search', '/ puts the cursor in Find');
   await page.keyboard.type('bin 89');
   ok(await view() === 'true,true,true,false' && await page.locator('#search').inputValue() === 'bin 89', 'letters typed in a field are text, not shortcuts');
-  await ev(() => { document.querySelector('#search').value = ''; document.activeElement.blur(); });
+  const sw = () => ev(() => document.querySelector('#search').getBoundingClientRect().width);
+  ok(await sw() > 150, 'Find is wide while it is used');
+  await key('Escape'); await page.waitForTimeout(250);
+  ok(await ev(() => document.activeElement.id) !== 'search' && await page.locator('#search').inputValue() === '' && await sw() < 60, 'Escape leaves Find, empties it and folds it back to the magnifier');
+  await key('n'); ok(await view() === 'true,true,true,true', 'and the single keys work again at once');
+  await key('n');
+
+  // Delete, with the box of a cue open
+  const cueTag = name => page.locator('.page.script .tag', { hasText: name }).first();
+  const txt = () => ev(() => PB.serialize());
+  await cueTag('SND 2').click(); await page.waitForTimeout(60);
+  ok(await page.locator('#pop .btn.danger').textContent() === 'Delete' && (await page.locator('#pop .btn.danger').getAttribute('title')).includes('Del'), 'the box of a cue has "Delete", and its tooltip names the key');
+  await key('Delete');
+  ok(await page.locator('#pop').isHidden() && !(await txt()).includes('{SND 2}'), 'Delete, with the box of a cue open, deletes that cue');
+  await key('Control+z');
+  ok((await txt()).includes('Rispondi! {SND 2}'), 'and it is one undo step');
+  await cueTag('LX 1').first().click(); await page.waitForTimeout(60);
+  await page.locator('#pop input.pin').nth(1).click(); await key('Home'); await key('Delete');
+  ok(await page.locator('#pop').isVisible() && await page.locator('#pop input.pin').nth(1).inputValue() === 'anterna' && (await txt()).includes('{LX 1 |'), 'with the cursor in a field, Delete removes a letter and the cue stays');
+  await key('Escape'); await key('Control+z');
+  ok((await txt()).includes('{LX 1 | lanterna}'), 'the cue is as it was after undo');
+  await key('?');
+  ok((await page.locator('#dlg table.keys').textContent()).includes('Del'), 'the list of shortcuts names Delete');
+  await key('Escape');
 
   // Ctrl+P is taken over, Ctrl+S saves
   await key('Control+p');

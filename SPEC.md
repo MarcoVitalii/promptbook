@@ -1,8 +1,8 @@
 # Promptbook — Specification
 
 **Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
-**Tool described:** r1.8 (`VERSION` in `src/core.js`).
-**State:** r1.6, r1.7 and r1.8 are built and committed on branch `master`; r1.8 is tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). Checked in a simulated browser only: nothing since r1.5 is recorded as having run on the rehearsal laptop, and nothing has been printed on paper (`docs/verification.md`).
+**Tool described:** r1.9 (`VERSION` in `src/core.js`).
+**State:** r1.6 to r1.9 are built and committed on branch `master`; r1.8 and r1.9 are tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). r1.6 to r1.8 were checked in a simulated browser only; the r1.9 features were tried by the client on a real show and reported as working (2026-10-10). Nothing has been printed on paper (`docs/verification.md`).
 
 ---
 
@@ -166,6 +166,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | r1.6 | 2026-10-08 | Boards in two columns, board names, grid, moving a cue | 02, 04, 05 | Commit `d0b53c0`. The tag `r1.6` and the branch `r1.6` both point at `a3d735b`, which is later and contains r1.7 |
 | r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e`, on `master`; no tag |
 | r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
+| r1.9 | 2026-10-10 | Blocks moved by dragging a grip, name asked before a board is made, "Delete" as the one word with the Delete key, cursor in the margin text of a new cue, Esc leaves Find | 01, 02, 04, 05, 09 | Tag `r1.9`, branch `master` |
 
 What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
 

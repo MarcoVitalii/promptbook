@@ -42,7 +42,7 @@ const { ok, open } = require('./_util');
   await page.locator('#bReview').click();
 
   // "+ Board" on the first script page must not land above the frontmatter
-  await page.locator('.addboard').first().click();
+  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
   ok(await page.evaluate(() => PB.serialize().startsWith('---\n') && !!PB.S.meta && PB.S.pages[2].boards.length === 1), 'a board added on page 1 goes below the frontmatter');
   await page.keyboard.press('Control+z');
 

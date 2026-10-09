@@ -83,9 +83,12 @@ const OUT = process.env.OUT || path.join('.cache', 'out');
   const bt = await ev(() => { const r = document.querySelector('.page.script .tag.btag').getBoundingClientRect(); return { x: r.left + 20, y: r.top + r.height / 2 }; });
   to = await word('nove');
   await mouseDrag(bt, { x: to.cx, y: to.cy }, false);
-  ok((await marks()).ghost === 0, 'a board tag does not lift');
-  await page.mouse.up();
-  ok(await text() === T && clean(await marks()), 'a board tag cannot be dragged: text unchanged');
+  m = await marks();
+  ok(m.ghost === 1 && m.drop === '' && await ev(() => document.querySelectorAll('.dropline').length) === 1, 'a board tag drags its line as a block: no word is highlighted, a line marks the place between two blocks');
+  await page.mouse.up(); await frame();
+  ok(/\{BOARD b1\}\n\nANNA: nove dieci undici\n\n\{VID 1/.test(await text()) && (await text()).length === T.length && clean(await marks()), 'the board now stands above the speech it was dropped on, and nothing else changed');
+  await page.keyboard.press('Control+z');
+  ok(await text() === T && await page.locator('#bUndo').isDisabled(), 'one Ctrl+Z puts the board back');
   await page.keyboard.press('Escape');
 
   await page.mouse.click(from.x, from.y);

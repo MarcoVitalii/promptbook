@@ -46,6 +46,8 @@ const OUT = process.env.OUT || '.';
   const pick = await page.locator('#pop .pcol .btn').allTextContents();
   ok(pick.includes('Template 1') && pick.includes('Template 2') && pick.includes('Blank'), 'picker offers templates and blank: ' + pick.join(', '));
   await page.locator('#pop .pcol .btn', { hasText: 'Template 2' }).click();
+  ok(await page.locator('#pop input').inputValue() === 'Board 1' && await ev(() => PB.S.boards.size) === 0, 'after the choice the name is asked, and no board exists yet');
+  await page.keyboard.press('Enter');
   await page.waitForSelector('.page.facing .board');
   ok(await ev(() => PB.S.boards.get('Board 1').base) === 'Template 2', 'board is based on the chosen template');
   ok(await page.locator('.page.facing .board .bbase .bstatic').count() === 2 && await page.locator('.page.facing .board .bbase path').count() === 2, 'the whole chain shows under the board');
@@ -73,7 +75,9 @@ const OUT = process.env.OUT || '.';
   await page.screenshot({ path: OUT + '/13-templates.png' });
   await page.locator('.tplbar .btn', { hasText: 'Back to script' }).click();
   await page.locator('.addboard').first().click();
-  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.get('Board 2') && PB.S.boards.get('Board 2').base) === 'Template 2', 'with a default, "+ Board" is a single tap');
+  ok(await page.locator('#pop .pcol').count() === 0 && await page.locator('#pop input').inputValue() === 'Board 2', 'with a default, "+ Board" asks only the name');
+  await page.keyboard.press('Enter');
+  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.get('Board 2') && PB.S.boards.get('Board 2').base) === 'Template 2', 'and Enter adds the board on the default template');
 
   // 8. change base, undo; copy a board to the templates
   await fig('Board 2').locator('button', { hasText: 'Base' }).click();
@@ -168,7 +172,9 @@ const OUT = process.env.OUT || '.';
   await ev(() => PB.startMemory('ANNA: Ciao {SND 1 | a}.\n{BOARD X}\n', { title: 'old', departments: [{ code: 'LX', name: 'Luci', colour: '#c98a00' }, { code: 'SND', name: 'Audio', colour: '#1f6fd6' }], defaultBoard: null }, null, [{ name: 'X', image: null, w: 1000, h: 750, strokes: [] }]));
   ok(await ev(() => PB.S.cfg.departments.map(d => d.code + (d.runs === undefined ? '' : '!')).join() + '|' + PB.S.cfg.templates.length + '|' + PB.S.boards.get('X').base) === 'LX,SND|0|null', 'older show opens: no templates, no "runs" flag any more');
   await page.locator('.addboard').first().click();
-  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.size) === 2, 'without templates "+ Board" behaves as before');
+  ok(await page.locator('#pop .pcol').count() === 0 && await page.locator('#pop input').count() === 1, 'without templates "+ Board" asks only the name');
+  await page.keyboard.press('Enter');
+  ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.size) === 2, 'and Enter adds the board');
 
   await done(); srv.close();
 })();

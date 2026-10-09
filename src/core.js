@@ -25,12 +25,12 @@ en: {
   boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
   save: 'Save', cancel: 'Cancel', close: 'Close',
   keys: 'Keyboard shortcuts', kHint: 'Single keys work when no text field has the focus and no cue box is open.', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
-  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu',
+  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu; leave Find',
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
-  bClear: 'Clear ink', bRemove: 'Remove', bRename: 'Rename', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
+  bClear: 'Clear ink', bRename: 'Rename', bCreate: 'Add board', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
   rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
   rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
@@ -50,6 +50,7 @@ en: {
   afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
   moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
+  moveBlock: 'Drag to move this block', blockUnpaired: 'Moved. A cue and its end no longer match: check the order.', kDel: 'Delete the cue or the board whose box is open',
   makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
   thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
   thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
@@ -92,12 +93,12 @@ it: {
   boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
   keys: 'Scorciatoie da tastiera', kHint: 'I tasti singoli funzionano quando nessun campo di testo è attivo e nessun riquadro dei cue è aperto.', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
-  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu',
+  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu; esci da Cerca',
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
-  bClear: 'Cancella inchiostro', bRemove: 'Rimuovi', bRename: 'Rinomina', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
+  bClear: 'Cancella inchiostro', bRename: 'Rinomina', bCreate: 'Aggiungi tavola', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
   rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
   rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
@@ -117,6 +118,7 @@ it: {
   afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
   moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
+  moveBlock: 'Trascina per spostare il blocco', blockUnpaired: 'Spostato. Un cue e la sua fine non corrispondono più: controlla l’ordine.', kDel: 'Elimina il cue o la tavola del riquadro aperto',
   makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
   thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
   thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
@@ -176,7 +178,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.8';
+const VERSION = 'r1.9';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -695,6 +697,30 @@ function textMoveCue(c, tb, wi) {
   return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
 }
 
+/* text with blocks [i0, i0+n) moved to stand before block j (j = S.blocks.length puts them last); null when that is
+   where they are. The moved blocks keep the blank lines above them and the block that followed them keeps at least as
+   many. An unrecognised line that would touch the line above it gets a blank line, or it would be read as part of it. */
+function textMoveBlocks(i0, n, j) {
+  const bl = S.blocks;
+  if (i0 < 0 || n < 1 || i0 + n > bl.length || j < 0 || j > bl.length || (j >= i0 && j <= i0 + n)) return null;
+  const mv = bl.slice(i0, i0 + n), seq = [];
+  const put = () => { for (const m of mv) seq.push([m, m.gap]); };
+  bl.forEach((b, i) => {
+    if (i === j) put();
+    if (i < i0 || i >= i0 + n) seq.push([b, i === i0 + n ? Math.max(b.gap, mv[0].gap) : b.gap]);
+  });
+  if (j === bl.length) put();
+  const out = [];
+  seq.forEach(([b, gap], k) => {
+    const up = k ? seq[k - 1][0] : null;
+    if (!up && b !== bl[0]) gap = 0;   // a new first line brings no blank line to the top
+    if (up && !gap && b.type === 'para' && up.type !== 'mark' && up.type !== 'h') gap = 1;
+    for (let q = 0; q < gap; q++) out.push('');
+    out.push(b.raw);
+  });
+  return out.join('\n') + '\n';
+}
+
 /* ---------- ink bookkeeping ---------- */
 function lineCount(b) {
   const g = b.g;
@@ -974,10 +1000,15 @@ function inkOn(col) {
   return 0.2126 * lin(n >> 16) + 0.7152 * lin(n >> 8 & 255) + 0.0722 * lin(n & 255) > 0.179 ? '#16150f' : '#fff';
 }
 
+/* the handle in the gutter by which a block is dragged to another place; never printed */
+function grip(row, b) {
+  const k = h('button', 'grip pbtn noprint'); k.type = 'button'; k.tabIndex = -1; k.dataset.b = b.id; k.title = t('moveBlock');
+  row.appendChild(k);
+}
 /* fr: null for the whole block, or { from, to, off, cont, first, last } for a page fragment */
 function buildRow(g, fr) {
   if (g.kind === 'simul') {
-    const row = h('div', 'row simul');
+    const row = h('div', 'row simul'); grip(row, g.blocks[0]);
     row.appendChild(h('div', 'nm simnm', t('together')));
     const cols = h('div', 'simcols'); cols.style.setProperty('--n', g.blocks.length);
     for (const b of g.blocks) {
@@ -992,7 +1023,7 @@ function buildRow(g, fr) {
   const b = g.b;
   if (b.type === 'mark') {
     const row = h('div', 'row mark'); row.dataset.b = b.id;
-    row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule'));
+    row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule')); grip(row, b);
     return row;
   }
   if (b.type === 'note') {   // takes no room: only a marker in the gutter, never printed
@@ -1023,6 +1054,7 @@ function buildRow(g, fr) {
     return row;
   }
   const row = h('div', 'row ' + (b.type === 'h' ? 'h' + b.level : b.type)); row.dataset.b = b.id;
+  if (!fr || fr.first) grip(row, b);
   if (b.type === 'h') { row.appendChild(elTx(b, 0, b.tokens.length)); return row; }
   const nm = h('div', 'nm');
   if (b.type === 'speech') {

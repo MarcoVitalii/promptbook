@@ -1,5 +1,15 @@
 # Changelog
 
+## r1.9 — 2026-10-10
+
+Blocks that can be dragged to another place, a name for a board before it is made, one word and one key for deleting, and two smaller helps at the keyboard. Tried by the client on a real show, who reported that all of it works as expected. Shows written by r1.8 open unchanged, and r1.8 opens a show saved by r1.9.
+
+- After you pick the department of a new cue, the cursor is already in the margin text. Tab goes to the description, Shift+Tab to the number (which still fills itself when left blank), Enter accepts.
+- Blocks can be moved. Every line of the script has a faint grip in the left gutter: drag it with the mouse or the pen, or hold it for a moment with a finger and then drag, and release where the red line shows. Cues and ink go with the block; speeches said together move as one; a board moves with its line, also when dragged by its tag in the margin. One undo step. Esc gives up.
+- "+ Board" and "Board here" first ask the name: "Board n" is written and selected, so typing replaces it. Enter adds the board, Esc adds nothing.
+- One word: boards now say "Delete", like cues and templates ("Remove" is gone). With the box of a cue or of a board open, the Delete key deletes it, unless the cursor is in a field.
+- Esc in Find leaves it: the field empties and folds back to the magnifier, and the single-key shortcuts work again.
+
 ## r1.8 — 2026-10-10
 
 A calmer screen, cues that stand out, a shorter toolbar and keyboard shortcuts. Checked in a simulated browser only: the colours, the tags and the corner controls were judged on screenshots, not on the rehearsal laptop, and nothing was printed on paper.

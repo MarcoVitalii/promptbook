@@ -880,7 +880,7 @@ const KEYS = [
   ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
   ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
   ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Esc', 'kEsc'], ['?', 'keys']
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['?', 'keys']
 ];
 let keysClose = null;
 function openKeys() {
@@ -906,7 +906,9 @@ const KEYMAP = {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
-    cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
+    const q = $('#search');   // leaving Find empties it, so that it folds back to the magnifier
+    if (document.activeElement === q) { e.preventDefault(); q.value = ''; S.findAt = null; q.blur(); return; }
+    cancelDrag(); if (POP) { if (POP.esc) POP.esc(); closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
   }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && !e.altKey && !e.shiftKey && S.loaded && $('#dlg').hidden) {
@@ -1000,5 +1002,5 @@ async function init() {
   showStart();
 }
 window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
-  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint };
+  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks };
 init();

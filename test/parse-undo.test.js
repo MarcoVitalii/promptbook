@@ -36,7 +36,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(await page.evaluate(() => /Alt! \{LX 1\}/.test(PB.serialize()) && /Chi va là\?/.test(PB.serialize()) && /ANNA: fine\.\n$/.test(PB.serialize())), 'three redos reapply them');
   // empty show: board on an empty page, then text
   await page.evaluate(() => PB.startMemory('', {}));
-  await page.locator('.addboard').first().click();
+  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
   ok(await page.evaluate(() => PB.serialize()) === '{BOARD Board 1}\n', 'board can be added to an empty show');
   console.log(errs.join('\n') || 'no page errors');
   await browser.close();
