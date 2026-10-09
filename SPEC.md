@@ -442,6 +442,26 @@ The client has seen the five decisions marked `[ASSUMED]` below and did not obje
 - A pen or mouse tap that slips more than 8 px but stays on the tag does nothing: neither a move nor the cue editor.
 - Not built: dragging board tags, dropping a cue onto a line of its own, dragging the boxed word instead of the tag, reordering boards, snap to grid, a grid step per board.
 
+### 5.15 History, variants, locked pages, changes — built in r1.7
+
+**Request (2026-10-09):** "git versioning below with tags for meaningful moments (revisions, branches for specific shows) with support to lock pages and reprint for rehearsals. Assume that actors will manage their notes on their own. I'd need to produce new pages, and a simple diff like github to align actors on what affects them."
+
+| Point | Decision | Status |
+|---|---|---|
+| Storage | A git repository in `.git`, inside the show file or beside `script.md` in a show folder. Written by the tool itself: loose objects (zlib), refs, `HEAD`, a minimal `config`. No index, no packs. This amends D10: git is inside the show and sees the individual files again. | `[LOCKED]` by the request; the subset of git `[ASSUMED]` |
+| Revision | A commit of every show file (`script.md`, `script.ink.json`, `config.json`, `boards/`, `templates/`) plus a lightweight tag. The typed name is the commit message; the tag is the name made safe for a ref (`Prova-1`, then `Prova-1-2`). Saved only on request. | `[ASSUMED]` |
+| Variant | A branch, `main` first. Creating one points a new branch at the current commit and moves `HEAD`. Changing variant checks out its last commit. No merge in the tool (D15). | `[LOCKED]` branches; no merge `[ASSUMED]` |
+| Nothing is lost | Before a restore or a change of variant, the show is committed on the current branch as "Before going to …" when it differs from the last commit. | `[ASSUMED]` |
+| Restore | Replaces the show files with those of a commit and reloads. `HEAD` stays on the branch. | `[ASSUMED]` |
+| Lock | `config.json` gains `lock: { name, rev, pages, n, cont, sig, keys }`, each a list joined by spaces: page labels; blocks starting on each page; whether the page opens mid-block; a hash of what each page held; a hash of every block in order. `rev` is the tag. Being in `config.json`, the lock belongs to the variant and to the revision. | `[ASSUMED]` |
+| Locked layout | Blocks are matched to the locked ones by their words (cue tokens ignored). A page starts at its first surviving block. Overflow goes to the next page when that page opened mid-block before, otherwise to inserted pages `12A`, `12B` (`12A1` after `12A`; `12+1` when `12A` already exists). An emptied page is dropped. Past the last locked page numbering continues. This adds to §6 without changing the page geometry. | `[ASSUMED]` |
+| Changed page | Its blocks, or the way they break over the page, differ from the lock. Marked at the foot; listed in History; "Print changed pages" prints script pages only. | `[ASSUMED]` |
+| Actors' notes | Not handled: an actor moves their own notes to the replaced page. Hence the smallest possible set of reprinted pages. | `[LOCKED]` by the request |
+| Changes | Block by block (longest common run of unchanged blocks, then pairs sharing half their words), word by word inside a changed block. Kinds: added, cut, changed, cues only. | `[ASSUMED]` |
+| What reaches a character | Text changes in a speech they speak (joined names included), in an action that spells their name in capitals, and in the speech just before one of theirs in the same scene. Cue-only changes and comments are left out. | `[ASSUMED]` |
+
+Not built: merging a correction into several variants inside the tool; reading packed git objects; a read-only view of an old revision; history for a show kept only in the browser.
+
 ## 6. Page layout `[LOCKED]`
 
 Left page (script):
@@ -523,6 +543,10 @@ Not verified:
 - The PDFs the checks write (`boards-names.pdf`, `grid.pdf`) were not opened. Print was checked through the print styles in the browser only.
 - The real screen: grid lightness was judged on screenshots by the build agents, not on the laptop's display.
 
+### r1.7 — built 2026-10-09, not yet committed or tagged
+
+History as a git repository inside the show, variants as branches, locked page numbers with inserted pages and a changed-pages print, changes per character (§5.15). 33 browser checks in `test/history.test.js`, 15 unit checks in `test/unit/compare.test.js`. Not yet tried on the laptop; nothing printed on paper.
+
 ### Backlog — ordered after the first rehearsal
 
 A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Dragging board tags and reordering boards. Dropping a cue onto a line of its own. Anything further that rehearsals show.
@@ -530,6 +554,18 @@ A call list built from the character list (§5.12). Renumber command with an old
 ### R2 — later
 
 Follow-along view for the stage manager (D11); it can use R1.1 to show what is running. Standbys and warnings. More than one device at a time is not planned (D15).
+
+### Cast and crew — ideas, not scheduled
+
+Collected on 2026-10-08 and 09. None is designed or decided; the cast would mostly use a phone.
+
+- Notes with an addressee (character, department or all), the rehearsal day and a state (open, solved), kept as a history; filters in Review by person, by day and by state.
+- Rehearsal calendar: date, time, place, agenda and scenes per day; who is called, computed from the scenes (needs the actor's name beside each character); a call sheet per day; the notes of a day attached to that rehearsal.
+- A page per person: their notes with the lines they refer to, readable on a phone.
+- Memory practice: a button that hides the actor's own lines, so the part can be rehearsed from the cues of the others; a line is shown again on request.
+- Later, on top of memory practice: speech to text on the device that listens to the actor and checks or corrects the spoken line against the script. Open: it must work without a network and without a library (D12), and the browser's built-in recognition may send the audio to a server.
+- Pronunciation: mark where the stress falls and whether a vowel is open or closed on a word (*àncora* / *ancóra*, *pèsca* / *pésca*), shown to the cast without changing the script text; read a word or a line aloud. The simplest form: tapping a word opens its page in an online pronunciation dictionary. Open: reading aloud uses the voices installed on the device, which differ in quality and may not have Italian; the dictionary link needs a network, which the tool itself never uses (D12).
+- Further off: the cast writing back (own notes, replies, marking a note solved) and a shared position during rehearsal. Both need more than one device at a time (D15) and a server (D12).
 
 ## 8. Assumptions
 

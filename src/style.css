@@ -230,6 +230,22 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 #measure{position:absolute;visibility:hidden;left:-20000px;top:0;width:var(--pw);font-family:"PB","Segoe UI",Arial,sans-serif;font-size:15px;line-height:22px;
   text-rendering:geometricPrecision;font-kerning:normal;font-variant-ligatures:none;font-synthesis:none}
 #cuePrint{display:none}
+.pfoot.chg{color:var(--acc);font-weight:700}
+/* history and changes */
+.hrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.hrow input[type=text],.hrow select{flex:1;min-width:140px;min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px}
+.hrow>span{font-size:13px}
+.hsec{border-top:1px solid var(--ui-b);margin-top:10px;padding-top:4px}
+.rev{display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ui-b)}
+.rev .rn{flex:1;min-width:0}.rev .rn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rev .rn span{font-size:12px;color:var(--muted)}
+.df{font:14px/1.45 "PB","Segoe UI",Arial,sans-serif}
+.df .dh{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+.df .de{border-left:4px solid var(--ui-b);padding:3px 8px;margin:4px 0;break-inside:avoid}
+.df .de.add{border-color:#2e8b47}.df .de.del{border-color:#c0392b}.df .de.chg{border-color:#c98a00}
+.df .dk{font-size:11px;color:var(--muted);margin-left:6px}
+.df ins{background:rgba(46,139,71,.22);text-decoration:underline;text-decoration-thickness:1.5px;font-weight:700}
+.df del{background:rgba(192,57,43,.2);text-decoration:line-through}
 
 /* ---------- print ---------- */
 @media print{
@@ -247,6 +263,9 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   body.pr-book .page.facing{display:block!important}
   body.pr-script .page.facing{display:none!important}
   .spread:last-child .page:last-child,body.pr-script .spread:last-child .page.script{break-after:auto}
+  body.pr-changed .spread:not(.chg){display:none}
+  body.pr-changed .page{break-after:auto;break-before:page}   /* the last printed page is not the last in the book: no empty sheet after it */
+  .pfoot.chg{color:#000}
   .w.sel{background:none}
   .row.para .nm::before{content:""}
   body.pr-cues #work{display:none}

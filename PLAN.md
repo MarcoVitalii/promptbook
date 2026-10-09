@@ -83,6 +83,7 @@ Items 1–2 alone already remove re-importing and hand-compiled cue lists. Ink i
 | R1.3 | Linking cues, cue notes, exports per department (SPEC §5.11) | Built 2026-10-07 as r1.3. Not yet tried on the laptop. |
 | R1.4 | `%%` comments, to-do notes, cue list columns, automatic numbers (SPEC §5.13) | Built 2026-10-07 as r1.4. Not yet tried on the laptop. |
 | R1.6 | Fixes from the first rehearsals: boards in two columns, board names under the drawing, board grid, moving a cue by dragging its tag (SPEC §5.14) | Built 2026-10-08 as r1.6; committed on branch r1.6, not yet tagged. 376 browser checks and 67 unit checks pass. Not yet tried on the laptop: the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only. Nothing printed on paper; the PDF was not opened. Gate: the device trial in §7. |
+| R1.7 | History in git inside the show, variants, locked page numbers, changes per character (SPEC §5.15) | Built 2026-10-09 as r1.7; not committed or tagged. All checks pass. Not yet tried on the laptop: the real file dialogs, a show file with a long history, and the printed changed pages are untested there. Open: confirm the `[ASSUMED]` rows of §5.15. |
 | R1 | Cue ends and board templates (SPEC §5.10, §5.11, §7) | Delivered 2026-10-06 as r1.0. 145 automated checks pass. Not yet tried on the laptop. |
 | Backlog | The former R1 list (SPEC §7) | Reordered by the first rehearsal's friction list |
 | R2 | Follow-along view for the stage manager, standbys | After R1. Single screen, so D12 is not reopened. |

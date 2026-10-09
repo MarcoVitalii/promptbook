@@ -248,6 +248,22 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 #measure{position:absolute;visibility:hidden;left:-20000px;top:0;width:var(--pw);font-family:"PB","Segoe UI",Arial,sans-serif;font-size:15px;line-height:22px;
   text-rendering:geometricPrecision;font-kerning:normal;font-variant-ligatures:none;font-synthesis:none}
 #cuePrint{display:none}
+.pfoot.chg{color:var(--acc);font-weight:700}
+/* history and changes */
+.hrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.hrow input[type=text],.hrow select{flex:1;min-width:140px;min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px}
+.hrow>span{font-size:13px}
+.hsec{border-top:1px solid var(--ui-b);margin-top:10px;padding-top:4px}
+.rev{display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--ui-b)}
+.rev .rn{flex:1;min-width:0}.rev .rn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rev .rn span{font-size:12px;color:var(--muted)}
+.df{font:14px/1.45 "PB","Segoe UI",Arial,sans-serif}
+.df .dh{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+.df .de{border-left:4px solid var(--ui-b);padding:3px 8px;margin:4px 0;break-inside:avoid}
+.df .de.add{border-color:#2e8b47}.df .de.del{border-color:#c0392b}.df .de.chg{border-color:#c98a00}
+.df .dk{font-size:11px;color:var(--muted);margin-left:6px}
+.df ins{background:rgba(46,139,71,.22);text-decoration:underline;text-decoration-thickness:1.5px;font-weight:700}
+.df del{background:rgba(192,57,43,.2);text-decoration:line-through}
 
 /* ---------- print ---------- */
 @media print{
@@ -265,6 +281,9 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
   body.pr-book .page.facing{display:block!important}
   body.pr-script .page.facing{display:none!important}
   .spread:last-child .page:last-child,body.pr-script .spread:last-child .page.script{break-after:auto}
+  body.pr-changed .spread:not(.chg){display:none}
+  body.pr-changed .page{break-after:auto;break-before:page}   /* the last printed page is not the last in the book: no empty sheet after it */
+  .pfoot.chg{color:#000}
   .w.sel{background:none}
   .row.para .nm::before{content:""}
   body.pr-cues #work{display:none}
@@ -383,7 +402,20 @@ en: {
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
-  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse'
+  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse',
+  mHistory: 'History…', hiTitle: 'History', hiNeedFile: 'History is kept inside the show file. Use “Save as show file…” first.',
+  hiVariant: 'Variant', hiNewVar: 'New variant', hiVarName: 'Name of a new variant, e.g. a theatre',
+  hiVarHint: 'A variant is the show as it is given in one place or on one occasion, with revisions of its own. A change made in one variant does not reach the others.',
+  hiRevName: 'Name of this revision, e.g. Rehearsal 12 October', hiSave: 'Save revision', hiLockToo: 'Lock page numbers here',
+  hiNow: 'Now', hiNone: 'No revision yet.', hiChanges: 'Changes', hiRestore: 'Restore',
+  hiRestored: 'Back to “{0}”. What you had was kept as a revision.', hiSaved: 'Revision “{0}” saved', hiSwitched: 'Now on variant “{0}”',
+  hiBefore: 'Before going to “{0}”', hiTaken: 'That name is taken.', hiPacked: 'Part of this history was packed by git (gc or clone) and cannot be read here.',
+  hiErr: 'History: {0}',
+  lkOff: 'Page numbers are free: they move when text is added or cut.', lkOn: 'Page numbers are locked at “{0}”.',
+  lkChanged: 'Changed pages: {0}', lkGone: 'Pages now empty: {0}', lkNone: 'No page has changed.',
+  lkUnlock: 'Unlock', lkPrint: 'Print changed pages', lkMark: 'changed since “{0}”',
+  dfTitle: 'Changes', dfFrom: 'From', dfTo: 'To', dfWho: 'Show', dfAll: 'Everything, cues too', dfText: 'Text', dfNone: 'No changes.',
+  dfAdd: 'added', dfDel: 'cut', dfChg: 'changed', dfCue: 'cues', dfCueLine: 'the line before yours', dfCount: '{0} changes', dfFor: 'for {0}', dfBack: 'Back'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -435,7 +467,20 @@ it: {
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
   pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
-  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga'
+  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga',
+  mHistory: 'Cronologia…', hiTitle: 'Cronologia', hiNeedFile: 'La cronologia sta dentro il file dello spettacolo. Usa prima «Salva come file spettacolo…».',
+  hiVariant: 'Variante', hiNewVar: 'Nuova variante', hiVarName: 'Nome di una nuova variante, es. un teatro',
+  hiVarHint: 'Una variante è lo spettacolo come va in scena in un luogo o in un’occasione, con le sue revisioni. Una modifica fatta in una variante non arriva alle altre.',
+  hiRevName: 'Nome di questa revisione, es. Prova 12 ottobre', hiSave: 'Salva revisione', hiLockToo: 'Blocca qui i numeri di pagina',
+  hiNow: 'Adesso', hiNone: 'Ancora nessuna revisione.', hiChanges: 'Modifiche', hiRestore: 'Ripristina',
+  hiRestored: 'Tornato a «{0}». Quello che avevi è stato tenuto come revisione.', hiSaved: 'Revisione «{0}» salvata', hiSwitched: 'Ora sei nella variante «{0}»',
+  hiBefore: 'Prima di passare a «{0}»', hiTaken: 'Questo nome è già usato.', hiPacked: 'Una parte di questa cronologia è stata compressa da git (gc o clone) e qui non si può leggere.',
+  hiErr: 'Cronologia: {0}',
+  lkOff: 'I numeri di pagina sono liberi: si spostano quando si aggiunge o si taglia testo.', lkOn: 'I numeri di pagina sono bloccati a «{0}».',
+  lkChanged: 'Pagine cambiate: {0}', lkGone: 'Pagine ora vuote: {0}', lkNone: 'Nessuna pagina è cambiata.',
+  lkUnlock: 'Sblocca', lkPrint: 'Stampa le pagine cambiate', lkMark: 'cambiata dopo «{0}»',
+  dfTitle: 'Modifiche', dfFrom: 'Da', dfTo: 'A', dfWho: 'Mostra', dfAll: 'Tutto, anche i cue', dfText: 'Testo', dfNone: 'Nessuna modifica.',
+  dfAdd: 'aggiunta', dfDel: 'tagliata', dfChg: 'cambiata', dfCue: 'cue', dfCueLine: 'la battuta prima della tua', dfCount: '{0} modifiche', dfFor: 'per {0}', dfBack: 'Indietro'
 }};
 let LANG = 'en';
 function t(k) {
@@ -470,7 +515,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.6';
+const VERSION = 'r1.7';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -479,7 +524,7 @@ function defaultConfig() {
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
     { code: 'VID', name: 'Video', colour: '#7a3fd1' },
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
-    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25 };
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null };
 }
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
@@ -496,6 +541,8 @@ function normCfg(c) {
   o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
   const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
   o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
+  const lk = o.lock;   // locked page numbers, see makeLock
+  o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
   return o;
 }
 
@@ -509,7 +556,7 @@ const S = {
   templates: new Map(),  // name -> same shape with tpl: true; kept in the configuration, never in the script
   urls: new Map(),       // 'boards/<file>' or 'templates/<file>' -> object URL
   pairs: [], mode: 'script', meta: null,   // meta: the frontmatter of the script, when it has one
-  pages: [], els: [], meas: new Map(),
+  pages: [], pageOff: 0, lockInfo: null, els: [], meas: new Map(),
   view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
   hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
@@ -520,6 +567,8 @@ const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
 /* a review department holds notes for after the rehearsal: listed in Review, never in the cue list */
 const isReview = code => { const d = deptOf(code); return !!(d && d.review); };
 const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
+/* what is printed for page number n: the number itself, or its locked label such as 12A */
+const pl = n => { const P = n ? S.pages[n - 1 + S.pageOff] : null; return P ? P.label : (n || ''); };
 
 /* =====================================================================
    PARSE
@@ -1077,6 +1126,160 @@ function commitText(nt) {
   return true;
 }
 
+/* ---------- compare ----------
+   Two versions of a script set side by side, block by block: what was added, cut or changed.
+   History uses it to show changes; locked pages use lcs() to find where the old pages are now. */
+/* longest common subsequence of two lists of strings, as pairs [i, j] in order */
+function lcs(a, b) {
+  const out = [], tail = []; let p = 0, n = a.length, m = b.length;
+  while (p < n && p < m && a[p] === b[p]) { out.push([p, p]); p++; }
+  while (n > p && m > p && a[n - 1] === b[m - 1]) { n--; m--; tail.push([n, m]); }
+  const N = n - p, M = m - p, W = M + 1;
+  if (N && M && N * M <= 4e6) {   // past that the middle counts as all different
+    const T = new Uint16Array((N + 1) * W);
+    for (let i = N - 1; i >= 0; i--) for (let j = M - 1; j >= 0; j--)
+      T[i * W + j] = a[p + i] === b[p + j] ? T[(i + 1) * W + j + 1] + 1 : Math.max(T[(i + 1) * W + j], T[i * W + j + 1]);
+    let i = 0, j = 0;
+    while (i < N && j < M) {
+      if (a[p + i] === b[p + j]) { out.push([p + i, p + j]); i++; j++; }
+      else if (T[(i + 1) * W + j] >= T[i * W + j + 1]) i++; else j++;
+    }
+  }
+  for (let k = tail.length - 1; k >= 0; k--) out.push(tail[k]);
+  return out;
+}
+/* a script text as blocks ready to compare, without touching the open show */
+function parseBlocks(text) {
+  const bl = parseScript(text).map(analyze), meta = bl.length && bl[0].type === 'meta' ? bl[0].meta : null;
+  let act = '', scene = '';
+  for (const b of bl) {
+    if (b.type === 'speech') b.name = fullName(b.head.name, meta);
+    if (b.type === 'h') { if (b.level === 1) { act = b.title; scene = ''; } else scene = b.title; }
+    b.act = act; b.scene = scene;
+  }
+  return bl;
+}
+/* [{ k, a, b }] in reading order: a is the old block, b the new one. k is 'same', 'add', 'del', 'chg',
+   or 'cue' for a block whose words are the same and whose cues are not. */
+function diffBlocks(A, B) {
+  const key = b => b.type + '\u0001' + b.raw, out = [];
+  const gap = (i0, i1, j0, j1) => {
+    /* between two unchanged blocks, an old and a new block that share half their words are one changed block */
+    const pair = new Map(); let from = j0;
+    if (i1 - i0 === 1 && j1 - j0 === 1 && A[i0].type === B[j0].type && A[i0].name === B[j0].name) pair.set(i0, j0);
+    else for (let i = i0; i < i1; i++) {
+      let best = -1, bs = 0.499;
+      for (let j = from; j < j1; j++) {
+        if (A[i].type !== B[j].type) continue;
+        const sc = A[i].plain === B[j].plain ? 2 : similarity(A[i].plain, B[j].plain);
+        if (sc > bs) { bs = sc; best = j; }
+      }
+      if (best >= 0) { pair.set(i, best); from = best + 1; }
+    }
+    let j = j0;
+    for (let i = i0; i < i1; i++) {
+      const pj = pair.get(i);
+      if (pj === undefined) { out.push({ k: 'del', a: A[i], b: null }); continue; }
+      while (j < pj) out.push({ k: 'add', a: null, b: B[j++] });
+      out.push({ k: A[i].plain === B[pj].plain && A[i].name === B[pj].name ? 'cue' : 'chg', a: A[i], b: B[pj] }); j = pj + 1;
+    }
+    while (j < j1) out.push({ k: 'add', a: null, b: B[j++] });
+  };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A.map(key), B.map(key)).concat([[A.length, B.length]])) {
+    gap(i, x, j, y);
+    if (x < A.length) out.push({ k: 'same', a: A[x], b: B[y] });
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* word by word: [[kind, words]], kind -1 cut, 0 kept, 1 added */
+function diffWords(a, b) {
+  const A = a.split(/\s+/).filter(Boolean), B = b.split(/\s+/).filter(Boolean), out = [];
+  const put = (k, w) => { const l = out[out.length - 1]; if (l && l[0] === k) l[1] += ' ' + w; else out.push([k, w]); };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A, B).concat([[A.length, B.length]])) {
+    while (i < x) put(-1, A[i++]);
+    while (j < y) put(1, B[j++]);
+    if (x < A.length) put(0, A[x]);
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* a block concerns a character who speaks it, or whose name an action spells in capitals */
+function concerns(b, name) {
+  if (!b || (b.type !== 'speech' && b.type !== 'action')) return false;
+  const re = new RegExp('(^|[^\\p{L}\\p{N}])' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^\\p{L}\\p{N}])', 'u');
+  return re.test(b.type === 'speech' ? b.name : b.plain);
+}
+/* The changes of a comparison that one reader needs: [{ e, cueLine }].
+   who '*': everything. who '': changes to the text, not to cues or comments. who a character: the text
+   changes in their own lines, in actions that name them, and in the line spoken just before one of theirs
+   in the same scene. */
+function diffFor(D, who) {
+  const out = [];
+  D.forEach((e, i) => {
+    if (e.k === 'same') return;
+    const bl = e.b || e.a, text = e.k !== 'cue' && bl.type !== 'mark' && bl.type !== 'note';
+    if (who === '*' || (text && !who)) { out.push({ e, cueLine: false }); return; }
+    if (!text) return;
+    if (concerns(e.a, who) || concerns(e.b, who)) { out.push({ e, cueLine: false }); return; }
+    if (bl.type !== 'speech') return;
+    for (let j = i + 1; j < D.length; j++) {
+      const n = D[j].b;
+      if (n && n.type === 'h') break;   // a new scene: nobody answers the line before it
+      if (n && n.type === 'speech') { if (concerns(n, who)) out.push({ e, cueLine: true }); break; }
+    }
+  });
+  return out;
+}
+/* the characters a comparison can be read for: the character list, or without one every single speaker */
+function diffNames(D) {
+  let meta = null; const seen = new Set();
+  for (const e of D) for (const b of [e.a, e.b]) {
+    if (!b) continue;
+    if (b.type === 'meta' && b.meta.chars.length) meta = b.meta;
+    if (b.type === 'speech' && !GROUP_NAME.test(normName(b.name))) for (const p of normName(b.name).split(NAME_SEP).filter((x, k) => k % 2 === 0 && x)) seen.add(p);
+  }
+  return meta ? meta.chars.map(c => c.name) : Array.from(seen).sort();
+}
+
+/* ---------- locked page numbers ----------
+   Once a script is printed and handed out, its page numbers must hold. A lock records where every
+   block was: S.cfg.lock = { name, rev, pages, n, cont, sig, keys }, each a list joined by spaces.
+   pages: the labels in order. n: how many blocks start on each page. cont: 1 when the page opens in the
+   middle of a block. sig: what each page held. keys: every block, in order.
+   With a lock, paginate() starts each old page where its first surviving block is; text that no longer
+   fits goes to inserted pages 12A, 12B; a page left empty disappears and its number is not reused. */
+const flows = g => !(g.kind === 'single' && (g.b.type === 'meta' || g.b.type === 'note'));
+const itemStarts = it => it.whole || it.first;
+const pageKey = P => hash(P.items.filter(it => flows(it.g)).map(it => it.g.m.kh + (it.whole ? '' : ':' + it.off + '+' + it.h)).join(' '));
+function makeLock(name, rev) {
+  const P = S.pages.filter(p => !p.front);
+  return { name: String(name || ''), rev: rev || '', pages: P.map(p => p.label).join(' '),
+    n: P.map(p => p.items.filter(it => flows(it.g) && itemStarts(it)).length).join(' '),
+    cont: P.map(p => { const it = p.items.find(q => flows(q.g)); return it && !itemStarts(it) ? 1 : 0; }).join(' '),
+    sig: P.map(pageKey).join(' '), keys: S.groups.filter(flows).map(g => g.m.kh).join(' ') };
+}
+function lockPlan() {
+  const L = S.cfg.lock; if (!L) return null;
+  const pages = L.pages.split(' '), at = [];
+  L.n.split(' ').forEach((c, i) => { for (let k = 0; k < +c; k++) at.push(i); });
+  const gs = S.groups.filter(flows), want = new Map(), sig = new Map(), sigs = L.sig.split(' ');
+  for (const [i, j] of lcs(L.keys ? L.keys.split(' ') : [], gs.map(g => g.m.kh))) want.set(gs[j], at[i]);
+  pages.forEach((lab, i) => sig.set(lab, sigs[i]));
+  return { pages, cont: L.cont.split(' ').map(x => x === '1'), want, sig, taken: new Set(pages) };
+}
+const alpha = k => k > 26 ? alpha(Math.floor((k - 1) / 26)) + alpha((k - 1) % 26 + 1) : String.fromCharCode(64 + k);
+/* the k-th page inserted after a locked page: 12 gives 12A, 12B; 12A gives 12A1, 12A2 */
+function insLabel(base, k, taken) {
+  const mk = n => base + (/\d$/.test(base) ? alpha(n) : n);
+  let s = mk(k);
+  for (let n = k; taken.has(s); n++) s = base + '+' + n;   // 12A already stands after 12: 12+1 goes between them
+  taken.add(s);
+  return s;
+}
+
 /* =====================================================================
    LAYOUT
    ===================================================================== */
@@ -1175,7 +1378,7 @@ function measure() {
   for (const g of S.groups) {
     const k = gkey(g); let m = S.meas.get(k);
     if (!m) {
-      m = { h: 0, lines: [], nameLines: 1, ls: null };
+      m = { h: 0, lines: [], nameLines: 1, ls: null, kh: hash(k) };
       S.meas.set(k, m);
       const el = buildRow(g, null); M.appendChild(el); todo.push([m, el]);
     }
@@ -1219,7 +1422,22 @@ function paginate() {
   const isHead = g => g.kind === 'single' && g.b.type === 'h';
   const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
   const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
-  const newPage = () => { const no = pages.length + 1 - off; cur = { items: [], boards: [], head: null, no, front: no < 1 }; pages.push(cur); y = 0; };
+  const lk = lockPlan();   // null while page numbers are free
+  let li = -1, sub = 0, tail = 0;   // the locked page being filled, pages inserted after it, pages past the last locked one
+  const label = to => {
+    const L = lk.pages;
+    if (to != null) { li = to; sub = 0; }
+    else if (li < 0) li = 0;
+    else if (li >= L.length - 1) return String((parseInt(L[L.length - 1], 10) || L.length) + (++tail));
+    else if (!sub && lk.cont[li + 1]) li++;   // the next page opened mid-block before: what runs over goes on it
+    else return insLabel(L[li], ++sub, lk.taken);
+    return L[li];
+  };
+  const newPage = to => {
+    const no = pages.length + 1 - off;
+    cur = { items: [], boards: [], head: null, no, front: no < 1, label: no < 1 ? '' : String(no), chg: false }; pages.push(cur); y = 0;
+    if (lk && no >= 1) cur.label = label(to);
+  };
   const push = it => {
     it.y = y; cur.items.push(it); y += it.h;
     const g = it.g;
@@ -1244,6 +1462,8 @@ function paginate() {
       continue;
     }
     if (cur.front && cur.items.length) newPage();
+    const to = lk ? lk.want.get(g) : undefined;
+    if (to !== undefined && to > li) { if (cur.items.length) newPage(to); else cur.label = label(to); }
     if (b && b.type === 'h' && b.level === 1 && cur.items.length) newPage();
     if (y + m.h <= H + 0.5) { push({ g, h: m.h, whole: true }); continue; }
     const total = b ? (m.lines[0] || 0) : 0;
@@ -1285,7 +1505,8 @@ function paginate() {
       }
       parts.push(bs.map(b => b.id + '~' + b.sv + '~' + b.name).join('+') + (it.whole ? '' : ':' + it.from + '-' + it.to + (it.part || '')));
     }
-    P.sig = P.no + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
+    P.chg = !!lk && !P.front && lk.sig.get(P.label) !== pageKey(P);
+    P.sig = P.no + '|' + P.label + (P.chg ? '*' + S.cfg.lock.name : '') + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
     P.fsig = facingSig(P);
     P.rails = [];
   }
@@ -1294,7 +1515,9 @@ function paginate() {
     for (let n = s.page; n <= e.page && n + off <= pages.length; n++) pages[n - 1 + off].rails.push(s);
   }
   for (const P of pages) if (P.rails.length) P.sig += '|' + P.rails.map(s => s.b.id + ':' + s.s + '>' + s.endRef.b.id + ':' + s.endRef.s + '@' + s.lane).join(',');
-  S.pages = pages;
+  S.pages = pages; S.pageOff = off;
+  const now = new Set(pages.map(P => P.label));
+  S.lockInfo = lk ? { changed: pages.filter(P => P.chg).map(P => P.label), gone: lk.pages.filter(x => !now.has(x)) } : null;
 }
 
 /* =====================================================================
@@ -1317,6 +1540,7 @@ function syncPages(force) {
     const E = S.els[i];
     if (force || E.sig !== P.sig) { E.sig = P.sig; E.done = false; E.a.textContent = ''; E.frags = []; }
     if (force || E.fsig !== P.fsig) { E.fsig = P.fsig; E.fdone = false; E.f.textContent = ''; }
+    E.sp.classList.toggle('chg', P.chg);
   });
   sizeWrap(); renderVisible();
 }
@@ -1349,7 +1573,7 @@ function renderScriptPage(i) {
   el.appendChild(h('div', 'phead', [titleOf(), P.head].filter(Boolean).join('  —  ')));
   const body = h('div', 'pbody');
   for (const it of P.items) body.appendChild(buildRow(it.g, it.whole ? null : it));
-  el.append(body, sv('svg', { class: 'links' }), h('div', 'tags'), sv('svg', { class: 'ink' }), h('div', 'pfoot', String(P.no)));
+  el.append(body, sv('svg', { class: 'links' }), h('div', 'tags'), sv('svg', { class: 'ink' }), h('div', 'pfoot' + (P.chg ? ' chg' : ''), P.label + (P.chg ? '  ∗ ' + t('lkMark', S.cfg.lock.name) : '')));
   E.done = true;
   layoutTags(i); drawInk(i);
 }
@@ -1527,7 +1751,7 @@ function chainOf(B) {
 }
 function effH(B) { const ch = chainOf(B); return ch.length ? ch[0].h : B.h; }   // a based board takes the shape of its root
 function bsig(B) { return B ? [B.name, B.image || '', effH(B), chainOf(B).map(T => T.name + ':' + (T.image || '')).join('>')].join('~') : ''; }
-function facingSig(P) { return P.no + '|' + (S.templates.size ? 't' : '') + '|' + P.boards.map(n => n + '=' + bsig(S.boards.get(n))).join(','); }
+function facingSig(P) { return P.label + '|' + (S.templates.size ? 't' : '') + '|' + P.boards.map(n => n + '=' + bsig(S.boards.get(n))).join(','); }
 function drawStrokes(B, g) {
   g.textContent = '';
   for (const st of B.strokes) { const p = sv('path', { d: pathD(st.points), 'stroke-width': st.width }); setStroke(p, st.colour); g.appendChild(p); }
@@ -1587,7 +1811,7 @@ function renderFacing(i) {
   const P = S.pages[i], E = S.els[i], el = E.f, pp = paper();
   el.textContent = ''; el.dataset.pi = i;
   if (P.front) { E.fdone = true; return; }   // nothing faces the front page
-  el.appendChild(h('div', 'phead', t('boards') + ' · ' + P.no));
+  el.appendChild(h('div', 'phead', t('boards') + ' · ' + P.label));
   const body = h('div', 'fbody'); el.appendChild(body);
   const bs = P.boards.map(ensureBoard);
   if (!bs.length) body.appendChild(h('div', 'fempty noprint', t('facingEmpty')));
@@ -2501,7 +2725,7 @@ function collectCues(review) {
       ctx = (pv ? '…' + wordsOf(pv).slice(-5).join(' ') + ' ' : '') + '▸' + (nx ? ' ' + (nx.name ? nx.name + ': ' : '') + wordsOf(nx).slice(0, 3).join(' ') + '…' : '');
       who = '';
     }
-    return { ctx: ctx.trim(), line, who, page: c.page || b.page || '' };
+    return { ctx: ctx.trim(), line, who, page: pl(c.page || b.page) };
   };
   for (const b of bl) for (const c of b.cues) {
     if (c.board || (c.end && c.startRef) || isReview(c.dept) !== !!review) continue;
@@ -2551,7 +2775,7 @@ function updOutline() {
   const sel = $('#outline'); sel.textContent = '';
   const o0 = h('option', null, t('jumpTo')); o0.value = ''; sel.appendChild(o0);
   for (const b of S.blocks) if (b.type === 'h') {
-    const o = h('option', null, (b.level === 2 ? '   ' : '') + b.title + (b.page ? '  · ' + b.page : '')); o.value = b.id; sel.appendChild(o);
+    const o = h('option', null, (b.level === 2 ? '   ' : '') + b.title + (b.page ? '  · ' + pl(b.page) : '')); o.value = b.id; sel.appendChild(o);
   }
 }
 function updPanels() {
@@ -2647,18 +2871,18 @@ function renderDrawer() {
         r.append(bt, ok); body.appendChild(r);
       }
     }
-    sec(t('rvPara'), t('rvParaHint'), rv.paras, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
+    sec(t('rvPara'), t('rvParaHint'), rv.paras, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvAmp'), '', rv.amps, b => snip(b.plain), b => jumpTo(b));
-    sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + o.b.page : ''), o => jumpTo(o.b));
-    sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
+    sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + pl(o.b.page) : ''), o => jumpTo(o.b));
+    sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvUnk'), '', rv.unk, o => o.c.dept + ' ' + o.c.label + ' — ' + snip(o.b.plain || o.c.desc), o => jumpTo(o.b));
-    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
+    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + pl(o.c.page) : ''), o => jumpTo(o.b));
     sec(t('rvOrph'), '', rv.orphans, o => '✕  ' + snip(o.text), o => {
       const k = rm(S.orphans, o); if (k < 0) return;
       pushHist({ undo: () => { S.orphans.splice(k, 0, o); inkChanged(); }, redo: () => { rm(S.orphans, o); inkChanged(); } });
       inkChanged();
     });
-    sec(t('rvNote'), t('rvNoteHint'), rv.notes, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.inner.replace(/\s*\n\s*/g, ' / ')), b => jumpTo(b));
+    sec(t('rvNote'), t('rvNoteHint'), rv.notes, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.inner.replace(/\s*\n\s*/g, ' / ')), b => jumpTo(b));
     if (rv.chars.size) {
       body.appendChild(h('h3', null, t('rvChars') + ' (' + rv.chars.size + ')'));
       body.appendChild(h('p', 'hint', t('rvCharsHint')));
@@ -2704,9 +2928,10 @@ function download(name, blob) {
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-function doPrint(kind, byDept) {
+function doPrint(kind, byDept, changed) {
   exitTemplates();
-  document.body.classList.remove('pr-book', 'pr-script', 'pr-cues');
+  document.body.classList.remove('pr-book', 'pr-script', 'pr-cues', 'pr-changed');
+  if (changed) document.body.classList.add('pr-changed');   // only the pages that differ from the locked ones
   document.body.classList.add('pr-' + kind);
   if (kind === 'cues') {
     const cp = $('#cuePrint'); cp.textContent = '';
@@ -2722,7 +2947,7 @@ window.addEventListener('beforeprint', () => {
   if (!c.contains('pr-book') && !c.contains('pr-script') && !c.contains('pr-cues')) c.add('pr-book');
   if (!c.contains('pr-cues')) renderAll();
 });
-window.addEventListener('afterprint', () => document.body.classList.remove('pr-book', 'pr-script', 'pr-cues'));
+window.addEventListener('afterprint', () => document.body.classList.remove('pr-book', 'pr-script', 'pr-cues', 'pr-changed'));
 
 let toastT = 0;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600); }
@@ -3113,6 +3338,10 @@ async function folderFiles(dir, out) {
   }
   return out;
 }
+async function gitFiles(dir, out) {
+  const walk = async (d, pre) => { for await (const [nm, hd] of d.entries()) { if (hd.kind === 'file') out.set(pre + nm, await hd.getFile()); else await walk(hd, pre + nm + '/'); } };
+  try { await walk(await dir.getDirectoryHandle('.git'), GIT); } catch (e) { /* no history */ }
+}
 async function saveToZip() {
   let handle;
   try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
@@ -3120,7 +3349,7 @@ async function saveToZip() {
   const s = S.store;
   let files = new Map();
   try {
-    if (s.mode === 'folder') files = await folderFiles(s.dir, new Map());   // keeps the images already in the folder
+    if (s.mode === 'folder') { files = await folderFiles(s.dir, new Map()); await gitFiles(s.dir, files); }   // keeps the images already in the folder, and the history
     else if (s.mode === 'zip') files = new Map(s.files);
   } catch (e) { saveError(e); return; }
   s.mode = 'zip'; s.dir = null; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
@@ -3159,6 +3388,302 @@ function importBundle() {
     catch (e) { toast(t('errFile')); }
   };
   fp.click();
+}
+
+/* =====================================================================
+   HISTORY: the show under git
+   The show keeps its history in git's own format, in a .git folder beside script.md: inside the show
+   file, or in the show folder. A revision is a commit with a tag; a variant is a branch. Only loose
+   objects, refs and HEAD are written, which is all git needs to read it (log, diff, branch, push).
+   There is no index: after unzipping a show, run "git reset" once. Packed objects are not read.
+   ===================================================================== */
+const GIT = '.git/', ENC = new TextEncoder(), DEC = new TextDecoder();
+const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const unhex = s => Uint8Array.from(s.match(/../g), x => parseInt(x, 16));
+function cat(parts) {
+  const out = new Uint8Array(parts.reduce((n, x) => n + x.length, 0)); let o = 0;
+  for (const x of parts) { out.set(x, o); o += x.length; }
+  return out;
+}
+const refName = s => String(s).normalize('NFC').replace(/[^\p{L}\p{N}_ -]+/gu, '').trim().replace(/[\s-]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const refLabel = n => n.replace(/-/g, ' ');
+const SHOW_FILE = /^(script\.md|script\.ink\.json|config\.json)$|^(boards|templates)\/[^/]+$/;
+async function gDir(parts, create) { let d = S.store.dir; for (const p of parts) d = await d.getDirectoryHandle(p, { create }); return d; }
+async function gRead(path) {
+  const s = S.store;
+  if (s.mode === 'zip') { const b = s.files.get(GIT + path); return b ? new Uint8Array(await b.arrayBuffer()) : null; }
+  const parts = (GIT + path).split('/'), name = parts.pop();
+  try { return new Uint8Array(await (await (await (await gDir(parts, false)).getFileHandle(name)).getFile()).arrayBuffer()); }
+  catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
+}
+async function gWrite(path, data) {
+  const s = S.store;
+  if (typeof data === 'string') data = ENC.encode(data);
+  if (s.mode === 'zip') { s.files.set(GIT + path, new Blob([data])); return; }
+  const parts = (GIT + path).split('/'), name = parts.pop();
+  const w = await (await (await gDir(parts, true)).getFileHandle(name, { create: true })).createWritable(); await w.write(data); await w.close();
+}
+/* refs under a prefix such as refs/tags/: name -> sha */
+async function gRefs(prefix) {
+  const s = S.store, out = new Map(), pk = await gRead('packed-refs');
+  if (pk) for (const l of DEC.decode(pk).split('\n')) { const m = /^([0-9a-f]{40}) (.+)$/.exec(l); if (m && m[2].startsWith(prefix)) out.set(m[2].slice(prefix.length), m[1]); }
+  let names = [];
+  if (s.mode === 'zip') names = Array.from(s.files.keys()).filter(k => k.startsWith(GIT + prefix)).map(k => k.slice(GIT.length + prefix.length));
+  else try { for await (const [nm, hd] of (await gDir((GIT + prefix).split('/').filter(Boolean), false)).entries()) if (hd.kind === 'file') names.push(nm); } catch (e) { /* none yet */ }
+  for (const n of names) { const b = await gRead(prefix + n); if (b) out.set(n, DEC.decode(b).trim()); }
+  return out;
+}
+async function gRef(name) { const k = name.lastIndexOf('/') + 1; return (await gRefs(name.slice(0, k))).get(name.slice(k)) || null; }
+async function gHead() {
+  const b = await gRead('HEAD'); if (!b) return null;
+  const tx = DEC.decode(b).trim(), m = /^ref: (.+)$/.exec(tx);
+  return m ? { ref: m[1], sha: await gRef(m[1]) } : { ref: null, sha: tx };
+}
+async function gPut(type, body) {
+  const raw = cat([ENC.encode(type + ' ' + body.length + '\0'), body]);
+  const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))), path = 'objects/' + sha.slice(0, 2) + '/' + sha.slice(2);
+  if (!(await gRead(path))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));
+  return sha;
+}
+async function gGet(sha) {
+  const z = await gRead('objects/' + sha.slice(0, 2) + '/' + sha.slice(2));
+  if (!z) throw new Error(t('hiPacked'));
+  const raw = await pipeBytes(z, new DecompressionStream('deflate')), k = raw.indexOf(0);
+  return { type: DEC.decode(raw.subarray(0, k)).split(' ')[0], body: raw.subarray(k + 1) };
+}
+const blobSha = new WeakMap();   // Blob -> sha of the object already written for it
+async function gBlob(blob) {
+  let s = blobSha.get(blob);
+  if (!s) { s = await gPut('blob', new Uint8Array(await blob.arrayBuffer())); blobSha.set(blob, s); }
+  return s;
+}
+/* files: path -> Blob. Writes the tree and what is under it, returns its sha. */
+async function gTree(files) {
+  const dirs = new Map(), here = [];
+  for (const [path, blob] of files) {
+    const k = path.indexOf('/');
+    if (k < 0) here.push([path, '100644', await gBlob(blob)]);
+    else { const d = path.slice(0, k); if (!dirs.has(d)) dirs.set(d, new Map()); dirs.get(d).set(path.slice(k + 1), blob); }
+  }
+  for (const [d, sub] of dirs) here.push([d + '/', '40000', await gTree(sub)]);   // git sorts a folder as if its name ended in a slash
+  here.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  return gPut('tree', cat(here.map(([n, mode, sha]) => cat([ENC.encode(mode + ' ' + n.replace(/\/$/, '') + '\0'), unhex(sha)]))));
+}
+/* every file under a tree: path -> sha of its blob */
+async function gFiles(tree, pre, out) {
+  const b = (await gGet(tree)).body; let i = 0;
+  while (i < b.length) {
+    const sp = b.indexOf(32, i), z = b.indexOf(0, sp), mode = DEC.decode(b.subarray(i, sp)), name = pre + DEC.decode(b.subarray(sp + 1, z)), sha = hex(b.subarray(z + 1, z + 21));
+    i = z + 21;
+    if (mode === '40000') await gFiles(sha, name + '/', out); else out.set(name, sha);
+  }
+  return out;
+}
+async function gCommitOf(sha) {
+  const o = await gGet(sha), tx = DEC.decode(o.body), k = tx.indexOf('\n\n'), head = k < 0 ? tx : tx.slice(0, k);
+  if (o.type === 'tag') return gCommitOf(/^object ([0-9a-f]{40})/m.exec(head)[1]);   // a tag made with "git tag -a"
+  const m = /^committer .* (\d+) [+-]\d{4}$/m.exec(head);
+  return { sha, tree: /^tree ([0-9a-f]{40})/m.exec(head)[1], parent: (/^parent ([0-9a-f]{40})/m.exec(head) || [])[1] || null, when: m ? new Date(+m[1] * 1000) : null, msg: k < 0 ? '' : tx.slice(k + 2).trim() };
+}
+async function gLog(sha, max) {
+  const out = [];
+  while (sha && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; }
+  return out;
+}
+async function gText(commit, path) {
+  const sha = (await gFiles(commit.tree, '', new Map())).get(path);
+  return sha ? DEC.decode((await gGet(sha)).body) : '';
+}
+async function settled() {
+  const s = S.store;
+  for (let k = 0; k < 100; k++) {
+    await saveNow();
+    const d = s.dirty;
+    if (!s.saving && !s.err && !(d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) return;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  throw new Error(t('stErr'));
+}
+async function workFiles() {
+  const s = S.store;
+  if (s.mode !== 'zip') return folderFiles(s.dir, new Map());
+  await pruneImages(s.files);
+  return new Map(Array.from(s.files).filter(([k]) => SHOW_FILE.test(k)));
+}
+const gFlush = () => S.store.mode === 'zip' ? flushZip() : null;
+/* Commit the show as it is. Without "always", nothing is written when it equals the last commit. */
+async function gSave(msg, always) {
+  await settled();
+  const head = (await gHead()) || { ref: 'refs/heads/main', sha: null };
+  const tree = await gTree(await workFiles());
+  if (!always && head.sha && (await gCommitOf(head.sha)).tree === tree) return head.sha;
+  const d = new Date(), off = -d.getTimezoneOffset(), p2 = n => String(n).padStart(2, '0');
+  const who = 'Promptbook <promptbook@localhost> ' + Math.floor(d / 1000) + ' ' + (off < 0 ? '-' : '+') + p2(Math.floor(Math.abs(off) / 60)) + p2(Math.abs(off) % 60);
+  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (head.sha ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
+  if (!(await gRead('HEAD'))) { await gWrite('HEAD', 'ref: refs/heads/main\n'); await gWrite('config', '[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = false\n'); }
+  await gWrite(head.ref || 'HEAD', sha + '\n');
+  return sha;
+}
+/* Replace the show on disk with the files of a tree, then open it again. */
+async function gCheckout(tree) {
+  const s = S.store, blobs = new Map();
+  for (const [path, sha] of await gFiles(tree, '', new Map())) {
+    if (!SHOW_FILE.test(path)) continue;
+    const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
+  }
+  if (s.mode === 'zip') {
+    s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
+    await flushZip();
+  } else {
+    for (const sub of ['boards', 'templates']) try {
+      const d = await s.dir.getDirectoryHandle(sub), gone = [];
+      for await (const [nm, hd] of d.entries()) if (hd.kind === 'file' && !blobs.has(sub + '/' + nm)) gone.push(nm);
+      for (const nm of gone) await d.removeEntry(nm);
+    } catch (e) { /* no such folder */ }
+    if (!blobs.has('script.ink.json')) try { await s.dir.removeEntry('script.ink.json'); } catch (e) { /* none */ }
+    for (const [path, b] of blobs) { const k = path.lastIndexOf('/'); await writeBlob(k < 0 ? null : path.slice(0, k), path.slice(k + 1), b); }
+  }
+  clearTimeout(saveT);
+  s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; s.conflict = false;
+  if (s.mode === 'folder') s.stamp = {};
+  return loadStore(s.handle || s.dir);
+}
+/* a revision: a commit named by the stage manager, with a tag; "lock" also fixes the page numbers there */
+async function histSave(name, lock) {
+  const tags = await gRefs('refs/tags/'); let tag = refName(name), n = 1;
+  while (tags.has(tag)) tag = refName(name) + '-' + (++n);
+  if (lock) { S.cfg.lock = makeLock(name, tag); markDirty('cfg'); relayout(true); }
+  const sha = await gSave(name, true);
+  await gWrite('refs/tags/' + tag, sha + '\n');
+  await gFlush();
+  return sha;
+}
+/* a variant: a branch that starts from the show as it is now */
+async function histVariant(name) {
+  const ref = 'refs/heads/' + refName(name);
+  if (await gRef(ref)) throw new Error(t('hiTaken'));
+  const sha = await gSave(t('hiBefore', name), false);
+  await gWrite(ref, sha + '\n'); await gWrite('HEAD', 'ref: ' + ref + '\n');
+  await gFlush();
+}
+async function histSwitch(branch) {
+  const ref = 'refs/heads/' + branch, sha = await gRef(ref);
+  if (!sha) return false;
+  await gSave(t('hiBefore', refLabel(branch)), false);
+  await gWrite('HEAD', 'ref: ' + ref + '\n');
+  return gCheckout((await gCommitOf(sha)).tree);
+}
+async function histRestore(sha) {
+  const c = await gCommitOf(sha);
+  await gSave(t('hiBefore', c.msg), false);
+  return gCheckout(c.tree);
+}
+async function histState() {
+  const head = await gHead(), log = head && head.sha ? await gLog(head.sha) : [];
+  return { branch: head && head.ref ? head.ref.replace('refs/heads/', '') : 'main', log, heads: await gRefs('refs/heads/'), tags: await gRefs('refs/tags/') };
+}
+const revName = c => c.msg.split('\n')[0] + (c.when ? '  ·  ' + c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
+function unlockPages() { S.cfg.lock = null; markDirty('cfg'); relayout(true); }
+async function openHistory() {
+  if (!onDisk()) { toast(t('hiNeedFile')); return; }
+  const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
+  let st;
+  try { st = await histState(); } catch (e) { fail(e); return; }
+  openDlg(t('hiTitle'), (body, foot, close) => {
+    const run = fn => async () => { try { await fn(); } catch (e) { fail(e); } };
+    const btn = (label, fn, cls) => { const b = h('button', 'btn sm' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.onclick = fn; return b; };
+    const input = ph => { const i = h('input'); i.type = 'text'; i.placeholder = ph; return i; };
+    /* variant */
+    const vr = h('div', 'hrow'), vs = h('select'), vn = input(t('hiVarName'));
+    for (const n of new Set([st.branch].concat(Array.from(st.heads.keys())))) { const o = h('option', null, refLabel(n)); o.value = n; vs.appendChild(o); }
+    vs.value = st.branch; vs.id = 'hiVar';
+    vs.onchange = run(async () => { const n = vs.value; close(); await histSwitch(n); toast(t('hiSwitched', refLabel(n))); });
+    vr.append(h('span', null, t('hiVariant')), vs, vn, btn(t('hiNewVar'), run(async () => {
+      const nm = vn.value.trim(); if (!nm) { vn.focus(); return; }
+      await histVariant(nm); close(); toast(t('hiSwitched', nm));
+    })));
+    body.append(vr, h('p', 'hint', t('hiVarHint')));
+    /* locked page numbers */
+    const lk = S.cfg.lock, li = S.lockInfo, ls = h('div', 'hsec'), lr = h('div', 'hrow');
+    ls.appendChild(h('p', 'hint', !lk ? t('lkOff') : t('lkOn', lk.name) + ' ' + (li.changed.length ? t('lkChanged', li.changed.join(', ')) : t('lkNone')) + (li.gone.length ? ' ' + t('lkGone', li.gone.join(', ')) : '')));
+    if (lk) {
+      const pb = btn(t('lkPrint'), () => { close(); doPrint('script', false, true); }); pb.disabled = !li.changed.length;
+      lr.append(pb, btn(t('lkUnlock'), () => { unlockPages(); close(); openHistory(); }));
+      ls.appendChild(lr);
+    }
+    body.appendChild(ls);
+    /* revisions */
+    const rs = h('div', 'hsec'), sr = h('div', 'hrow'), rn = input(t('hiRevName')), ck = h('label', 'chk'), cb = h('input');
+    cb.type = 'checkbox'; ck.append(cb, t('hiLockToo')); rn.id = 'hiName';
+    sr.append(rn, ck, btn(t('hiSave'), run(async () => {
+      const nm = rn.value.trim(); if (!nm) { rn.focus(); return; }
+      await histSave(nm, cb.checked); close(); toast(t('hiSaved', nm));
+    }), 'pri'));
+    rs.appendChild(sr);
+    if (!st.log.length) rs.appendChild(h('p', 'hint', t('hiNone')));
+    for (const c of st.log) {
+      const r = h('div', 'rev'), nm = h('div', 'rn');
+      nm.append(h('b', null, c.msg.split('\n')[0]), h('span', null, c.when ? c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''));
+      r.append(nm, btn(t('hiChanges'), () => { close(); openDiff(c.sha); }), btn(t('hiRestore'), run(async () => { close(); await histRestore(c.sha); toast(t('hiRestored', c.msg.split('\n')[0])); })));
+      rs.appendChild(r);
+    }
+    body.appendChild(rs);
+    dlgBtn(foot, t('close'), '', close);
+  });
+}
+/* the changes between two revisions, or between a revision and now, as a list an actor can read */
+function diffList(D, who) {
+  const el = h('div', 'df'), rows = diffFor(D, who); let last = null;
+  if (!rows.length) { el.appendChild(h('p', 'hint', t('dfNone'))); return el; }
+  const tx = b => who === '*' || b.type === 'note' ? b.raw : b.plain;
+  for (const { e, cueLine } of rows) {
+    const bl = e.b || e.a, where = [bl.act, bl.scene].filter(Boolean).join(' · ');
+    if (where !== last) { el.appendChild(h('div', 'dh', where || '—')); last = where; }
+    const d = h('div', 'de ' + (e.k === 'cue' ? 'chg' : e.k));
+    if (e.k === 'add') d.appendChild(h('ins', null, tx(e.b)));
+    else if (e.k === 'del') d.appendChild(h('del', null, tx(e.a)));
+    else for (const [k, w] of diffWords(e.k === 'cue' ? e.a.raw : tx(e.a), e.k === 'cue' ? e.b.raw : tx(e.b))) d.append(k ? h(k < 0 ? 'del' : 'ins', null, w) : w, ' ');
+    d.appendChild(h('span', 'dk', [t({ add: 'dfAdd', del: 'dfDel', chg: 'dfChg', cue: 'dfCue' }[e.k]), cueLine ? t('dfCueLine') : '', e.b && e.b.page ? 'p. ' + pl(e.b.page) : ''].filter(Boolean).join(' · ')));
+    el.appendChild(d);
+  }
+  return el;
+}
+async function openDiff(from, to) {
+  const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
+  let st;
+  try { st = await histState(); } catch (e) { fail(e); return; }
+  if (!st.log.length) { toast(t('hiNone')); return; }
+  openDlg(t('dfTitle'), (body, foot, close) => {
+    const bar = h('div', 'hrow'), fs = h('select'), ts = h('select'), ws = h('select'), cnt = h('p', 'hint');
+    const opt = (sel, v, label) => { const o = h('option', null, label); o.value = v; sel.appendChild(o); };
+    opt(ts, '', t('hiNow'));
+    for (const c of st.log) { opt(fs, c.sha, revName(c)); opt(ts, c.sha, revName(c)); }
+    fs.value = st.log.some(c => c.sha === from) ? from : st.log[0].sha; ts.value = st.log.some(c => c.sha === to) ? to : '';
+    fs.id = 'dfFrom'; ts.id = 'dfTo'; ws.id = 'dfWho';
+    bar.append(h('span', null, t('dfFrom')), fs, h('span', null, t('dfTo')), ts, h('span', null, t('dfWho')), ws);
+    let D = [], list = h('div', 'df'), gen = 0;
+    const show = () => { const n = diffList(D, ws.value); list.replaceWith(n); list = n; cnt.textContent = t('dfCount', $$('.de', n).length); };
+    const load = async () => {
+      const g = ++gen, side = v => v ? gText(st.log.find(c => c.sha === v), 'script.md').then(parseBlocks) : S.blocks;
+      try { const A = await side(fs.value), B = await side(ts.value); if (g !== gen) return; D = diffBlocks(A, B); } catch (e) { fail(e); return; }
+      const keep = ws.value; ws.textContent = '';
+      opt(ws, '', t('dfText')); opt(ws, '*', t('dfAll'));
+      for (const n of diffNames(D)) { const k = diffFor(D, n).length; if (k) opt(ws, n, n + ' (' + k + ')'); }
+      ws.value = Array.from(ws.options).some(o => o.value === keep) ? keep : '';
+      show();
+    };
+    fs.onchange = ts.onchange = load; ws.onchange = show;
+    body.append(bar, cnt, list);
+    dlgBtn(foot, t('dfBack'), '', () => { close(); openHistory(); });
+    dlgBtn(foot, t('print'), '', () => {
+      const cp = $('#cuePrint'), sel = s => s.options[s.selectedIndex].textContent; cp.textContent = '';
+      cp.append(h('h1', null, [titleOf(), t('dfTitle') + (ws.value && ws.value !== '*' ? ' ' + t('dfFor', ws.value) : '')].filter(Boolean).join(' — ')), h('p', null, sel(fs) + '  →  ' + sel(ts)), list.cloneNode(true));
+      document.body.classList.remove('pr-book', 'pr-script', 'pr-changed'); document.body.classList.add('pr-cues');
+      window.print();
+    });
+    dlgBtn(foot, t('close'), 'pri', close);
+    load();
+  });
 }
 
 /* =====================================================================
@@ -3260,6 +3785,7 @@ function buildMenu() {
   add(t('mText'), () => openTextDialog(false), !S.loaded);
   add(t('mSettings'), openSettings, !S.loaded);
   add(t('mTemplates'), () => { if (S.mode === 'templates') exitTemplates(); else enterTemplates(); }, !S.loaded);
+  add(t('mHistory'), openHistory, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
@@ -3382,7 +3908,8 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint };
 init();
 
 </script>

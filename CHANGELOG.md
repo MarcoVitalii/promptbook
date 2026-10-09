@@ -1,5 +1,43 @@
 # Changelog
 
+## r1.7 — 2026-10-09
+
+History of the show, variants for venues, page numbers that hold once a script is handed out, and a list of changes per character. Checked in a simulated browser only: not yet run on the rehearsal laptop, and nothing was printed on paper. The history was read back with git itself (`git fsck`, `git log`, `git diff`).
+
+History (Menu → “History…”)
+- “Save revision” keeps the whole show as it is now under a name you type, for example “Rehearsal 12 October”: script, ink, boards, templates and settings.
+- Every revision is listed with its date. “Restore” brings one back. What you had before is saved first as a revision of its own, so a restore can always be undone by restoring that one.
+- The history is inside the show file, so it travels with it. A show that is not on disk yet has no history: use “Save as show file…” first.
+
+Variants
+- A variant is the show as it is given in one place or on one occasion: a theatre with other lights, a contest that needs a shorter running time. “New variant” starts one from the show as it is now.
+- Each variant has its own text, cues, boards and revisions. Pick a variant in History to move to it; the one you leave is saved first.
+- A change made in one variant does not reach the others. A correction that every variant needs must be made in each, or merged with git (see below).
+
+Locked page numbers
+- Tick “Lock page numbers here” when you save the revision you print and hand out. From then on a page starts where it started on paper.
+- Text added later that no longer fits goes to inserted pages: 12A, 12B after page 12. A page whose text is all cut disappears and its number is not reused. Pages after the last printed one are numbered on as usual.
+- A page that differs from the printed one shows “∗ changed since …” at its foot, on screen and in print. History lists the changed pages, and “Print changed pages” prints only those, script pages without boards, for the cast to swap into their copies.
+- Only words count: adding or moving a cue does not mark a page as changed.
+- Lock again at a later revision to make that one the reference; lettered pages keep their letters. “Unlock” returns to plain numbers.
+- The cue list, Review and the scene menu show the same page labels.
+
+Changes
+- “Changes” beside a revision compares it with the show now; any two revisions can be chosen.
+- Lines are shown as on GitHub: cut words struck through in red, new words underlined in green, grouped by act and scene, with the page where known.
+- “Show” narrows the list: “Text” leaves out cue changes; “Everything, cues too” includes them; a character's name shows what reaches that actor, with the count beside the name. That is their own lines, actions that name them in capitals, and a changed line just before one of theirs in the same scene, marked “the line before yours”.
+- “Print” prints the list as shown, for example one sheet per actor.
+
+For those who use git
+- The history is a git repository: a `.git` folder inside the show file, or beside `script.md` in an older show folder. A revision is a commit with a tag, a variant is a branch, the first one `main`.
+- Unzip the show, run `git reset` once (the tool writes no index), then `git log`, `git diff main Teatro-Verdi`, `git merge` or `git push` work as usual. Zip the folder again, `.git` included, to open the result in the tool.
+- The tool reads loose objects only. After `git gc` or a clone, history that git has packed cannot be read here until it is unpacked (`git unpack-objects`).
+
+Compatibility
+- A show written by r1.6 opens unchanged and has no history until the first revision is saved.
+- r1.6 opens a show written by r1.7 and keeps its history when it saves a show file, but shows plain page numbers, has no History menu, and drops the history when a show folder is saved as a show file.
+- Restoring a revision or changing variant replaces the ink and the boards too, with those of that revision.
+
 ## r1.6 — 2026-10-08
 
 Four changes asked for after the first rehearsals. They were checked in a simulated browser only: this release has not yet run on the rehearsal laptop, and nothing was printed on paper. Try moving a cue with your finger and with the pen before relying on it in a rehearsal.

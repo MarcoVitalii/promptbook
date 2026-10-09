@@ -18,6 +18,7 @@ function syncPages(force) {
     const E = S.els[i];
     if (force || E.sig !== P.sig) { E.sig = P.sig; E.done = false; E.a.textContent = ''; E.frags = []; }
     if (force || E.fsig !== P.fsig) { E.fsig = P.fsig; E.fdone = false; E.f.textContent = ''; }
+    E.sp.classList.toggle('chg', P.chg);
   });
   sizeWrap(); renderVisible();
 }
@@ -50,7 +51,7 @@ function renderScriptPage(i) {
   el.appendChild(h('div', 'phead', [titleOf(), P.head].filter(Boolean).join('  —  ')));
   const body = h('div', 'pbody');
   for (const it of P.items) body.appendChild(buildRow(it.g, it.whole ? null : it));
-  el.append(body, sv('svg', { class: 'links' }), h('div', 'tags'), sv('svg', { class: 'ink' }), h('div', 'pfoot', String(P.no)));
+  el.append(body, sv('svg', { class: 'links' }), h('div', 'tags'), sv('svg', { class: 'ink' }), h('div', 'pfoot' + (P.chg ? ' chg' : ''), P.label + (P.chg ? '  ∗ ' + t('lkMark', S.cfg.lock.name) : '')));
   E.done = true;
   layoutTags(i); drawInk(i);
 }
@@ -228,7 +229,7 @@ function chainOf(B) {
 }
 function effH(B) { const ch = chainOf(B); return ch.length ? ch[0].h : B.h; }   // a based board takes the shape of its root
 function bsig(B) { return B ? [B.name, B.image || '', effH(B), chainOf(B).map(T => T.name + ':' + (T.image || '')).join('>')].join('~') : ''; }
-function facingSig(P) { return P.no + '|' + (S.templates.size ? 't' : '') + '|' + P.boards.map(n => n + '=' + bsig(S.boards.get(n))).join(','); }
+function facingSig(P) { return P.label + '|' + (S.templates.size ? 't' : '') + '|' + P.boards.map(n => n + '=' + bsig(S.boards.get(n))).join(','); }
 function drawStrokes(B, g) {
   g.textContent = '';
   for (const st of B.strokes) { const p = sv('path', { d: pathD(st.points), 'stroke-width': st.width }); setStroke(p, st.colour); g.appendChild(p); }
@@ -288,7 +289,7 @@ function renderFacing(i) {
   const P = S.pages[i], E = S.els[i], el = E.f, pp = paper();
   el.textContent = ''; el.dataset.pi = i;
   if (P.front) { E.fdone = true; return; }   // nothing faces the front page
-  el.appendChild(h('div', 'phead', t('boards') + ' · ' + P.no));
+  el.appendChild(h('div', 'phead', t('boards') + ' · ' + P.label));
   const body = h('div', 'fbody'); el.appendChild(body);
   const bs = P.boards.map(ensureBoard);
   if (!bs.length) body.appendChild(h('div', 'fempty noprint', t('facingEmpty')));
@@ -1202,7 +1203,7 @@ function collectCues(review) {
       ctx = (pv ? '…' + wordsOf(pv).slice(-5).join(' ') + ' ' : '') + '▸' + (nx ? ' ' + (nx.name ? nx.name + ': ' : '') + wordsOf(nx).slice(0, 3).join(' ') + '…' : '');
       who = '';
     }
-    return { ctx: ctx.trim(), line, who, page: c.page || b.page || '' };
+    return { ctx: ctx.trim(), line, who, page: pl(c.page || b.page) };
   };
   for (const b of bl) for (const c of b.cues) {
     if (c.board || (c.end && c.startRef) || isReview(c.dept) !== !!review) continue;
@@ -1252,7 +1253,7 @@ function updOutline() {
   const sel = $('#outline'); sel.textContent = '';
   const o0 = h('option', null, t('jumpTo')); o0.value = ''; sel.appendChild(o0);
   for (const b of S.blocks) if (b.type === 'h') {
-    const o = h('option', null, (b.level === 2 ? '   ' : '') + b.title + (b.page ? '  · ' + b.page : '')); o.value = b.id; sel.appendChild(o);
+    const o = h('option', null, (b.level === 2 ? '   ' : '') + b.title + (b.page ? '  · ' + pl(b.page) : '')); o.value = b.id; sel.appendChild(o);
   }
 }
 function updPanels() {
@@ -1348,18 +1349,18 @@ function renderDrawer() {
         r.append(bt, ok); body.appendChild(r);
       }
     }
-    sec(t('rvPara'), t('rvParaHint'), rv.paras, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
+    sec(t('rvPara'), t('rvParaHint'), rv.paras, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvAmp'), '', rv.amps, b => snip(b.plain), b => jumpTo(b));
-    sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + o.b.page : ''), o => jumpTo(o.b));
-    sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.plain), b => jumpTo(b));
+    sec(t('rvNoChar'), t('rvNoCharHint'), rv.noChar, o => o.name + '  ×' + o.n + (o.b.page ? ' — p. ' + pl(o.b.page) : ''), o => jumpTo(o.b));
+    sec(t('rvInk'), '', rv.flagged, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.plain), b => jumpTo(b));
     sec(t('rvUnk'), '', rv.unk, o => o.c.dept + ' ' + o.c.label + ' — ' + snip(o.b.plain || o.c.desc), o => jumpTo(o.b));
-    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + o.c.page : ''), o => jumpTo(o.b));
+    sec(t('rvEnd'), '', rv.ends, o => '\u25A0 ' + (o.c.end ? cueName(o.c) : t('linkLoose', o.c.unresolved.map(cueName).join(', ') + ' ← ' + cueName(o.c))) + (o.c.page ? ' — p. ' + pl(o.c.page) : ''), o => jumpTo(o.b));
     sec(t('rvOrph'), '', rv.orphans, o => '✕  ' + snip(o.text), o => {
       const k = rm(S.orphans, o); if (k < 0) return;
       pushHist({ undo: () => { S.orphans.splice(k, 0, o); inkChanged(); }, redo: () => { rm(S.orphans, o); inkChanged(); } });
       inkChanged();
     });
-    sec(t('rvNote'), t('rvNoteHint'), rv.notes, b => (b.page ? 'p. ' + b.page + ' — ' : '') + snip(b.inner.replace(/\s*\n\s*/g, ' / ')), b => jumpTo(b));
+    sec(t('rvNote'), t('rvNoteHint'), rv.notes, b => (b.page ? 'p. ' + pl(b.page) + ' — ' : '') + snip(b.inner.replace(/\s*\n\s*/g, ' / ')), b => jumpTo(b));
     if (rv.chars.size) {
       body.appendChild(h('h3', null, t('rvChars') + ' (' + rv.chars.size + ')'));
       body.appendChild(h('p', 'hint', t('rvCharsHint')));
@@ -1405,9 +1406,10 @@ function download(name, blob) {
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-function doPrint(kind, byDept) {
+function doPrint(kind, byDept, changed) {
   exitTemplates();
-  document.body.classList.remove('pr-book', 'pr-script', 'pr-cues');
+  document.body.classList.remove('pr-book', 'pr-script', 'pr-cues', 'pr-changed');
+  if (changed) document.body.classList.add('pr-changed');   // only the pages that differ from the locked ones
   document.body.classList.add('pr-' + kind);
   if (kind === 'cues') {
     const cp = $('#cuePrint'); cp.textContent = '';
@@ -1423,7 +1425,7 @@ window.addEventListener('beforeprint', () => {
   if (!c.contains('pr-book') && !c.contains('pr-script') && !c.contains('pr-cues')) c.add('pr-book');
   if (!c.contains('pr-cues')) renderAll();
 });
-window.addEventListener('afterprint', () => document.body.classList.remove('pr-book', 'pr-script', 'pr-cues'));
+window.addEventListener('afterprint', () => document.body.classList.remove('pr-book', 'pr-script', 'pr-cues', 'pr-changed'));
 
 let toastT = 0;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600); }

@@ -384,6 +384,10 @@ async function folderFiles(dir, out) {
   }
   return out;
 }
+async function gitFiles(dir, out) {
+  const walk = async (d, pre) => { for await (const [nm, hd] of d.entries()) { if (hd.kind === 'file') out.set(pre + nm, await hd.getFile()); else await walk(hd, pre + nm + '/'); } };
+  try { await walk(await dir.getDirectoryHandle('.git'), GIT); } catch (e) { /* no history */ }
+}
 async function saveToZip() {
   let handle;
   try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
@@ -391,7 +395,7 @@ async function saveToZip() {
   const s = S.store;
   let files = new Map();
   try {
-    if (s.mode === 'folder') files = await folderFiles(s.dir, new Map());   // keeps the images already in the folder
+    if (s.mode === 'folder') { files = await folderFiles(s.dir, new Map()); await gitFiles(s.dir, files); }   // keeps the images already in the folder, and the history
     else if (s.mode === 'zip') files = new Map(s.files);
   } catch (e) { saveError(e); return; }
   s.mode = 'zip'; s.dir = null; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
@@ -430,6 +434,302 @@ function importBundle() {
     catch (e) { toast(t('errFile')); }
   };
   fp.click();
+}
+
+/* =====================================================================
+   HISTORY: the show under git
+   The show keeps its history in git's own format, in a .git folder beside script.md: inside the show
+   file, or in the show folder. A revision is a commit with a tag; a variant is a branch. Only loose
+   objects, refs and HEAD are written, which is all git needs to read it (log, diff, branch, push).
+   There is no index: after unzipping a show, run "git reset" once. Packed objects are not read.
+   ===================================================================== */
+const GIT = '.git/', ENC = new TextEncoder(), DEC = new TextDecoder();
+const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const unhex = s => Uint8Array.from(s.match(/../g), x => parseInt(x, 16));
+function cat(parts) {
+  const out = new Uint8Array(parts.reduce((n, x) => n + x.length, 0)); let o = 0;
+  for (const x of parts) { out.set(x, o); o += x.length; }
+  return out;
+}
+const refName = s => String(s).normalize('NFC').replace(/[^\p{L}\p{N}_ -]+/gu, '').trim().replace(/[\s-]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
+const refLabel = n => n.replace(/-/g, ' ');
+const SHOW_FILE = /^(script\.md|script\.ink\.json|config\.json)$|^(boards|templates)\/[^/]+$/;
+async function gDir(parts, create) { let d = S.store.dir; for (const p of parts) d = await d.getDirectoryHandle(p, { create }); return d; }
+async function gRead(path) {
+  const s = S.store;
+  if (s.mode === 'zip') { const b = s.files.get(GIT + path); return b ? new Uint8Array(await b.arrayBuffer()) : null; }
+  const parts = (GIT + path).split('/'), name = parts.pop();
+  try { return new Uint8Array(await (await (await (await gDir(parts, false)).getFileHandle(name)).getFile()).arrayBuffer()); }
+  catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
+}
+async function gWrite(path, data) {
+  const s = S.store;
+  if (typeof data === 'string') data = ENC.encode(data);
+  if (s.mode === 'zip') { s.files.set(GIT + path, new Blob([data])); return; }
+  const parts = (GIT + path).split('/'), name = parts.pop();
+  const w = await (await (await gDir(parts, true)).getFileHandle(name, { create: true })).createWritable(); await w.write(data); await w.close();
+}
+/* refs under a prefix such as refs/tags/: name -> sha */
+async function gRefs(prefix) {
+  const s = S.store, out = new Map(), pk = await gRead('packed-refs');
+  if (pk) for (const l of DEC.decode(pk).split('\n')) { const m = /^([0-9a-f]{40}) (.+)$/.exec(l); if (m && m[2].startsWith(prefix)) out.set(m[2].slice(prefix.length), m[1]); }
+  let names = [];
+  if (s.mode === 'zip') names = Array.from(s.files.keys()).filter(k => k.startsWith(GIT + prefix)).map(k => k.slice(GIT.length + prefix.length));
+  else try { for await (const [nm, hd] of (await gDir((GIT + prefix).split('/').filter(Boolean), false)).entries()) if (hd.kind === 'file') names.push(nm); } catch (e) { /* none yet */ }
+  for (const n of names) { const b = await gRead(prefix + n); if (b) out.set(n, DEC.decode(b).trim()); }
+  return out;
+}
+async function gRef(name) { const k = name.lastIndexOf('/') + 1; return (await gRefs(name.slice(0, k))).get(name.slice(k)) || null; }
+async function gHead() {
+  const b = await gRead('HEAD'); if (!b) return null;
+  const tx = DEC.decode(b).trim(), m = /^ref: (.+)$/.exec(tx);
+  return m ? { ref: m[1], sha: await gRef(m[1]) } : { ref: null, sha: tx };
+}
+async function gPut(type, body) {
+  const raw = cat([ENC.encode(type + ' ' + body.length + '\0'), body]);
+  const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))), path = 'objects/' + sha.slice(0, 2) + '/' + sha.slice(2);
+  if (!(await gRead(path))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));
+  return sha;
+}
+async function gGet(sha) {
+  const z = await gRead('objects/' + sha.slice(0, 2) + '/' + sha.slice(2));
+  if (!z) throw new Error(t('hiPacked'));
+  const raw = await pipeBytes(z, new DecompressionStream('deflate')), k = raw.indexOf(0);
+  return { type: DEC.decode(raw.subarray(0, k)).split(' ')[0], body: raw.subarray(k + 1) };
+}
+const blobSha = new WeakMap();   // Blob -> sha of the object already written for it
+async function gBlob(blob) {
+  let s = blobSha.get(blob);
+  if (!s) { s = await gPut('blob', new Uint8Array(await blob.arrayBuffer())); blobSha.set(blob, s); }
+  return s;
+}
+/* files: path -> Blob. Writes the tree and what is under it, returns its sha. */
+async function gTree(files) {
+  const dirs = new Map(), here = [];
+  for (const [path, blob] of files) {
+    const k = path.indexOf('/');
+    if (k < 0) here.push([path, '100644', await gBlob(blob)]);
+    else { const d = path.slice(0, k); if (!dirs.has(d)) dirs.set(d, new Map()); dirs.get(d).set(path.slice(k + 1), blob); }
+  }
+  for (const [d, sub] of dirs) here.push([d + '/', '40000', await gTree(sub)]);   // git sorts a folder as if its name ended in a slash
+  here.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  return gPut('tree', cat(here.map(([n, mode, sha]) => cat([ENC.encode(mode + ' ' + n.replace(/\/$/, '') + '\0'), unhex(sha)]))));
+}
+/* every file under a tree: path -> sha of its blob */
+async function gFiles(tree, pre, out) {
+  const b = (await gGet(tree)).body; let i = 0;
+  while (i < b.length) {
+    const sp = b.indexOf(32, i), z = b.indexOf(0, sp), mode = DEC.decode(b.subarray(i, sp)), name = pre + DEC.decode(b.subarray(sp + 1, z)), sha = hex(b.subarray(z + 1, z + 21));
+    i = z + 21;
+    if (mode === '40000') await gFiles(sha, name + '/', out); else out.set(name, sha);
+  }
+  return out;
+}
+async function gCommitOf(sha) {
+  const o = await gGet(sha), tx = DEC.decode(o.body), k = tx.indexOf('\n\n'), head = k < 0 ? tx : tx.slice(0, k);
+  if (o.type === 'tag') return gCommitOf(/^object ([0-9a-f]{40})/m.exec(head)[1]);   // a tag made with "git tag -a"
+  const m = /^committer .* (\d+) [+-]\d{4}$/m.exec(head);
+  return { sha, tree: /^tree ([0-9a-f]{40})/m.exec(head)[1], parent: (/^parent ([0-9a-f]{40})/m.exec(head) || [])[1] || null, when: m ? new Date(+m[1] * 1000) : null, msg: k < 0 ? '' : tx.slice(k + 2).trim() };
+}
+async function gLog(sha, max) {
+  const out = [];
+  while (sha && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; }
+  return out;
+}
+async function gText(commit, path) {
+  const sha = (await gFiles(commit.tree, '', new Map())).get(path);
+  return sha ? DEC.decode((await gGet(sha)).body) : '';
+}
+async function settled() {
+  const s = S.store;
+  for (let k = 0; k < 100; k++) {
+    await saveNow();
+    const d = s.dirty;
+    if (!s.saving && !s.err && !(d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) return;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  throw new Error(t('stErr'));
+}
+async function workFiles() {
+  const s = S.store;
+  if (s.mode !== 'zip') return folderFiles(s.dir, new Map());
+  await pruneImages(s.files);
+  return new Map(Array.from(s.files).filter(([k]) => SHOW_FILE.test(k)));
+}
+const gFlush = () => S.store.mode === 'zip' ? flushZip() : null;
+/* Commit the show as it is. Without "always", nothing is written when it equals the last commit. */
+async function gSave(msg, always) {
+  await settled();
+  const head = (await gHead()) || { ref: 'refs/heads/main', sha: null };
+  const tree = await gTree(await workFiles());
+  if (!always && head.sha && (await gCommitOf(head.sha)).tree === tree) return head.sha;
+  const d = new Date(), off = -d.getTimezoneOffset(), p2 = n => String(n).padStart(2, '0');
+  const who = 'Promptbook <promptbook@localhost> ' + Math.floor(d / 1000) + ' ' + (off < 0 ? '-' : '+') + p2(Math.floor(Math.abs(off) / 60)) + p2(Math.abs(off) % 60);
+  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (head.sha ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
+  if (!(await gRead('HEAD'))) { await gWrite('HEAD', 'ref: refs/heads/main\n'); await gWrite('config', '[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = false\n'); }
+  await gWrite(head.ref || 'HEAD', sha + '\n');
+  return sha;
+}
+/* Replace the show on disk with the files of a tree, then open it again. */
+async function gCheckout(tree) {
+  const s = S.store, blobs = new Map();
+  for (const [path, sha] of await gFiles(tree, '', new Map())) {
+    if (!SHOW_FILE.test(path)) continue;
+    const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
+  }
+  if (s.mode === 'zip') {
+    s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
+    await flushZip();
+  } else {
+    for (const sub of ['boards', 'templates']) try {
+      const d = await s.dir.getDirectoryHandle(sub), gone = [];
+      for await (const [nm, hd] of d.entries()) if (hd.kind === 'file' && !blobs.has(sub + '/' + nm)) gone.push(nm);
+      for (const nm of gone) await d.removeEntry(nm);
+    } catch (e) { /* no such folder */ }
+    if (!blobs.has('script.ink.json')) try { await s.dir.removeEntry('script.ink.json'); } catch (e) { /* none */ }
+    for (const [path, b] of blobs) { const k = path.lastIndexOf('/'); await writeBlob(k < 0 ? null : path.slice(0, k), path.slice(k + 1), b); }
+  }
+  clearTimeout(saveT);
+  s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; s.conflict = false;
+  if (s.mode === 'folder') s.stamp = {};
+  return loadStore(s.handle || s.dir);
+}
+/* a revision: a commit named by the stage manager, with a tag; "lock" also fixes the page numbers there */
+async function histSave(name, lock) {
+  const tags = await gRefs('refs/tags/'); let tag = refName(name), n = 1;
+  while (tags.has(tag)) tag = refName(name) + '-' + (++n);
+  if (lock) { S.cfg.lock = makeLock(name, tag); markDirty('cfg'); relayout(true); }
+  const sha = await gSave(name, true);
+  await gWrite('refs/tags/' + tag, sha + '\n');
+  await gFlush();
+  return sha;
+}
+/* a variant: a branch that starts from the show as it is now */
+async function histVariant(name) {
+  const ref = 'refs/heads/' + refName(name);
+  if (await gRef(ref)) throw new Error(t('hiTaken'));
+  const sha = await gSave(t('hiBefore', name), false);
+  await gWrite(ref, sha + '\n'); await gWrite('HEAD', 'ref: ' + ref + '\n');
+  await gFlush();
+}
+async function histSwitch(branch) {
+  const ref = 'refs/heads/' + branch, sha = await gRef(ref);
+  if (!sha) return false;
+  await gSave(t('hiBefore', refLabel(branch)), false);
+  await gWrite('HEAD', 'ref: ' + ref + '\n');
+  return gCheckout((await gCommitOf(sha)).tree);
+}
+async function histRestore(sha) {
+  const c = await gCommitOf(sha);
+  await gSave(t('hiBefore', c.msg), false);
+  return gCheckout(c.tree);
+}
+async function histState() {
+  const head = await gHead(), log = head && head.sha ? await gLog(head.sha) : [];
+  return { branch: head && head.ref ? head.ref.replace('refs/heads/', '') : 'main', log, heads: await gRefs('refs/heads/'), tags: await gRefs('refs/tags/') };
+}
+const revName = c => c.msg.split('\n')[0] + (c.when ? '  ·  ' + c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
+function unlockPages() { S.cfg.lock = null; markDirty('cfg'); relayout(true); }
+async function openHistory() {
+  if (!onDisk()) { toast(t('hiNeedFile')); return; }
+  const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
+  let st;
+  try { st = await histState(); } catch (e) { fail(e); return; }
+  openDlg(t('hiTitle'), (body, foot, close) => {
+    const run = fn => async () => { try { await fn(); } catch (e) { fail(e); } };
+    const btn = (label, fn, cls) => { const b = h('button', 'btn sm' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.onclick = fn; return b; };
+    const input = ph => { const i = h('input'); i.type = 'text'; i.placeholder = ph; return i; };
+    /* variant */
+    const vr = h('div', 'hrow'), vs = h('select'), vn = input(t('hiVarName'));
+    for (const n of new Set([st.branch].concat(Array.from(st.heads.keys())))) { const o = h('option', null, refLabel(n)); o.value = n; vs.appendChild(o); }
+    vs.value = st.branch; vs.id = 'hiVar';
+    vs.onchange = run(async () => { const n = vs.value; close(); await histSwitch(n); toast(t('hiSwitched', refLabel(n))); });
+    vr.append(h('span', null, t('hiVariant')), vs, vn, btn(t('hiNewVar'), run(async () => {
+      const nm = vn.value.trim(); if (!nm) { vn.focus(); return; }
+      await histVariant(nm); close(); toast(t('hiSwitched', nm));
+    })));
+    body.append(vr, h('p', 'hint', t('hiVarHint')));
+    /* locked page numbers */
+    const lk = S.cfg.lock, li = S.lockInfo, ls = h('div', 'hsec'), lr = h('div', 'hrow');
+    ls.appendChild(h('p', 'hint', !lk ? t('lkOff') : t('lkOn', lk.name) + ' ' + (li.changed.length ? t('lkChanged', li.changed.join(', ')) : t('lkNone')) + (li.gone.length ? ' ' + t('lkGone', li.gone.join(', ')) : '')));
+    if (lk) {
+      const pb = btn(t('lkPrint'), () => { close(); doPrint('script', false, true); }); pb.disabled = !li.changed.length;
+      lr.append(pb, btn(t('lkUnlock'), () => { unlockPages(); close(); openHistory(); }));
+      ls.appendChild(lr);
+    }
+    body.appendChild(ls);
+    /* revisions */
+    const rs = h('div', 'hsec'), sr = h('div', 'hrow'), rn = input(t('hiRevName')), ck = h('label', 'chk'), cb = h('input');
+    cb.type = 'checkbox'; ck.append(cb, t('hiLockToo')); rn.id = 'hiName';
+    sr.append(rn, ck, btn(t('hiSave'), run(async () => {
+      const nm = rn.value.trim(); if (!nm) { rn.focus(); return; }
+      await histSave(nm, cb.checked); close(); toast(t('hiSaved', nm));
+    }), 'pri'));
+    rs.appendChild(sr);
+    if (!st.log.length) rs.appendChild(h('p', 'hint', t('hiNone')));
+    for (const c of st.log) {
+      const r = h('div', 'rev'), nm = h('div', 'rn');
+      nm.append(h('b', null, c.msg.split('\n')[0]), h('span', null, c.when ? c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''));
+      r.append(nm, btn(t('hiChanges'), () => { close(); openDiff(c.sha); }), btn(t('hiRestore'), run(async () => { close(); await histRestore(c.sha); toast(t('hiRestored', c.msg.split('\n')[0])); })));
+      rs.appendChild(r);
+    }
+    body.appendChild(rs);
+    dlgBtn(foot, t('close'), '', close);
+  });
+}
+/* the changes between two revisions, or between a revision and now, as a list an actor can read */
+function diffList(D, who) {
+  const el = h('div', 'df'), rows = diffFor(D, who); let last = null;
+  if (!rows.length) { el.appendChild(h('p', 'hint', t('dfNone'))); return el; }
+  const tx = b => who === '*' || b.type === 'note' ? b.raw : b.plain;
+  for (const { e, cueLine } of rows) {
+    const bl = e.b || e.a, where = [bl.act, bl.scene].filter(Boolean).join(' · ');
+    if (where !== last) { el.appendChild(h('div', 'dh', where || '—')); last = where; }
+    const d = h('div', 'de ' + (e.k === 'cue' ? 'chg' : e.k));
+    if (e.k === 'add') d.appendChild(h('ins', null, tx(e.b)));
+    else if (e.k === 'del') d.appendChild(h('del', null, tx(e.a)));
+    else for (const [k, w] of diffWords(e.k === 'cue' ? e.a.raw : tx(e.a), e.k === 'cue' ? e.b.raw : tx(e.b))) d.append(k ? h(k < 0 ? 'del' : 'ins', null, w) : w, ' ');
+    d.appendChild(h('span', 'dk', [t({ add: 'dfAdd', del: 'dfDel', chg: 'dfChg', cue: 'dfCue' }[e.k]), cueLine ? t('dfCueLine') : '', e.b && e.b.page ? 'p. ' + pl(e.b.page) : ''].filter(Boolean).join(' · ')));
+    el.appendChild(d);
+  }
+  return el;
+}
+async function openDiff(from, to) {
+  const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
+  let st;
+  try { st = await histState(); } catch (e) { fail(e); return; }
+  if (!st.log.length) { toast(t('hiNone')); return; }
+  openDlg(t('dfTitle'), (body, foot, close) => {
+    const bar = h('div', 'hrow'), fs = h('select'), ts = h('select'), ws = h('select'), cnt = h('p', 'hint');
+    const opt = (sel, v, label) => { const o = h('option', null, label); o.value = v; sel.appendChild(o); };
+    opt(ts, '', t('hiNow'));
+    for (const c of st.log) { opt(fs, c.sha, revName(c)); opt(ts, c.sha, revName(c)); }
+    fs.value = st.log.some(c => c.sha === from) ? from : st.log[0].sha; ts.value = st.log.some(c => c.sha === to) ? to : '';
+    fs.id = 'dfFrom'; ts.id = 'dfTo'; ws.id = 'dfWho';
+    bar.append(h('span', null, t('dfFrom')), fs, h('span', null, t('dfTo')), ts, h('span', null, t('dfWho')), ws);
+    let D = [], list = h('div', 'df'), gen = 0;
+    const show = () => { const n = diffList(D, ws.value); list.replaceWith(n); list = n; cnt.textContent = t('dfCount', $$('.de', n).length); };
+    const load = async () => {
+      const g = ++gen, side = v => v ? gText(st.log.find(c => c.sha === v), 'script.md').then(parseBlocks) : S.blocks;
+      try { const A = await side(fs.value), B = await side(ts.value); if (g !== gen) return; D = diffBlocks(A, B); } catch (e) { fail(e); return; }
+      const keep = ws.value; ws.textContent = '';
+      opt(ws, '', t('dfText')); opt(ws, '*', t('dfAll'));
+      for (const n of diffNames(D)) { const k = diffFor(D, n).length; if (k) opt(ws, n, n + ' (' + k + ')'); }
+      ws.value = Array.from(ws.options).some(o => o.value === keep) ? keep : '';
+      show();
+    };
+    fs.onchange = ts.onchange = load; ws.onchange = show;
+    body.append(bar, cnt, list);
+    dlgBtn(foot, t('dfBack'), '', () => { close(); openHistory(); });
+    dlgBtn(foot, t('print'), '', () => {
+      const cp = $('#cuePrint'), sel = s => s.options[s.selectedIndex].textContent; cp.textContent = '';
+      cp.append(h('h1', null, [titleOf(), t('dfTitle') + (ws.value && ws.value !== '*' ? ' ' + t('dfFor', ws.value) : '')].filter(Boolean).join(' — ')), h('p', null, sel(fs) + '  →  ' + sel(ts)), list.cloneNode(true));
+      document.body.classList.remove('pr-book', 'pr-script', 'pr-changed'); document.body.classList.add('pr-cues');
+      window.print();
+    });
+    dlgBtn(foot, t('close'), 'pri', close);
+    load();
+  });
 }
 
 /* =====================================================================
@@ -531,6 +831,7 @@ function buildMenu() {
   add(t('mText'), () => openTextDialog(false), !S.loaded);
   add(t('mSettings'), openSettings, !S.loaded);
   add(t('mTemplates'), () => { if (S.mode === 'templates') exitTemplates(); else enterTemplates(); }, !S.loaded);
+  add(t('mHistory'), openHistory, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
@@ -653,5 +954,6 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t };
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint };
 init();

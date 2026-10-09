@@ -59,7 +59,20 @@ en: {
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
-  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse'
+  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse',
+  mHistory: 'History…', hiTitle: 'History', hiNeedFile: 'History is kept inside the show file. Use “Save as show file…” first.',
+  hiVariant: 'Variant', hiNewVar: 'New variant', hiVarName: 'Name of a new variant, e.g. a theatre',
+  hiVarHint: 'A variant is the show as it is given in one place or on one occasion, with revisions of its own. A change made in one variant does not reach the others.',
+  hiRevName: 'Name of this revision, e.g. Rehearsal 12 October', hiSave: 'Save revision', hiLockToo: 'Lock page numbers here',
+  hiNow: 'Now', hiNone: 'No revision yet.', hiChanges: 'Changes', hiRestore: 'Restore',
+  hiRestored: 'Back to “{0}”. What you had was kept as a revision.', hiSaved: 'Revision “{0}” saved', hiSwitched: 'Now on variant “{0}”',
+  hiBefore: 'Before going to “{0}”', hiTaken: 'That name is taken.', hiPacked: 'Part of this history was packed by git (gc or clone) and cannot be read here.',
+  hiErr: 'History: {0}',
+  lkOff: 'Page numbers are free: they move when text is added or cut.', lkOn: 'Page numbers are locked at “{0}”.',
+  lkChanged: 'Changed pages: {0}', lkGone: 'Pages now empty: {0}', lkNone: 'No page has changed.',
+  lkUnlock: 'Unlock', lkPrint: 'Print changed pages', lkMark: 'changed since “{0}”',
+  dfTitle: 'Changes', dfFrom: 'From', dfTo: 'To', dfWho: 'Show', dfAll: 'Everything, cues too', dfText: 'Text', dfNone: 'No changes.',
+  dfAdd: 'added', dfDel: 'cut', dfChg: 'changed', dfCue: 'cues', dfCueLine: 'the line before yours', dfCount: '{0} changes', dfFor: 'for {0}', dfBack: 'Back'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -111,7 +124,20 @@ it: {
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
   pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
-  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga'
+  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga',
+  mHistory: 'Cronologia…', hiTitle: 'Cronologia', hiNeedFile: 'La cronologia sta dentro il file dello spettacolo. Usa prima «Salva come file spettacolo…».',
+  hiVariant: 'Variante', hiNewVar: 'Nuova variante', hiVarName: 'Nome di una nuova variante, es. un teatro',
+  hiVarHint: 'Una variante è lo spettacolo come va in scena in un luogo o in un’occasione, con le sue revisioni. Una modifica fatta in una variante non arriva alle altre.',
+  hiRevName: 'Nome di questa revisione, es. Prova 12 ottobre', hiSave: 'Salva revisione', hiLockToo: 'Blocca qui i numeri di pagina',
+  hiNow: 'Adesso', hiNone: 'Ancora nessuna revisione.', hiChanges: 'Modifiche', hiRestore: 'Ripristina',
+  hiRestored: 'Tornato a «{0}». Quello che avevi è stato tenuto come revisione.', hiSaved: 'Revisione «{0}» salvata', hiSwitched: 'Ora sei nella variante «{0}»',
+  hiBefore: 'Prima di passare a «{0}»', hiTaken: 'Questo nome è già usato.', hiPacked: 'Una parte di questa cronologia è stata compressa da git (gc o clone) e qui non si può leggere.',
+  hiErr: 'Cronologia: {0}',
+  lkOff: 'I numeri di pagina sono liberi: si spostano quando si aggiunge o si taglia testo.', lkOn: 'I numeri di pagina sono bloccati a «{0}».',
+  lkChanged: 'Pagine cambiate: {0}', lkGone: 'Pagine ora vuote: {0}', lkNone: 'Nessuna pagina è cambiata.',
+  lkUnlock: 'Sblocca', lkPrint: 'Stampa le pagine cambiate', lkMark: 'cambiata dopo «{0}»',
+  dfTitle: 'Modifiche', dfFrom: 'Da', dfTo: 'A', dfWho: 'Mostra', dfAll: 'Tutto, anche i cue', dfText: 'Testo', dfNone: 'Nessuna modifica.',
+  dfAdd: 'aggiunta', dfDel: 'tagliata', dfChg: 'cambiata', dfCue: 'cue', dfCueLine: 'la battuta prima della tua', dfCount: '{0} modifiche', dfFor: 'per {0}', dfBack: 'Indietro'
 }};
 let LANG = 'en';
 function t(k) {
@@ -146,7 +172,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.6';
+const VERSION = 'r1.7';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -155,7 +181,7 @@ function defaultConfig() {
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
     { code: 'VID', name: 'Video', colour: '#7a3fd1' },
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
-    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25 };
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null };
 }
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
@@ -172,6 +198,8 @@ function normCfg(c) {
   o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
   const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
   o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
+  const lk = o.lock;   // locked page numbers, see makeLock
+  o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
   return o;
 }
 
@@ -185,7 +213,7 @@ const S = {
   templates: new Map(),  // name -> same shape with tpl: true; kept in the configuration, never in the script
   urls: new Map(),       // 'boards/<file>' or 'templates/<file>' -> object URL
   pairs: [], mode: 'script', meta: null,   // meta: the frontmatter of the script, when it has one
-  pages: [], els: [], meas: new Map(),
+  pages: [], pageOff: 0, lockInfo: null, els: [], meas: new Map(),
   view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
   hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
@@ -196,6 +224,8 @@ const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
 /* a review department holds notes for after the rehearsal: listed in Review, never in the cue list */
 const isReview = code => { const d = deptOf(code); return !!(d && d.review); };
 const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
+/* what is printed for page number n: the number itself, or its locked label such as 12A */
+const pl = n => { const P = n ? S.pages[n - 1 + S.pageOff] : null; return P ? P.label : (n || ''); };
 
 /* =====================================================================
    PARSE
@@ -753,6 +783,160 @@ function commitText(nt) {
   return true;
 }
 
+/* ---------- compare ----------
+   Two versions of a script set side by side, block by block: what was added, cut or changed.
+   History uses it to show changes; locked pages use lcs() to find where the old pages are now. */
+/* longest common subsequence of two lists of strings, as pairs [i, j] in order */
+function lcs(a, b) {
+  const out = [], tail = []; let p = 0, n = a.length, m = b.length;
+  while (p < n && p < m && a[p] === b[p]) { out.push([p, p]); p++; }
+  while (n > p && m > p && a[n - 1] === b[m - 1]) { n--; m--; tail.push([n, m]); }
+  const N = n - p, M = m - p, W = M + 1;
+  if (N && M && N * M <= 4e6) {   // past that the middle counts as all different
+    const T = new Uint16Array((N + 1) * W);
+    for (let i = N - 1; i >= 0; i--) for (let j = M - 1; j >= 0; j--)
+      T[i * W + j] = a[p + i] === b[p + j] ? T[(i + 1) * W + j + 1] + 1 : Math.max(T[(i + 1) * W + j], T[i * W + j + 1]);
+    let i = 0, j = 0;
+    while (i < N && j < M) {
+      if (a[p + i] === b[p + j]) { out.push([p + i, p + j]); i++; j++; }
+      else if (T[(i + 1) * W + j] >= T[i * W + j + 1]) i++; else j++;
+    }
+  }
+  for (let k = tail.length - 1; k >= 0; k--) out.push(tail[k]);
+  return out;
+}
+/* a script text as blocks ready to compare, without touching the open show */
+function parseBlocks(text) {
+  const bl = parseScript(text).map(analyze), meta = bl.length && bl[0].type === 'meta' ? bl[0].meta : null;
+  let act = '', scene = '';
+  for (const b of bl) {
+    if (b.type === 'speech') b.name = fullName(b.head.name, meta);
+    if (b.type === 'h') { if (b.level === 1) { act = b.title; scene = ''; } else scene = b.title; }
+    b.act = act; b.scene = scene;
+  }
+  return bl;
+}
+/* [{ k, a, b }] in reading order: a is the old block, b the new one. k is 'same', 'add', 'del', 'chg',
+   or 'cue' for a block whose words are the same and whose cues are not. */
+function diffBlocks(A, B) {
+  const key = b => b.type + '\u0001' + b.raw, out = [];
+  const gap = (i0, i1, j0, j1) => {
+    /* between two unchanged blocks, an old and a new block that share half their words are one changed block */
+    const pair = new Map(); let from = j0;
+    if (i1 - i0 === 1 && j1 - j0 === 1 && A[i0].type === B[j0].type && A[i0].name === B[j0].name) pair.set(i0, j0);
+    else for (let i = i0; i < i1; i++) {
+      let best = -1, bs = 0.499;
+      for (let j = from; j < j1; j++) {
+        if (A[i].type !== B[j].type) continue;
+        const sc = A[i].plain === B[j].plain ? 2 : similarity(A[i].plain, B[j].plain);
+        if (sc > bs) { bs = sc; best = j; }
+      }
+      if (best >= 0) { pair.set(i, best); from = best + 1; }
+    }
+    let j = j0;
+    for (let i = i0; i < i1; i++) {
+      const pj = pair.get(i);
+      if (pj === undefined) { out.push({ k: 'del', a: A[i], b: null }); continue; }
+      while (j < pj) out.push({ k: 'add', a: null, b: B[j++] });
+      out.push({ k: A[i].plain === B[pj].plain && A[i].name === B[pj].name ? 'cue' : 'chg', a: A[i], b: B[pj] }); j = pj + 1;
+    }
+    while (j < j1) out.push({ k: 'add', a: null, b: B[j++] });
+  };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A.map(key), B.map(key)).concat([[A.length, B.length]])) {
+    gap(i, x, j, y);
+    if (x < A.length) out.push({ k: 'same', a: A[x], b: B[y] });
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* word by word: [[kind, words]], kind -1 cut, 0 kept, 1 added */
+function diffWords(a, b) {
+  const A = a.split(/\s+/).filter(Boolean), B = b.split(/\s+/).filter(Boolean), out = [];
+  const put = (k, w) => { const l = out[out.length - 1]; if (l && l[0] === k) l[1] += ' ' + w; else out.push([k, w]); };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A, B).concat([[A.length, B.length]])) {
+    while (i < x) put(-1, A[i++]);
+    while (j < y) put(1, B[j++]);
+    if (x < A.length) put(0, A[x]);
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* a block concerns a character who speaks it, or whose name an action spells in capitals */
+function concerns(b, name) {
+  if (!b || (b.type !== 'speech' && b.type !== 'action')) return false;
+  const re = new RegExp('(^|[^\\p{L}\\p{N}])' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^\\p{L}\\p{N}])', 'u');
+  return re.test(b.type === 'speech' ? b.name : b.plain);
+}
+/* The changes of a comparison that one reader needs: [{ e, cueLine }].
+   who '*': everything. who '': changes to the text, not to cues or comments. who a character: the text
+   changes in their own lines, in actions that name them, and in the line spoken just before one of theirs
+   in the same scene. */
+function diffFor(D, who) {
+  const out = [];
+  D.forEach((e, i) => {
+    if (e.k === 'same') return;
+    const bl = e.b || e.a, text = e.k !== 'cue' && bl.type !== 'mark' && bl.type !== 'note';
+    if (who === '*' || (text && !who)) { out.push({ e, cueLine: false }); return; }
+    if (!text) return;
+    if (concerns(e.a, who) || concerns(e.b, who)) { out.push({ e, cueLine: false }); return; }
+    if (bl.type !== 'speech') return;
+    for (let j = i + 1; j < D.length; j++) {
+      const n = D[j].b;
+      if (n && n.type === 'h') break;   // a new scene: nobody answers the line before it
+      if (n && n.type === 'speech') { if (concerns(n, who)) out.push({ e, cueLine: true }); break; }
+    }
+  });
+  return out;
+}
+/* the characters a comparison can be read for: the character list, or without one every single speaker */
+function diffNames(D) {
+  let meta = null; const seen = new Set();
+  for (const e of D) for (const b of [e.a, e.b]) {
+    if (!b) continue;
+    if (b.type === 'meta' && b.meta.chars.length) meta = b.meta;
+    if (b.type === 'speech' && !GROUP_NAME.test(normName(b.name))) for (const p of normName(b.name).split(NAME_SEP).filter((x, k) => k % 2 === 0 && x)) seen.add(p);
+  }
+  return meta ? meta.chars.map(c => c.name) : Array.from(seen).sort();
+}
+
+/* ---------- locked page numbers ----------
+   Once a script is printed and handed out, its page numbers must hold. A lock records where every
+   block was: S.cfg.lock = { name, rev, pages, n, cont, sig, keys }, each a list joined by spaces.
+   pages: the labels in order. n: how many blocks start on each page. cont: 1 when the page opens in the
+   middle of a block. sig: what each page held. keys: every block, in order.
+   With a lock, paginate() starts each old page where its first surviving block is; text that no longer
+   fits goes to inserted pages 12A, 12B; a page left empty disappears and its number is not reused. */
+const flows = g => !(g.kind === 'single' && (g.b.type === 'meta' || g.b.type === 'note'));
+const itemStarts = it => it.whole || it.first;
+const pageKey = P => hash(P.items.filter(it => flows(it.g)).map(it => it.g.m.kh + (it.whole ? '' : ':' + it.off + '+' + it.h)).join(' '));
+function makeLock(name, rev) {
+  const P = S.pages.filter(p => !p.front);
+  return { name: String(name || ''), rev: rev || '', pages: P.map(p => p.label).join(' '),
+    n: P.map(p => p.items.filter(it => flows(it.g) && itemStarts(it)).length).join(' '),
+    cont: P.map(p => { const it = p.items.find(q => flows(q.g)); return it && !itemStarts(it) ? 1 : 0; }).join(' '),
+    sig: P.map(pageKey).join(' '), keys: S.groups.filter(flows).map(g => g.m.kh).join(' ') };
+}
+function lockPlan() {
+  const L = S.cfg.lock; if (!L) return null;
+  const pages = L.pages.split(' '), at = [];
+  L.n.split(' ').forEach((c, i) => { for (let k = 0; k < +c; k++) at.push(i); });
+  const gs = S.groups.filter(flows), want = new Map(), sig = new Map(), sigs = L.sig.split(' ');
+  for (const [i, j] of lcs(L.keys ? L.keys.split(' ') : [], gs.map(g => g.m.kh))) want.set(gs[j], at[i]);
+  pages.forEach((lab, i) => sig.set(lab, sigs[i]));
+  return { pages, cont: L.cont.split(' ').map(x => x === '1'), want, sig, taken: new Set(pages) };
+}
+const alpha = k => k > 26 ? alpha(Math.floor((k - 1) / 26)) + alpha((k - 1) % 26 + 1) : String.fromCharCode(64 + k);
+/* the k-th page inserted after a locked page: 12 gives 12A, 12B; 12A gives 12A1, 12A2 */
+function insLabel(base, k, taken) {
+  const mk = n => base + (/\d$/.test(base) ? alpha(n) : n);
+  let s = mk(k);
+  for (let n = k; taken.has(s); n++) s = base + '+' + n;   // 12A already stands after 12: 12+1 goes between them
+  taken.add(s);
+  return s;
+}
+
 /* =====================================================================
    LAYOUT
    ===================================================================== */
@@ -851,7 +1035,7 @@ function measure() {
   for (const g of S.groups) {
     const k = gkey(g); let m = S.meas.get(k);
     if (!m) {
-      m = { h: 0, lines: [], nameLines: 1, ls: null };
+      m = { h: 0, lines: [], nameLines: 1, ls: null, kh: hash(k) };
       S.meas.set(k, m);
       const el = buildRow(g, null); M.appendChild(el); todo.push([m, el]);
     }
@@ -895,7 +1079,22 @@ function paginate() {
   const isHead = g => g.kind === 'single' && g.b.type === 'h';
   const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
   const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
-  const newPage = () => { const no = pages.length + 1 - off; cur = { items: [], boards: [], head: null, no, front: no < 1 }; pages.push(cur); y = 0; };
+  const lk = lockPlan();   // null while page numbers are free
+  let li = -1, sub = 0, tail = 0;   // the locked page being filled, pages inserted after it, pages past the last locked one
+  const label = to => {
+    const L = lk.pages;
+    if (to != null) { li = to; sub = 0; }
+    else if (li < 0) li = 0;
+    else if (li >= L.length - 1) return String((parseInt(L[L.length - 1], 10) || L.length) + (++tail));
+    else if (!sub && lk.cont[li + 1]) li++;   // the next page opened mid-block before: what runs over goes on it
+    else return insLabel(L[li], ++sub, lk.taken);
+    return L[li];
+  };
+  const newPage = to => {
+    const no = pages.length + 1 - off;
+    cur = { items: [], boards: [], head: null, no, front: no < 1, label: no < 1 ? '' : String(no), chg: false }; pages.push(cur); y = 0;
+    if (lk && no >= 1) cur.label = label(to);
+  };
   const push = it => {
     it.y = y; cur.items.push(it); y += it.h;
     const g = it.g;
@@ -920,6 +1119,8 @@ function paginate() {
       continue;
     }
     if (cur.front && cur.items.length) newPage();
+    const to = lk ? lk.want.get(g) : undefined;
+    if (to !== undefined && to > li) { if (cur.items.length) newPage(to); else cur.label = label(to); }
     if (b && b.type === 'h' && b.level === 1 && cur.items.length) newPage();
     if (y + m.h <= H + 0.5) { push({ g, h: m.h, whole: true }); continue; }
     const total = b ? (m.lines[0] || 0) : 0;
@@ -961,7 +1162,8 @@ function paginate() {
       }
       parts.push(bs.map(b => b.id + '~' + b.sv + '~' + b.name).join('+') + (it.whole ? '' : ':' + it.from + '-' + it.to + (it.part || '')));
     }
-    P.sig = P.no + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
+    P.chg = !!lk && !P.front && lk.sig.get(P.label) !== pageKey(P);
+    P.sig = P.no + '|' + P.label + (P.chg ? '*' + S.cfg.lock.name : '') + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
     P.fsig = facingSig(P);
     P.rails = [];
   }
@@ -970,5 +1172,7 @@ function paginate() {
     for (let n = s.page; n <= e.page && n + off <= pages.length; n++) pages[n - 1 + off].rails.push(s);
   }
   for (const P of pages) if (P.rails.length) P.sig += '|' + P.rails.map(s => s.b.id + ':' + s.s + '>' + s.endRef.b.id + ':' + s.endRef.s + '@' + s.lane).join(',');
-  S.pages = pages;
+  S.pages = pages; S.pageOff = off;
+  const now = new Set(pages.map(P => P.label));
+  S.lockInfo = lk ? { changed: pages.filter(P => P.chg).map(P => P.label), gone: lk.pages.filter(x => !now.has(x)) } : null;
 }
