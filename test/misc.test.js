@@ -86,7 +86,16 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.mouse.move(bb.x, bb.y + 30); await page.mouse.down(); await page.mouse.move(bb.x + 40, bb.y + 34, { steps: 4 }); await page.mouse.up();
   const n1 = await page.evaluate(() => Array.from(PB.S.ink.values()).reduce((a, e) => a + e.strokes.length, 0));
   ok(n1 === n0 + 1 && await page.locator('#pop').isHidden(), 'with Finger on, the mouse draws and does not pin');
+  const lit = () => page.evaluate(() => [document.querySelector('#bFinger').classList.contains('on'), document.querySelector('#bErase').classList.contains('on')].join());
+  await page.locator('#bErase').click();
+  ok(await lit() === 'false,true', 'choosing Eraser unlights Finger');
+  await page.mouse.move(bb.x + 20, bb.y + 32); await page.mouse.down(); await page.mouse.move(bb.x + 22, bb.y + 32, { steps: 2 }); await page.mouse.up();
+  const n2 = await page.evaluate(() => Array.from(PB.S.ink.values()).reduce((a, e) => a + e.strokes.length, 0));
+  ok(n2 === n0, 'the mouse still erases while Eraser is on');
   await page.locator('#bFinger').click();
+  ok(await lit() === 'true,false', 'choosing Finger leaves the eraser');
+  await page.locator('#bFinger').click();
+  ok(await lit() === 'false,false', 'Finger then turns off as before');
 
   // Letter paper + settings + new department
   await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();

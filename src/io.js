@@ -815,7 +815,7 @@ function applyView() {
   c.toggle('facing', v.facing); c.toggle('nocues', !v.cues); c.toggle('noink', !v.ink); c.toggle('night', v.night);
   $('#bFacing').classList.toggle('on', v.facing); $('#bCues').classList.toggle('on', v.cues); $('#bInk').classList.toggle('on', v.ink);
   $('#bNight').classList.toggle('on', v.night); $('#zFit').classList.toggle('on', v.fit);
-  $('#bFinger').classList.toggle('on', S.tool.finger); $('#bErase').classList.toggle('on', S.tool.mode === 'erase');
+  $('#bFinger').classList.toggle('on', S.tool.finger && S.tool.mode !== 'erase'); $('#bErase').classList.toggle('on', S.tool.mode === 'erase');
   $$('#pens .sw').forEach(b => b.classList.toggle('on', S.tool.mode === 'pen' && b.dataset.c === S.tool.colour));
 }
 function updUndo() { $('#bUndo').disabled = !S.hist.length; $('#bRedo').disabled = !S.redo.length; }
@@ -848,7 +848,7 @@ function bindUI() {
   }
   $('#bMenu').onclick = () => { const m = $('#menu'); if (m.hidden) { buildMenu(); m.hidden = false; } else m.hidden = true; };
   $('#bErase').onclick = () => { S.tool.mode = S.tool.mode === 'erase' ? 'pen' : 'erase'; applyView(); };
-  $('#bFinger').onclick = () => { S.tool.finger = !S.tool.finger; savePrefs(); applyView(); };
+  $('#bFinger').onclick = () => { if (S.tool.mode === 'erase') { S.tool.mode = 'pen'; S.tool.finger = true; } else S.tool.finger = !S.tool.finger; savePrefs(); applyView(); };
   $('#bUndo').onclick = undo; $('#bRedo').onclick = redo;
   const tog = (id, key, after) => { $(id).onclick = () => { S.view[key] = !S.view[key]; savePrefs(); applyView(); if (after) after(); }; };
   tog('#bFacing', 'facing', () => { sizeWrap(); renderVisible(); });
