@@ -4,6 +4,8 @@
 **Compared with:** Fountain 1.1 (fountain.io/syntax) and the Downstage language spec (github.com/jscaltreto/downstage, `SPEC.md`).
 **Method:** desk review. No script was run through a Fountain or Downstage tool, and nothing in the app was changed.
 
+> **Where this sits now (2026-10-09):** background to decision D3 (`docs/decisions.md`). The section numbers below refer to the specification as it was at v0.8. Their content is now in `docs/specs/01-script-text.md` (§5.2, §5.12), `docs/specs/02-cues.md` (§5.3, §5.11), `docs/specs/04-boards.md` (§5.5) and `docs/specs/07-storage.md` (§5.8). Since this review was written the format gained comments (`%%`, r1.4), which closes row 19 of the table in §4.
+>
 > **Update, r1.1 (2026-10-07):** the native format now has a frontmatter block with title, author and other details, and a character list with aliases and descriptions, printed on its own page and used to check speeches (`SPEC.md` §5.12). Rows 1–4 below and the table in §3 describe r1.0.
 
 ## 1. Verdict

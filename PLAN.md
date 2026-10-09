@@ -1,154 +1,35 @@
-# Digital Prompt Book — Plan
+# Promptbook — Plan
 
-**Status:** v0.9 — 2026-10-08 — r1.6 built, committed on branch r1.6, not yet tagged (fixes from the first rehearsals); not yet tried on the laptop
-**Rehearsal deadline:** 2026-10-08
-**Companion file:** `SPEC.md`
+**Plan:** v1.0, 2026-10-09. Restructured with `SPEC.md` v2.0: this file now holds only what is ahead. What the tool must do is in `SPEC.md` and `docs/specs/`; why it is built this way is in `docs/decisions.md`; how each release was checked is in `docs/verification.md`.
+**State:** r1.7 is built and committed on branch `r1.6`, not tagged. r1.6 and r1.7 are checked in a simulated browser only.
 
 ---
 
-## 1. Strategy
+## 1. Intent
 
-v0.1 planned to adopt a converter, adapt a script language and build a core plus an Obsidian plugin. The answers make almost all of that unnecessary.
+The first rehearsal with the tool was on 2026-10-08. The plan since then is driven by two things: what the rehearsals ask for, and closing the gap between "passes the checks" and "works under a hand on the laptop".
 
-| Part | v0.1 | v0.2 | Why |
-|---|---|---|---|
-| Word import | Pandoc | Paste the text | Script is already plain `NAME: text` |
-| Script language | Downstage / Fountain / Markdown | The convention already in use | No new syntax to learn, no external renderer |
-| Rendering and print | Typst or HTML | HTML and CSS in the browser | Zero dependencies |
-| Drawings | Excalidraw plugin | Built-in pen | Zero dependencies, ink must sit on the text |
-| Cue list | Dataview prototype, then core | Built in | Small |
-| Host | Obsidian plugin + CLI + optional browser | One HTML file | Q5 |
-| Versioning | Git | Git, optional, outside the tool | Q9 |
+## 2. Where each release stands
 
-**Adopt:** nothing at runtime. One open-licence font (Inter, SIL OFL 1.1) embedded in the file.
-**Adapt:** nothing.
-**Build:** `promptbook.html`.
-
-The price of this simplicity is stated in SPEC §4: K3 (ink is not data), K4 (ink is flagged when its own lines change), K5 (no Excalidraw).
-
-## 2. Architecture
-
-One file, plain JavaScript, no build step. Internally four parts with hard boundaries so later tiers do not need a rewrite:
-
-```
-parse      text → blocks, cues, board tokens          (pure, testable)
-layout     blocks → fixed-measure pages               (measure, paginate)
-interact   pins, pen, block editing, boards
-store      folder mode | project-file mode            (one interface, two back ends)
-```
-
-## 3. Schedule
-
-### Day 0 — 2026-10-06
-
-- ~~Answer Q14.~~ Done: pen-and-touch laptop. One device, one browser family, folder mode only.
-- Client vetoes or accepts the `[ASSUMED]` items in SPEC §3–4. None vetoed so far; silence is being treated as acceptance.
-- ~~Freeze R0. Build starts.~~ Done: all nine R0 items are built and pass 79 automated checks (SPEC §7).
-- Not done: nothing has run on the rehearsal laptop, with a real pen, or with the real script.
-
-### Day 1 — 2026-10-07
-
-The build is ahead of this schedule, so day 1 becomes the device day:
-
-1. Open `promptbook.html` in Chrome or Edge on the rehearsal laptop. Try the sample scene. Run the SPEC Q21 checks: pen draws without scrolling, resting hand stays quiet, eraser end erases, finger tap pins.
-2. Make a show folder, open it from the tool, paste the real script. Read the Review panel: unrecognised lines and one-off character names.
-3. The stage manager marks one real scene: cues, ink, one board. Time a cue pin; the target is under 3 seconds.
-4. Print that scene. Compare ink position on paper with the screen.
-5. Report what broke. Fixes land the same day.
-
-### Day 2 — 2026-10-08
-
-- Morning: test on the actual rehearsal device. Fix what breaks. Print one full copy as paper backup.
-- Rehearsal: tool in use, old workflow on standby.
-- After: collect friction list. It sets R1 priorities.
-
-### Build order inside R0
-
-If time runs out, the list is cut from the bottom:
-
-1. R0.1 parse + R0.2 page view + R0.9 save/load
-2. R0.4 cue pins + R0.7 cue list
-3. R0.3 block editing
-4. R0.5 ink on script
-5. R0.8 print
-6. R0.6 boards
-
-Items 1–2 alone already remove re-importing and hand-compiled cue lists. Ink is fourth, not first, because without 1–3 there is nothing to ink on.
-
-## 4. After rehearsal
-
-| Tier | Content | Gate |
+| Release | Content | Gate still open |
 |---|---|---|
-| R0.1 | Cue words boxed instead of underlined | Delivered 2026-10-06. Display only; no file or gesture changes. |
-| R1.3 | Linking cues, cue notes, exports per department (SPEC §5.11) | Built 2026-10-07 as r1.3. Not yet tried on the laptop. |
-| R1.4 | `%%` comments, to-do notes, cue list columns, automatic numbers (SPEC §5.13) | Built 2026-10-07 as r1.4. Not yet tried on the laptop. |
-| R1.6 | Fixes from the first rehearsals: boards in two columns, board names under the drawing, board grid, moving a cue by dragging its tag (SPEC §5.14) | Built 2026-10-08 as r1.6; committed on branch r1.6, not yet tagged. 376 browser checks and 67 unit checks pass. Not yet tried on the laptop: the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only. Nothing printed on paper; the PDF was not opened. Gate: the device trial in §7. |
-| R1.7 | History in git inside the show, variants, locked page numbers, changes per character (SPEC §5.15) | Built 2026-10-09 as r1.7; not committed or tagged. All checks pass. Not yet tried on the laptop: the real file dialogs, a show file with a long history, and the printed changed pages are untested there. Open: confirm the `[ASSUMED]` rows of §5.15. |
-| R1 | Cue ends and board templates (SPEC §5.10, §5.11, §7) | Delivered 2026-10-06 as r1.0. 145 automated checks pass. Not yet tried on the laptop. |
-| Backlog | The former R1 list (SPEC §7) | Reordered by the first rehearsal's friction list |
-| R2 | Follow-along view for the stage manager, standbys | After R1. Single screen, so D12 is not reopened. |
+| r0.1 | R0 plus the cue-word box | Recorded as tried on the laptop. Not in this repository. |
+| r1.0 | Cue ends, board templates | Not recorded as tried on the laptop. |
+| r1.3, r1.4 | Linking cues, descriptions, exports per department; comments, to-do notes, columns, numbers | Not recorded as tried on the laptop. |
+| r1.5 | Fix for the show file; development tooling | Last tagged release; opens r1.6 shows. |
+| r1.6 | Fixes from the first rehearsals | Device trial (§3, action 4). Tag. Confirmation of five `[ASSUMED]` decisions. |
+| r1.7 | History, variants, locked pages, changes | Device trial (§3, action 5). Tag. Confirmation of its `[ASSUMED]` rows. |
 
-### R1 build order — all nine steps done in r1.0
+Which release ran in the rehearsal of 2026-10-08 is not recorded. The earlier question of whether to take r0.1 or r1.0 into it is overtaken.
 
-Adopt: nothing. Adapt: nothing. Build: both features inside `promptbook.html`, same four parts as PLAN §2.
+## 3. Next actions
 
-| Step | Work | Part touched | Done when |
-|---|---|---|---|
-| 1 | Parse `{/DEPT label \| desc}`; pair ends with starts (SPEC K8) | parse | Pairs resolve on a test script with missing, repeated and unlabelled cues |
-| 2 | "End:" row in the tap popover; end tag in the margin | interact, layout | An end is placed in one tap after tapping a word |
-| 3 | Cue list columns, CSV, review hints; start edits and deletes carry to the end | interact | List shows where each cue ends; one undo reverts a paired edit |
-| 4 | Running rail in the margin | layout | Rail is continuous across a page break and in print |
-| 5 | Template store: `templates/` files, list and default in `config.json`; `base` on boards and templates; chain loading; loop guard | store | A three-deep chain survives reload; a loop cannot be made; old shows open unchanged |
-| 6 | Templates view, opened from Settings: one sheet per template, same pen, eraser and undo; new blank / from image / based on another | interact, layout | A template can be drawn and edited without any line in `script.md`; nothing of it reaches a print |
-| 7 | Draw the chain greyed and locked under a board's own ink, on screen and in print | layout | Changing a template shows on every board built on it; eraser cannot touch the chain |
-| 8 | Template picker on "+ Board" and "Board here"; default template; change a board's base; "Copy to templates"; rename carries through; delete guard | interact | New board from a template in one tap; a board changes base and keeps its ink |
-| 9 | Regression: the existing 84 checks plus new ones for steps 1–8 | — | All pass; print checked as PDF |
+In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-09.md`); the rest are carried from the plan as it stood.
 
-No step depends on an open question.
-
-Files written by R0 stay valid. R1 adds a token form, one folder (`templates/`) and a few fields; it changes no existing format.
-
-## 5. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Tool not trusted by rehearsal time | Medium | High | Old workflow kept; paper backup printed day 2 |
-| Laptop's only browser is not Chrome or Edge | Low | Medium | SPEC A7; project-file mode pulled back into R0 |
-| Pen is reported to the browser as touch or mouse, so pen and finger cannot be told apart | Low | High | Test on the real laptop first thing on day 1; fallback is a draw/tap toggle |
-| Writer edits a separate copy while the SM annotates | Closed | — | One editor (SPEC D15) |
-| Pinning a cue is slower than writing it | Medium | High | Target under 3 seconds, department on one tap; measure with the SM on day 1 |
-| Ink misaligned between devices or in print | Medium | Medium | Fixed measure, embedded font, line-count check per inked block |
-| Parser misreads the real script | High | Low | Review list; fix on day 1 evening |
-| Data loss | Low | High | Autosave; script and cues are plain text; export-all button |
-| Collaboration expectation unmet | Closed | — | One editor accepted (Q15) |
-| Two days is not enough for all of R0 | Closed | — | R0 was built on day 0 |
-| Something works in the test browser but not on the real laptop | Medium | High | Day 1 is reserved for it; "Finger" toggle lets the mouse or finger draw if the pen is not recognised |
-| Chrome refuses the chosen folder | Low | Low | Top level of Desktop, Documents and Downloads is blocked; use a sub-folder |
-| "Block" in the template request was read wrongly (taken as a blocking board) | Low | Medium | Reading is stated at the top of SPEC §5.10 |
-| Movable props are wanted after all | Closed | — | Ruled out (Q22) |
-| A change to a template spoils boards built on it earlier | Medium | Medium | That is what a live link means; make a new template based on the old one instead of editing it. Stated in the guide when R1 ships |
-| Templates crowd a facing page or leak into the print | Closed | — | They live in the configuration (Q26) |
-| "Live in configurations" was meant literally: strokes inside `config.json` | Low | Low | Reading stated in SPEC §5.10 (Files); switching is a storage detail, not a redesign |
-| The Templates view is a second place to draw, with its own way in and out | Medium | Low | Same pen, eraser and undo as a board; one "Back to script" control |
-| A cue end pairs with the wrong start when numbers repeat | Medium | Low | Nearest-open rule, visible rail, review hint; the stage manager can retarget by editing the end |
-| R1 lands in the middle of rehearsals and unsettles a tool just learned | Medium | Medium | R1 only adds; no R0 gesture changes except that "Use as default" on boards became "To templates". r0.1 stays available as a tag |
-| A show is opened with an older release after using ends or templates | Low | Medium | Version on the start screen; rule in §8 |
-| The repository is lost with the build session | High until Q27 is answered | Medium | Archive delivered with the release; Q27 |
-| "yes" to Q21 did not mean all four device checks passed | Medium | High | Stated in SPEC §9; the paper backup on day 2 stays |
-| The cue drag of r1.6 misbehaves under a real finger, pen or resting hand: it changed the pointer handling that also does palm rejection and finger scrolling | Medium | High | Simulated checks pass, incl. the older palm checks unchanged; device trial in §7 before a rehearsal relies on it; a wrong move is one undo; r1.5 stays available as a tag and opens r1.6 shows |
-
-## 6. Not planned
-
-Console or playback export. Real-time co-editing. Score or bar-number cueing. Handwriting recognition. Any server.
-
-## 7. Next actions
-
-1. Decide where the repository lives (SPEC Q27).
-2. Try r1.0 on the laptop: place an end on a sound cue, draw a stage template, base a second template on it, add a board.
-3. Decide which release goes into the 2026-10-08 rehearsal: r0.1 (already tried) or r1.0. Do not switch a show back to r0.1 once it uses ends or templates.
-4. Veto the reading of "configurations" if the drawings must sit inside `config.json` itself.
-5. Correct the record if "yes" to Q21 or Q19 meant something else (SPEC §9).
-6. Try r1.6 on the laptop before a rehearsal relies on it. Nothing of r1.6 has run there; the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only; nothing was printed on paper and the PDF was not opened. Device trial of the cue drag, with finger and pen, and of the grid:
+1. **Decide where the repository lives** (Q27) and put a copy there. Today it has no remote. Then tag r1.6 and r1.7, or state that they are not releases until their device trial, and bring `master` up from r1.5.
+2. **Fix the two ways of losing work found in the review:** two boards saved in one file (X1); a damaged settings or ink file opened as empty and then overwritten (X2).
+3. **Name the pointer thresholds in one place** (F7), so that they can be tuned during the trial below.
+4. **Try r1.6 on the laptop before a rehearsal relies on it.** Nothing of r1.6 has run there; the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only; nothing was printed on paper and the PDF was not opened. Device trial of the cue drag, with finger and pen, and of the grid:
    - Finger hold on a tag: does 0.3 s feel right, is the lift visible under the finger, does a real finger stay within 8 px during the hold (otherwise it scrolls).
    - Finger swipe starting on a tag still scrolls and never lifts.
    - Pen drag from a tag starts at once and leaves no ink; a pen tap with normal jitter still opens the cue editor.
@@ -158,24 +39,84 @@ Console or playback export. Real-time co-editing. Score or bar-number cueing. Ha
    - Edge scroll with finger and pen: is the band at the bottom reachable, is the speed usable.
    - A system `pointercancel` in mid-drag ends the drag with no change.
    - Grid lightness on the real screen and on paper; hairlines may print faint on a laser printer.
-7. Print one facing page with three or more boards from r1.6 and open the PDF: two columns, names under the drawings, grid.
-8. Confirm or change the five decisions of r1.6 marked `[ASSUMED]` in SPEC §5.14: the limit of 8 boards, the "⋯" button, the grid as a show setting, the 0.3 s finger hold, a cue always lands after a word.
+5. **Try r1.7 on the laptop:** the real file dialogs; a revision, a variant, a restore; a locked show after an edit, and "Print changed pages" on paper; a change list printed for one actor. Keep the show file of a week's rehearsals and note its size (X6).
+6. **Try the r1.0 features on the laptop** if that was never done: place an end on a sound cue, draw a stage template, base a second template on it, add a board.
+7. **Print one facing page with three or more boards** from r1.6 and look at it: two columns, names under the drawings, grid.
+8. **Confirm or change the five decisions of r1.6** marked `[ASSUMED]`: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30).
+9. **Confirm the `[ASSUMED]` rows of r1.7** (`docs/specs/08-history.md`, PAG-14 to PAG-17).
+10. **Veto the reading of "configurations"** if the template drawings must sit inside `config.json` itself.
+11. **Correct the record** if "yes" to Q21 or Q19 meant something else (`SPEC.md` §5).
+12. **Record the results** of 4 to 7 in `docs/verification.md` §4.
 
-## 8. Releases and versioning
+## 4. Backlog — ordered after the first rehearsal
 
-Releases are kept in a git repository whose root is the project: `promptbook.html` (the built release), `src/`, `fonts/`, `build.py`, `test/`, `SPEC.md`, `PLAN.md`, `CHANGELOG.md`, `README.md`.
+A call list built from the character list. Renumber command with an old-to-new log (must keep cue pairs together). Hint for out-of-order labels (CUE-5 already promises it). Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Dragging board tags and reordering boards. Dropping a cue onto a line of its own. Anything further that rehearsals show.
 
-| Tag | Date | Content |
-|---|---|---|
-| `r0.1` | 2026-10-06 | First commit: R0 plus the cue-word box. R0 itself was delivered before the repository existed and has no tag. |
-| `r1.0` | 2026-10-06 | Cue ends, board templates |
-| `r1.3` | 2026-10-07 | Linking cues (`{SND 6 / SND 5}`), cue notes, exports per department; "runs" removed |
-| `r1.4` | 2026-10-07 | `%%` comments, to-do notes as a review department, Margin and Description columns, automatic numbers |
-| `r1.5` | 2026-10-08 | Fix: a reopened show file saved only its first change; “Keep mine” failed |
-| `r1.6` | 2026-10-08 | Fixes from the first rehearsals: boards in two columns (8 per page), board names under the drawing, board grid, moving a cue by dragging its tag. Built; committed on branch r1.6, not yet tagged; not yet tried on the laptop |
+From the review, when there is room: undo of a board rename (X5); only `data:` images from a backup, and a content security policy (X8); a release marker in the show (X7); `core.js` free of the other two files, then the split of `io.js` and `view.js` (F1, F2).
 
-Rule for every release: change `src/`, set `VERSION`, run `python3 build.py`, run `sh test/run.sh` with every check passing, add the `CHANGELOG.md` entry, commit, tag. The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
+## 5. R2 — later
 
-Going back: check out the older tag and open its `promptbook.html`. Show folders are forward compatible (an older show opens in a newer release); the changelog says when the reverse does not hold. r1.0 is the first such case: a show that uses cue ends or templates should not be edited with r0.1.
+Follow-along view for the stage manager (D11); it can use cue ends to show what is running. Standbys and warnings (D5). More than one device at a time is not planned (D15). Single screen, so D12 is not reopened.
 
-The repository was created in the build session, which is temporary. Where it lives permanently is SPEC Q27.
+## 6. Cast and crew — ideas, not scheduled
+
+Collected on 2026-10-08 and 09. None is designed or decided; the cast would mostly use a phone.
+
+- Notes with an addressee (character, department or all), the rehearsal day and a state (open, solved), kept as a history; filters in Review by person, by day and by state.
+- Rehearsal calendar: date, time, place, agenda and scenes per day; who is called, computed from the scenes (needs the actor's name beside each character); a call sheet per day; the notes of a day attached to that rehearsal.
+- A page per person: their notes with the lines they refer to, readable on a phone.
+- Memory practice: a button that hides the actor's own lines, so the part can be rehearsed from the cues of the others; a line is shown again on request.
+- Later, on top of memory practice: speech to text on the device that listens to the actor and checks or corrects the spoken line against the script. Open: it must work without a network and without a library (D12), and the browser's built-in recognition may send the audio to a server.
+- Pronunciation: mark where the stress falls and whether a vowel is open or closed on a word (*àncora* / *ancóra*, *pèsca* / *pésca*), shown to the cast without changing the script text; read a word or a line aloud. The simplest form: tapping a word opens its page in an online pronunciation dictionary. Open: reading aloud uses the voices installed on the device, which differ in quality and may not have Italian; the dictionary link needs a network, which the tool itself never uses (D12).
+- Further off: the cast writing back (own notes, replies, marking a note solved) and a shared position during rehearsal. Both need more than one device at a time (D15) and a server (D12).
+
+## 7. Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| The repository is lost | High until Q27 is answered | High | Action 1 |
+| Work is lost through a defect in saving | Low | High | Autosave; script and cues are plain text; backup export; revisions since r1.7. Two known ways remain open: review X1 and X2 (action 2) |
+| Something works in the test browser but not on the real laptop | Medium | High | Device trials (actions 4 to 7); the "Finger" toggle lets the mouse or finger draw if the pen is not recognised |
+| The cue drag of r1.6 misbehaves under a real finger, pen or resting hand: it changed the pointer handling that also does palm rejection and finger scrolling | Medium | High | Simulated checks pass, including the older palm checks unchanged; device trial before a rehearsal relies on it; a wrong move is one undo; r1.5 stays available as a tag and opens r1.6 shows |
+| Pen is reported to the browser as touch or mouse, so pen and finger cannot be told apart | Low | High | Test on the real laptop; fallback is the "Finger" toggle |
+| "yes" to Q21 did not mean all four device checks passed | Medium | High | Stated in `SPEC.md` §5; keep a paper copy as backup |
+| Pinning a cue is slower than writing it | Medium | High | Target under 3 seconds, department on one tap; time it with the stage manager |
+| Tool not trusted in rehearsal | Medium | High | Old workflow kept (A6); paper backup |
+| Ink misaligned between devices or in print | Medium | Medium | Fixed measure, embedded font, line-count check per inked block; never compared on paper |
+| A change to a template spoils boards built on it earlier | Medium | Medium | That is what a live link means; make a new template based on the old one instead of editing it |
+| A release lands in the middle of rehearsals and unsettles a tool just learned | Medium | Medium | Releases add; older releases stay available as tags, as far as the compatibility table allows (`docs/specs/07-storage.md`) |
+| A show is opened with an older release after using a newer feature | Low | Medium | Version on the start screen; the compatibility table. No guard in the file itself (review X7) |
+| The show file grows with its history until saving is slow | Medium | Medium | Measure a real show (action 5); review X6 |
+| Laptop's only browser is not Chrome or Edge | Low | Medium | A7; the in-browser fallback and backup files |
+| "Block" in the template request was read wrongly (taken as a blocking board) | Low | Medium | Reading stated in `docs/specs/04-boards.md` |
+| Parser misreads the real script | High | Low | Review list; fix by hand (K7) |
+| A cue end pairs with the wrong start when numbers repeat | Medium | Low | Nearest-open rule, visible rail, review hint; the stage manager can retarget by editing the end |
+| The Templates view is a second place to draw, with its own way in and out | Medium | Low | Same pen, eraser and undo as a board; one "Back to script" control |
+| "Live in configurations" was meant literally: strokes inside `config.json` | Low | Low | Reading stated in `docs/specs/04-boards.md`; switching is a storage detail, not a redesign |
+| Chrome refuses the chosen folder | Low | Low | Top level of Desktop, Documents and Downloads is blocked; use a sub-folder |
+
+Closed: a writer editing a separate copy while the stage manager annotates (one editor, D15); the collaboration expectation (Q15); two days not being enough for R0 (built on day 0); movable props being wanted after all (ruled out, Q22); templates crowding a facing page or leaking into print (they live in the configuration, Q26).
+
+## 8. Not planned
+
+Console or playback export. Real-time co-editing. Score or bar-number cueing. Handwriting recognition. Any server.
+
+## 9. Releases and versioning
+
+Releases are kept in a git repository whose root is the project. Tags that exist: `r1.1`, `r1.2`, `r1.3`, `r1.4`, `r1.5`. r0 and r0.1 are not in this repository; r1.0 is its first commit (`33118d4`) and has no tag; r1.6 and r1.7 are committed and not yet tagged. The table of releases is in `SPEC.md` §6.
+
+Rule for every release:
+
+1. Record the request as intent in the capability file it belongs to; write the requirements and the consequences (`docs/decisions.md` §5).
+2. Change `src/`, set `VERSION` in `src/core.js`.
+3. `npm test`: builds `promptbook.html` and runs every check; all pass.
+4. Add the entry to `CHANGELOG.md`, with "Compatibility". Add the release to `SPEC.md` §6 and its check record to `docs/verification.md` §3, saying what was not verified.
+5. Commit `src/` and `promptbook.html` together, tag `rX.Y`.
+
+The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
+
+Going back: check out the older tag and open its `promptbook.html`. An older show opens in a newer release; the reverse holds only where the compatibility table says so (`docs/specs/07-storage.md` §2.4).
+
+## 10. What left this file
+
+Two parts of the plan as it stood at git `953336a` described finished work and were removed: the day-by-day schedule for 2026-10-06 to 08, and the nine-step build order of r1.0. The strategy table (what was adopted, adapted and built, and why) moved to `docs/decisions.md` §4. The architecture sketch moved to `docs/architecture.md`.

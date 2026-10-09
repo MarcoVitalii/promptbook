@@ -1,608 +1,176 @@
-# Digital Prompt Book — Specification
+# Promptbook — Specification
 
-**Status:** v1.0 — 2026-10-08 — r1.6 built, committed on branch r1.6, not yet tagged: four changes asked for after the first rehearsals (§5.14). Checked in a simulated browser only; nothing of r1.6 has run on the rehearsal laptop.
-**Rehearsal deadline:** 2026-10-08
-**Companion file:** `PLAN.md`
-
-`[LOCKED]` = decided by the client's answers. `[ASSUMED]` = my reading, stands unless vetoed. `[OPEN]` = still blocks something.
-
-Change from v0.1: the answers remove the need for Pandoc, Typst, Downstage, Fountain, Dataview and an Obsidian plugin. The product is now one HTML file.
-
-Change in v0.4: §5 and §7 now describe what was built. Differences from the v0.3 design are listed in §5.9.
-
-Change in v0.5: the client's answers to Q15–Q21 are recorded (§9). R1 is redefined as two features asked for by the client: board templates (§5.10) and cue ends (§5.11). The former R1 list becomes the backlog.
-
-Change in v0.6: Q22 answered. Templates are no longer a separate store; a template is a board with a mark, and boards can be chained (§5.10 rewritten). Cue words are now boxed instead of underlined (§5.3, built).
-
-Change in v0.7: Q26 answered. Templates live in the configuration, not in the script: no line in `script.md`, never on a facing page, never printed (§5.10 revised, D18 reworded, K10 added).
-
-Change in v0.8: Q24 answered ("build it now"). R1 is built and released as r1.0. §5.10 and §5.11 each end with an "As built" list; §7 carries the test record. Releases are versioned in git (PLAN §8).
-
-Change in v0.9: the script can start with a frontmatter block: title and other details for a front page, and a character list that speeches are checked against (§5.12, D19). Built as r1.1.
-
-Change in v1.0: four requests from the first rehearsals, built as r1.6 (§5.14): boards on a facing page in two columns, board names under the drawing, a grid on boards, moving a cue by dragging its tag. §5.3, §5.5, §5.7 and §5.8 are extended; §6 is unchanged.
+**Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
+**Tool described:** r1.7 (`VERSION` in `src/core.js`).
+**State:** r1.6 and r1.7 are built and committed on branch `r1.6`, not tagged. Checked in a simulated browser only: nothing since r1.5 is recorded as having run on the rehearsal laptop, and nothing has been printed on paper (`docs/verification.md`).
 
 ---
 
-## 1. Problem
+## How to read this specification
 
-The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses). The stage manager (SM) annotates a printed export inside Excalidraw. Every script edit forces re-export, re-import and re-alignment. Cue lists are compiled by hand.
+The specification answers three questions, in this order, at every level:
 
-## 2. Goal
+1. **Intent** — why. The need, in the client's words where they exist, with the date. What the thing is for and which goal it serves.
+2. **Requirements** — what must hold. One statement per ID, written so that it can be checked.
+3. **Consequences** — what follows. The design that was chosen, what it costs, what it rules out, what an older release does with the new data, what was not built and what was never verified.
 
-1. Script edits never require re-importing or re-aligning.
-2. Cue lists are generated from the annotated script.
-3. Cues are shown cleanly beside the line where they are called.
-4. Printable.
-5. Fast enough to use live in rehearsal, pen in hand.
-6. Zero install, runs in a browser.
+A change starts at the top: a request is recorded as intent, turned into requirements, and its consequences are written down before it is built. `docs/decisions.md` §5 gives the steps.
 
-## 3. Decisions
+**Tags.** `[LOCKED]` = decided by the client's answers. `[ASSUMED]` = the builder's reading; it stands unless vetoed. `[OPEN]` = still blocks something.
 
-| # | Decision | Source | Status |
-|---|---|---|---|
-| D1 | Obsidian is allowed but nothing depends on it. The tool is browser-native. The show folder may live inside the vault. | Q1, Q5 | `[LOCKED]` |
-| D2 | Word is abandoned after a one-time move. | Q2 | `[LOCKED]` |
-| D3 | The script format is the convention already in use, plus `#` headings and one cue token. No new markup language. | Q2, Q12 | `[LOCKED]` |
-| D4 | A cue marks a position in the text. It can sit on a word in dialogue, on a word in an action, or stand alone between lines. No timing data. | Q3 | `[LOCKED]` |
-| D5 | Standbys and warnings are out of scope for now. | Q3 | `[LOCKED]` |
-| D6 | Ink over the script text is required. | Q4 | `[LOCKED]` |
-| D7 | Departments are configurable. Cue numbers are free text typed by the SM, optional, never auto-changed. Renumbering is an explicit, optional command. | Q6 | `[LOCKED]` |
-| D8 | Page layout per §6. | Q7 | `[LOCKED]` |
-| D9 | Cue lists are documentation only. No console or playback export. | Q8 | `[LOCKED]` |
-| D10 | Storage is a plain folder. Git is optional and external. | Q9 | `[LOCKED]` — amended in r1.2: the same files now live in one `.zip` show file, to make moving a show easy. Older folders still open. Git no longer sees the individual files. |
-| D11 | Calling the show from the tool means a follow-along view for the stage manager alone. No synced screens. Postponed to R2. | Q11, Q16 | `[LOCKED]` |
-| D12 | "Zero dependencies" means: one HTML file, no install, no server, no build step, no third-party libraries. The only third-party content is one embedded font (Inter, SIL Open Font License 1.1). | Q5 | `[ASSUMED]` |
-| D13 | The editing device is a laptop with touchscreen and pen. R0 is built and tested for that device only. | Q14 | `[LOCKED]` |
-| D14 | Input is split by pointer type, with no mode switch: pen draws, finger or mouse taps and scrolls (§5.7). | follows from D13 | `[ASSUMED]` |
-| D15 | One editor. Script text is edited in one place at a time; no merge, no co-editing. | Q15 | `[LOCKED]` |
-| D16 | Boards keep the built-in pen only (no shapes, arrows, text objects, no movable props), on condition that reusable stage backgrounds exist: board templates, §5.10. | Q18, Q22 | `[LOCKED]` |
-| D18 | A template is a board in every respect but one: it is kept in the show's configuration instead of having a place in the script. Same data, same pen. A board can be based on a template, and a template can be based on another template. Based-on is a live link, not a copy. | Q22, Q26 | `[LOCKED]` |
-| D19 | The script may start with a frontmatter block between two `---` lines. Its values are printed on a front page in the order written, the title larger. A `characters` list in it is the reference for checking speaker names; group names such as ALL, OTHERS, ALL BUT x are never checked. This extends D3: still no new markup inside the script body. | client, v0.9 | `[LOCKED]` in principle, details `[ASSUMED]` |
-| D17 | A cue can have an end, marked at its own position in the text (§5.11). An end is a position, like the cue itself; still no timing data (D4). | client, v0.5 | `[LOCKED]` in principle, design `[ASSUMED]` |
+**Requirement tables.** *Basis* is where the requirement comes from: a decision (`D`), a conflict (`K`), a request, or "as built" when it was settled while building with no recorded client decision. *Since* is the release that first had it. *Checked by* names the test files with a check for it (`test/<name>.test.js`, `unit/` for `test/unit/`); "—" means no automated check was found.
 
-## 4. Conflicts in the answers
+**IDs.** `G` goal, `C` constraint, `A` assumption, `Q` question (all in this file). `D` decision, `K` conflict (`docs/decisions.md`). Requirements carry the prefix of their capability: `TXT-8`, `CUE-25`. IDs are never reused or renumbered. The tier IDs used until v1.0 (`R0.1` to `R1.15`) are mapped in `docs/verification.md` §5.
 
-| # | Conflict | Resolution applied | Status |
-|---|---|---|---|
-| K1 | Rehearsal in 2 days vs. live calling (Q11), collaboration parity with Word (Q2), ink (Q4) and the full print layout (Q7). | Tiered scope, §7. Only R0 is promised for 2026-10-08. Live calling and anything beyond single-editor collaboration are not in R0. | Accepted (Q17) |
-| K2 | "Equivalent flexibility in collaboration" (Q2) vs. "unversioned on the only PC that has it" (Q9). One of these does not describe reality. If the script lives on one PC, there is no concurrent collaboration today to be equivalent to. | One editor at a time (D15). | Resolved (Q15) |
-| K3 | Ink is the fastest input (Q4) vs. generated cue lists (goal 2). Handwriting is not data. A cue written in ink never reaches the cue list. | Two inputs side by side: tap a word to drop a cue pin (structured, feeds the list); ink for everything else. Pinning must take under 3 seconds or the SM will ink cues instead and the list will be empty. | `[ASSUMED]` |
-| K4 | Ink over text (Q4) vs. editable text (goal 1). Ink is positioned by coordinates; text reflows. | Ink belongs to one text block, not to a page (§5.4). Edits elsewhere never disturb it. Editing the inked block itself flags its ink for a look. This does not eliminate re-alignment; it shrinks it from "every page after the edit" to "the lines that changed". | `[ASSUMED]` |
-| K5 | Zero dependencies (Q5) vs. the SM's current Excalidraw habit. Excalidraw is a third-party library and cannot be inside the tool under D12. | Built-in pen replaces it: pen, eraser, colours, images. No shapes, arrows, text objects or selection in R0. This is less than Excalidraw offers. | Accepted for now (Q18), with templates as the condition (D16) |
-| K6 | "Any browser" vs. saving to a folder. Writing straight into a folder works only in Chrome and Edge; Firefox and Safari do not support it. | Folder mode is the R0 path (D13). Project-file mode moves to R1, needed only if a second device or another browser appears. | Resolved, given A7 |
-| K7 | "Italian should not be relevant" (Q10). It is, slightly: accented capitals in names, and colons inside dialogue. | Parser is Unicode-aware; rule in §5.2. The real script is not shared (Q20); misread lines are fixed by hand in the tool, guided by the Review panel. | Accepted (Q20) |
-| K8 | Cue ends (D17) vs. D7. An end has to find its start, but labels are optional, free text and may repeat. | Pairing rule in §5.11: same department and label, nearest open cue before it; with no label, nearest open cue of that department. An end that finds nothing is a hint, not an error. | `[ASSUMED]` |
-| K9 | Board templates with props (Q18) vs. K5. If props must be picked up and moved on each board, that is an object layer with selection and dragging, which K5 excluded. | Props are drawn with the pen into a template. A different arrangement is another template, usually based on the first. No movable objects. | Resolved (Q22, D18) |
-| K10 | "Templates as special blocks marked as template" (Q22) vs. "live in configurations so they don't appear in the final script" (Q26). A board exists by having a line in the script; a template must have none. | The mark is where it is kept. A template has the same file shape and is drawn with the same pen, but it is listed in the configuration, edited in a Templates view, and left out of script and print. A script board cannot be marked in place; it is copied to the templates. | `[ASSUMED]` |
+**Documents.**
 
-## 5. Design
-
-### 5.1 Files
-
-```
-show/
-  promptbook.html        the tool; open in Chrome or Edge (it can also live elsewhere)
-  script.md              the script; hand-editable anywhere, including Obsidian
-  script.ink.json        ink strokes, keyed to text blocks
-  boards/                one .json per board (ink) plus its image file
-  templates/             one .json per template plus its image file (r1.0)
-  config.json            title, paper size, departments, list of templates and the default one
-```
-
-The tool asks once for the show folder and offers to reopen it on the next start. Chrome and Edge refuse the top level of Desktop, Documents and Downloads; a sub-folder is fine.
-
-Cue lists are computed on screen and exported on demand (`cues.csv`, print). Nothing generated is stored as a source.
-
-### 5.2 Script text
-
-What the writer types, unchanged from today:
-
-```
-# ATTO PRIMO
-## Scena 1
-
-(Buio. Si sente il mare.)
-
-ANNA: Chi è là? (si volta) Rispondi!
-MARCO: Sono io.
-& ANNA: Non ti credo!
-```
-
-| Line | Meaning |
+| File | Answers |
 |---|---|
-| `# text`, `## text` | Act, scene |
-| `NAME: text` | Speech. NAME is everything before the first colon when it contains no lowercase letters other than the connectors `e`, `ed`, `and`, `&`. Unicode letters count. |
-| `(text)` on its own line | Action |
-| `(text)` inside a speech | Inline direction, shown in italics |
-| `& NAME: text` | Spoken at the same time as the speech above. Any number may be chained. |
-| any other line | Continuation of the block above |
+| `SPEC.md` | Why the product exists, what binds it as a whole, what is assumed and still open |
+| `docs/specs/01` … `09` | Intent, requirements and consequences of each capability |
+| `docs/decisions.md` | Every decision and conflict, with its source and what follows from it |
+| `docs/architecture.md` | How it is built: C4 context, containers, components |
+| `docs/verification.md` | What was checked, how, and what never was |
+| `docs/review-2026-10-09.md` | Criticalities, refactor opportunities, technical debt |
+| `PLAN.md` | What happens next: actions, backlog, risks |
+| `CHANGELOG.md` | What changed in each release, written for the user |
+| `docs/background/syntax-comparison.md` | Why the script format was kept instead of Fountain or Downstage |
 
-Lines the parser cannot classify are listed for review, never dropped.
-
-Tolerances added while building, to cope with a pasted Word text:
-
-- A line starting with `ATTO`, `SCENA`, `PROLOGO`, `EPILOGO`, `QUADRO`, `PARTE`, `INTERVALLO`, `FINE` (and the English equivalents) is a heading even without `#`.
-- `NAME (direction): text` is a speech; the direction is shown in italics.
-- `NAME:text` and `NAME : text` are accepted. `10:30` inside a line is not mistaken for a speaker.
-- An action that starts with `(` and closes on a later line is one block.
-- A level-1 heading starts a new page.
-- A speech longer than the space left on the page is split by lines; the second part is labelled `(segue)` (`(cont.)` in the English interface).
-- The Review panel lists every character name with a count. A name that appears once is usually a typo or a misread line.
-
-### 5.3 Cues
-
-Stored in the text, so they survive every edit and are readable without the tool:
-
-```
-ANNA: Chi è là? {LX 12 | blackout} Rispondi!
-{SND | onda lunga}
-```
-
-- `{DEPT label | description}`. Label and description are both optional.
-- Attached to the word it follows, or standalone on its own line.
-- The SM never types this. Tapping a word opens a pin with department buttons; number and description can be added then or later.
-- Duplicate, missing and out-of-order labels are allowed and shown as hints, not errors (D7).
-- Shown as a coloured tag in the right margin with a line to the word. A "clean" view hides them for the writer.
-- The cue word itself is boxed in the department colour with a light tint (build R0.1; it was an underline in R0). Cues from several departments on one word give nested boxes, up to three. The line to the margin leaves from the bottom corner of the box. The box is painted without taking space, so adding a cue still moves no text and flags no ink.
-- Since r1.6 a cue is moved by dragging its margin tag to a word (request and decisions in §5.14):
-  - Mouse and pen: the drag starts once the pointer has moved 8 px with the button or the tip down. Finger: the tag must be held for 0.3 s without moving more than 8 px; it then lifts (a shadow) and can be dragged. A finger that moves earlier scrolls the page as before.
-  - While dragging, a copy of the tag follows the pointer (14 px to the right and 36 px above it, scaled with the zoom), the tag itself is dimmed, and the target word is highlighted in the cue's colour. The target is the word under the pointer; otherwise the nearest word of the nearest line of text on that script page, if it is within 70 px at zoom 1. There is no target on the facing page, outside the pages, far from any text, or while the pointer is still over the tag being dragged.
-  - Within 48 px of the top or bottom of the work area the script scrolls, up to 14 px per frame and faster nearer the edge, so a cue can be carried to another page.
-  - Release on a target: the token is cut from its place and written after that word, behind the cues already there. Every field moves unchanged: number, margin text, description, links. One undo step. Release on the word the cue already follows as its last cue: nothing changes and no undo step is added.
-  - Release without a target, Escape, or a cancelled pointer: nothing changes. A press and release within 8 px still opens the cue editor.
-  - Every tag except a board tag can be dragged: cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was, and gets one after it where it lands, so words are never joined. A cue cannot be dropped onto a line of its own.
-  - A move that breaks a pair (an end above its start, a start below its end) is kept, and a message says the two no longer match (§5.11).
-  - Not while a block's text is being edited. While a drag runs, other pointers are ignored.
-
-### 5.4 Ink
-
-- Each speech, action and heading is a block. A stroke belongs to the block it starts in and is stored relative to that block, in text-size units.
-- The page has a fixed measure: fixed column widths and one embedded open-licence font, so line breaks are the same on screen, at any zoom and in print. Zoom scales the page; it never reflows it.
-- With every inked block the file keeps a snapshot of the block's text and line count. On load: text unchanged → ink as is; text changed → ink shown with a "check" flag; block gone → ink listed as orphaned.
-- Blocks are re-matched after external edits by exact text first, then by order and similarity.
-- The flag is a red "!" beside the block. Tapping it offers "Ink is fine" or "Clear ink on this block".
-- Orphaned ink is kept in the file and listed in the Review panel, where it can be deleted. Undoing the text deletion re-attaches it. Re-attaching by hand is R1.
-
-### 5.5 Boards (facing page)
-
-- A board is an image (stage photo, ground plan, or blank) with an ink layer.
-- A standalone `{BOARD name}` token in the script marks where it applies.
-- Up to r0.1 a ground-plan image could be set as the default background ("Use as default"). r1.0 replaces that button with templates (§5.10): "Base…" chooses what a board is drawn on, "To templates" copies a board into the templates. A default background set earlier keeps working until a default template is chosen.
-- Ways to add one: "+ Board" on the facing page, "Board here" in the tap popover, or paste an image from the clipboard.
-- Images over 1.5 MB are reduced to 2000 px on the long side and stored as JPEG.
-- Removing a board removes its token from the script. Its file stays in `boards/`.
-- Arrangement on the facing page, since r1.6 (§5.14): one or two boards are stacked in one column, at the size they had before; three or more are set in two columns, filled row by row (1 2 / 3 4 / 5 –), in the order of their tokens. All boards of a page get one width; a row is as tall as its taller board; nothing leaves the page body and "+ Board" stays below the boards. Print uses the same arrangement.
-- At most 8 boards per page through the interface: "+ Board", "Board here" and image paste refuse a ninth with a message. A page whose text holds more `{BOARD}` tokens still shows them all, in two columns with more rows. A board added after the last block of a page can land on the next page; that edge is accepted.
-- A board figure is, top to bottom: a button row (26 px), the drawing, the name (20 px). The name is centred, always shown and printed, cut with an ellipsis when wider than the drawing; its tooltip gives the full name. A tap on the name opens the rename popover. The pen does not draw on the name. The Templates view uses the same figure.
-- A facing-page figure narrower than 420 px shows one "⋯" button instead of its buttons; it opens a popover headed by the board's name with the same actions. In two columns every figure is that narrow (about 360 px on A4). With one or two blank boards the figures are wider and the buttons show directly; two boards with tall images can fall under 420 px and then get the "⋯" too. Template sheets always show all their buttons. In print the button row is hidden but keeps its height, so paper and screen have the same layout.
-- Grid, since r1.6: every board and template shows a light grey grid, drawn over the board's image and the greyed template chain and under the ink; one grid per figure, not one per layer. The step is a show setting (Settings → "Board grid"): Off, Fine (25 board units, 1/40 of the width; the default) or Coarse (50 units). Every fourth line is a little stronger. Lines are hairlines at any size and zoom. The grid is display only: not stored in any board file, ignored by the pen, the eraser and "Clear ink", and the ink does not snap to it. It lines up through a template chain because all boards share coordinates. It prints when it is on, on boards (templates are never printed), and has its own strength for day, night and print, always lighter than a faded template.
-
-### 5.6 Cue list
-
-Table computed from the tokens: department, label, description, act/scene, the words around the cue, page. Filter by department. Print and CSV.
-
-### 5.7 Input model
-
-The laptop reports pen, finger and mouse as different pointers. The tool uses that instead of a tool palette:
-
-| Pointer | On a script page | On a board |
-|---|---|---|
-| Pen tip | Draws ink | Draws ink |
-| Pen eraser end or barrel button | Erases strokes it touches | Same |
-| Finger tap on a word | Opens the cue pin | — |
-| Finger drag | Scrolls | Scrolls |
-| Finger held 0.3 s on a cue tag, then dragged (r1.6) | Moves the cue to the word it is released on (§5.3) | — |
-| Pen or mouse dragged from a cue tag (r1.6) | Same, at once; the pen draws no ink | — |
-| Finger tap between blocks | Standalone cue or board | — |
-| Mouse | As finger. A toolbar toggle lets the mouse draw, for machines without a pen. | Same |
-
-- Touches are ignored while the pen is down and for about half a second after it lifts.
-- While the pen hovers near the screen, a touch can still tap quickly to pin a cue, but it cannot scroll, long-press, or be a large contact. This is the palm rule; it is untested on real hardware.
-- Because the page must not scroll under the pen, finger scrolling is done by the tool itself, not by the browser. Pinch-zoom is replaced by the zoom buttons.
-- The pen can tap margin tags, the ink flag and board buttons.
-- Finger hold on a tag (r1.6): a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts, also when the swipe starts on a tag. A quick finger tap on a tag opens the cue editor as before. Board tags do not lift.
-- The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. All of this is simulated only; it is untested on real hardware.
-- Escape cancels a drag. A system `pointercancel` ends it with no change.
-- The cue pin shows one button per department. One tap creates the cue; label and description fields are there but optional.
-- Double-tap, double-click or long-press on a block opens its text for editing. "Edit text" in the tap popover does the same.
-- Keyboard: undo/redo, and a letter per department to pin at the last tapped word.
-
-### 5.8 Data shapes
-
-`config.json`
-
-```json
-{ "paper": "A4",
-  "departments": [
-    { "code": "LX",  "name": "Luci",  "colour": "#d9a400" },
-    { "code": "SND", "name": "Audio", "colour": "#2b7de9" },
-    { "code": "VID", "name": "Video", "colour": "#7a3fd1" } ] }
-```
-
-`script.ink.json`
-
-```json
-{ "version": 1,
-  "blocks": [
-    { "text": "ANNA: Chi è là? Rispondi!",
-      "lines": 1,
-      "strokes": [ { "colour": "#c00", "width": 0.12, "points": [[0.4,0.2],[0.9,0.25]] } ] } ] }
-```
-
-`text` is the block with cue tokens removed, so adding a cue does not flag the ink. Coordinates are in units of the text size (15 px), from the top-left corner of the block's text column.
-
-As built, a block entry may also carry `inked` (the text as it was when the ink was drawn, present only while the ink is flagged), and the file may carry an `orphans` list of the same shape.
-
-`boards/<name>.json` has the same stroke shape plus `name`, `image` (file name), `w` (always 1000) and `h`. Board coordinates are in those units, so ink scales with the board.
-
-`config.json` also holds `title` and `defaultBoard` (`image`, `h`). Since r1.0: each department has `runs` (true/false); `templates` (names, in order), `defaultTemplate`, `recentTemplates` and `templateFade` (0.15–0.8). Board files may carry `base`; `templates/<name>.json` has the board shape plus `base`.
-
-Since r1.6: `config.json` holds `boardGrid`, the grid step in board units: `0` (off), `25` (fine) or `50` (coarse). A missing value, or any value that is not one of the three, is read as 25. Nothing else in the saved data changed in r1.6: moving a cue only rewrites `script.md`. An older release ignores `boardGrid`.
-
-### 5.9 As built: differences from the v0.3 design
-
-Added, because they were cheap and reduce risk on the day:
-
-| Addition | Why |
-|---|---|
-| In-browser fallback with backup export / import (one `.promptbook.json` file) | The tool stays usable in any browser and before a folder is chosen. This is most of R1's "project-file mode". |
-| Reopen last folder | One click to resume. |
-| Outside-change guard on `script.md` | If the file is edited in Obsidian while the tool is open, the tool reloads it; if both sides changed, it asks instead of overwriting. |
-| Settings: title, paper (A4 / Letter), departments | D7 says departments are configurable. |
-| Review panel | R0.1 requires the list of unclassified lines; flagged ink, orphaned ink, unknown departments and character counts ride along. |
-| Duplicate-number mark in the cue list | A hint only (D7). |
-| Find, and jump to act / scene | Pages are drawn only when near the screen, so the browser's own find cannot see the whole script. |
-| Night mode | Dark theatre. Print is always light. |
-| Italian and English interface | Picked from the browser language; switchable. |
-
-Different:
-
-| v0.3 | As built |
-|---|---|
-| Embedded font unspecified | Inter, Latin subset, three faces, about 110 KB of the file |
-| Folder mode only in R0 | Folder mode plus the fallback above |
-| CSV | Separator follows the system locale (`;` on Italian systems) so Excel opens it directly |
-| Facing page shows boards | In print the facing page is always emitted, blank when the script page has no board |
-
-Not built: renumber command, clean-script export, re-attaching orphaned ink by hand, highlighter / line / text tools, "changed since last print" marks.
-
-### 5.10 Board templates — R1, built in r1.0
-
-**Request as received:** "templated backgrounds for blocks (like grayed out in the active block)"; from Q18: "a template setup to quickly draw on top of stage draws + props"; from Q22: "keep templates as special blocks marked as template. this allows to have a template depending on another template. No movable prop objects."; from Q26: "live in configurations so they don't appear in the final script".
-
-**Reading applied** `[ASSUMED]`: "block" here means a blocking board (§5.5). A template is a board that other boards are drawn on top of; underneath, it shows greyed out.
-
-| Point | Design | Status |
-|---|---|---|
-| What a template is | A board kept in the configuration. It has an image or not, it has ink, it is drawn on with the same pen. It has no `{BOARD}` line in `script.md`. | `[LOCKED]` D18 |
-| Based on | A board may name one other board as its base. A template may have a base too, so templates chain: bare stage → stage with Act 1 furniture → a scene's blocking. | `[LOCKED]` D18 |
-| Live link | The base is referenced, not copied. Change a template and every board built on it, at any depth, shows the change. | `[LOCKED]`, follows from "depending on" (answers Q23) |
-| How it looks | The whole chain under a board is drawn first, desaturated and faded to one strength (default about 40%, one setting). The board's own image and ink sit on top at full strength. Prints grey. | `[ASSUMED]` |
-| Protection | On a board, everything that comes from its chain is locked. Pen and eraser act only on that board's own ink. To change a prop, open the template it was drawn in. | `[ASSUMED]` |
-| Props | Drawn with the pen into a template. No objects to select, move or rotate. | `[LOCKED]` D16 |
-| Shape | A board with a base takes the base's proportions, so coordinates line up through the chain. | `[ASSUMED]` |
-| Making one | In the Templates view: new blank, new from an image, or new based on another template. From the script: "Copy to templates" on any board; its image and ink become a new template and the board itself is left as it is. | `[ASSUMED]` |
-| Using one | "+ Board" and "Board here" offer the templates as one-tap choices, last used first, plus "blank". One template can be the default; then adding a board stays a single tap. A board's base can be changed later without losing its ink. | `[ASSUMED]` |
-| Loops | A board cannot be based on itself, directly or through the chain. The picker does not offer choices that would close a loop. | `[ASSUMED]` |
-| Rename, delete | Renaming a template updates everything based on it. A template that something is based on cannot be deleted; the tool names what depends on it. | `[ASSUMED]` |
-| Where a template lives | In the configuration. Settings gains "Templates", which opens a Templates view: each template on a sheet of its own, with its chain greyed beneath, drawn on with the usual pen, eraser and undo. Templates never appear on a facing page, in the cue list, or in any print. | `[LOCKED]` Q26; the view itself is `[ASSUMED]` |
-| Files | `config.json` lists the templates (`templates`: names in order) and `defaultTemplate`. Each drawing is a file `templates/<name>.json` with the board file shape plus `base`, and its image beside it. `boards/<name>.json` gains `base`. Reading applied: "in configurations" means part of the show's settings, not that the strokes are written inside `config.json`, which would make that file too large to edit by hand. | `[ASSUMED]` |
-| Migration | Nothing to convert. The existing "Use as default" background keeps working until a default template is chosen, which then takes its place. | `[ASSUMED]` |
-
-Out of scope for R1: movable or rotatable prop objects, more than one base per board, per-layer fade strengths, basing a board on another script board, printing a template sheet.
-
-As built in r1.0:
-
-- Way in: menu → "Templates…", or the "Templates…" button in Settings. The view replaces the script on screen and has "+ Template" and "Back to script" on a bar that stays in view.
-- Each template sheet has: Rename, Base, Image…, Default (star), New based on this, Clear ink, Delete.
-- Adding a board: with no templates, or with a default template, it is one tap as before. With templates and no default, a short list asks what to draw on (templates, last used first, then "Blank").
-- Fade strength is a Settings choice: 25, 40, 55 or 70%.
-- Delete can be undone. Files of deleted or renamed templates are left on disk; the tool never deletes a file.
-- Two templates cannot have names that would be saved under the same file name.
-- An image set on a board that has a base is drawn over the base and hides it. Remove the base or the image, whichever is not wanted.
-- A board's shape follows the root of its chain. If that template later gets an image with other proportions, ink already drawn on boards built on it keeps its coordinates and may no longer sit where it did.
-- "Use as default" on boards is gone (see §5.5).
-
-### 5.11 Cue ends — R1, built in r1.0, extended in r1.3
-
-**Request as received:** "support for end of cues (e.g. when a music should stop)".
-
-Today a stop can only be written as another cue with "stop" in its description. That keeps the list flat: it cannot show what is running at a given line, or what was never stopped.
-
-| Point | Design | Status |
-|---|---|---|
-| Token | `{/DEPT label \| description}`. The slash marks an end. Example: `{SND 5 \| mare}` … `{/SND 5 \| sfuma in 3s}`. | `[ASSUMED]` |
-| Position | Anywhere a cue can go: after a word in dialogue or action, or on its own line (D4). | `[LOCKED]` |
-| Pairing | An end closes the nearest earlier cue that is still open and has the same department and label. An end without a label closes the nearest earlier open cue of that department (K8). | `[ASSUMED]` |
-| Which cues are expected to end | A per-department switch, "cues run until stopped". Default on for SND and VID, off for LX. It only affects what the popover offers first and one review hint. | `[ASSUMED]` |
-| Entering one | Tap a word. The popover gains a row "End:" with the open cues before that point, most recent first, at most four. One tap places the end. The stage manager never types the token. | `[ASSUMED]` |
-| In the margin | An end tag in the department colour, outlined instead of filled, with a stop square before the label. Same connector line to the word. | `[ASSUMED]` |
-| Running rail | A thin line in the department colour down the cue margin from the start tag to the end tag, across pages, so what is running is visible on every page in between. | Should |
-| Cue list | One row per cue. New columns: where it ends (page, cue line) and the end's description. CSV carries them. | `[ASSUMED]` |
-| Editing | Changing a start cue's department or label changes its paired end in the same step (the pair would otherwise break). Deleting a start deletes its end. Both are one undo. This is the stage manager's own edit carried through, not renumbering (D7). | `[ASSUMED]` |
-| Review hints | An end that closes nothing. A cue in a "runs until stopped" department that is still open at the end of the show. Hints, not errors. | `[ASSUMED]` |
-
-Not in R1: fades with durations as data (D4), automatic "everything stops at blackout" rules.
-
-**Change request (r1.3):** "not all video/audio cues need an end"; "fading can be another cue to signal the change or something an operator needs to remember"; a longer optional description shown only in the cue list; exports per department.
-
-| Point | Design | Status |
-|---|---|---|
-| Plain end | `{/SND 5}` stays, for what an operator does by hand. It has no number and does not appear in the other software's cue numbering. | `[LOCKED]` |
-| Linking cue | `{SND 6 / SND 5 \| text}`: SND 6 is a cue of its own and ends SND 5. Targets are separated by ` / `, any department: `{SND 9 / SND 6 / VID 2}`. Own label may be empty: `{SND / SND 5}`. | `[LOCKED]` |
-| Reading a link | A part after ` / ` is a link only if it starts with an upper-case department code; otherwise the whole text is the label (`1/2`, `5 / 6`). Not tied to the Settings list, so changing departments never changes how a script reads. | `[ASSUMED]` |
-| Pairing | Unchanged for each target: nearest earlier open cue of that department and number (no number: nearest of the department). A linking cue closes its targets first, then stays open itself. A target not found is a Review hint. | `[ASSUMED]` |
-| "Runs" | Removed. No department is expected to end; Review no longer lists open cues. | `[LOCKED]` |
-| Margin and rail | The linking cue is drawn exactly like a plain end: outlined tag, stop square before its number, short text as usual; hovering shows what it ends. The rail runs from the ended cue to that tag and may continue to the next; a chain shares one lane. | `[ASSUMED]` |
-| Editing | Renumber or change department of a cue: its end token and every link to it follow. Delete a cue: its end token goes; a linking cue stays, without the link. Delete a linking cue: its targets reopen. One undo each. | `[ASSUMED]` |
-| Notes | `{DEPT label \| short text \| notes}`. Shown in the cue list (screen, print, CSV), never in the margin; a dot marks the tag. One paragraph. | `[ASSUMED]` |
-| Per department | Cue list: one CSV per department in one zip; print with one sheet per department. A cue ended by another department's cue says so on its own sheet. | `[ASSUMED]` |
-| CSV | Existing columns keep their positions; "Ended by", "Ends" and "Notes" are appended. | `[ASSUMED]` |
-
-As built in r1.0:
-
-- The "End:" row offers only cues an end token can actually reach under the pairing rule: the latest open cue of each department, and earlier ones whose number no later open cue repeats. Departments marked "runs" come first.
-- Placing an end opens the same small editor as a cue, titled with the cue it closes, so a note ("sfuma in 3s") can be added. The end has no number of its own.
-- The running rail sits in the outer margin, right of the tags, one lane per overlapping cue, up to six lanes.
-- Cue list on screen and in print: the end is a second line on its cue's row ("ends p. 12 — note · cue line"). The CSV has three extra columns. An end that closes nothing has its own row, marked with a square.
-- Review panel: "Ends with no cue to close" counts toward the badge. "Still running at the end" lists unended cues of "runs" departments and is not counted, because one-shot effects are never ended.
-- The "runs" switch is a tick box per department in Settings. Shows saved before r1.0 get it guessed from the code (SND, AUDIO, MUS, VID… on; others off).
-- An end without a number re-pairs by position. If its cue's department is changed and another open cue of the new department sits between them, the end closes that one instead.
-
-### 5.12 Frontmatter, front page and character list — built in r1.1
-
-**Request as received:** "host a frontmatter with metadata to display on the first page like title, author, company and year of the representation. display just the values on the frontpage in the order described in the frontmatter itself, title with bigger fonts, the rest smaller. Allow to define characters to validate the rest of the script and potentially define call list later on. […] some expressions are used to quickly refer to groupings of characters without explicit enumeration, like ALL BUT x, or ALL OTHERS or OTHERS, exclude this by checks." Then: "personaggi should be printed on a separate page, with name/alias - description collected in the metadata".
-
-```
 ---
-title: Il mare
-author: Marco Vitali
-company: Compagnia del Porto
-year: 2026
-characters:
-  - ANNA/A - la figlia
-  - MARCO/M - il pescatore
-  - SOLDATO 1
----
-# ATTO PRIMO
-```
 
-| Point | Design | Status |
+## 1. Intent
+
+### 1.1 Problem
+
+The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses). The stage manager annotates a printed export inside Excalidraw. Every script edit forces re-export, re-import and re-alignment. Cue lists are compiled by hand.
+
+### 1.2 Goals
+
+| # | Goal |
+|---|---|
+| G1 | Script edits never require re-importing or re-aligning. |
+| G2 | Cue lists are generated from the annotated script. |
+| G3 | Cues are shown cleanly beside the line where they are called. |
+| G4 | Printable. |
+| G5 | Fast enough to use live in rehearsal, pen in hand. |
+| G6 | Zero install, runs in a browser. |
+
+### 1.3 Who it is for
+
+| Person | Uses the tool | Gets from it |
 |---|---|---|
-| Where | Only as the first thing in `script.md`, between two lines holding `---`. This is the form Obsidian shows as "Properties". | `[ASSUMED]` |
-| Fields | `key: value`, one per line. Any key is accepted; nothing is required. A key may hold a list, either `[A, B]` on the line or `- item` lines beneath it. Quotes around a value are dropped. Lines starting with `#` are ignored. | `[ASSUMED]` |
-| Front page | One page before the script. It shows the values only, never the keys, centred, in the order written. `title` (or `titolo`) is set large (38 px bold); everything else small (18 px). No running head, no page number, nothing on the facing page. | `[LOCKED]` by the request; sizes `[ASSUMED]` |
-| Not on the front page | `characters` (or `personaggi`), which has its own page, and Obsidian's own `tags`, `aliases`, `cssclasses`, which are never shown. | `[ASSUMED]` |
-| Character page | A page of its own after the front page, before the script. Heading: the key as typed (`Personaggi`, `Characters`). One line per character in the order written: **NAME** / ALIAS — description. No running head, no number, nothing facing it. Over 30 characters the list is set smaller in two columns. A longer list than fits one page is cut off. | `[LOCKED]` by the request; layout `[ASSUMED]` |
-| Aliases | `NAME/ALIAS`, several allowed (`MARCO/M/MARCHINO`). A speech typed with an alias (`M: …`, `A e M: …`) is shown, checked and listed under the full name; `script.md` keeps what was typed. A name always wins over an alias spelled the same. `E` cannot be an alias: it is read as the connector. | `[ASSUMED]` |
-| Page numbers | The front page and the character page have no number. The script still starts on page 1, so adding frontmatter to an existing show changes no page number. | `[ASSUMED]` |
-| Title | `title` in the script wins over the title in Settings, which is then shown greyed. Without it, Settings applies as before. | `[ASSUMED]` |
-| Character list | Each entry is `NAME`, `NAME/ALIAS`, either optionally followed by ` - description`. Names are compared in capitals with spaces collapsed, and printed in capitals. | `[ASSUMED]` |
-| Check | Only when the list has at least one name. A speaker is accepted if the whole name is in the list. Otherwise it is split at `,` `/` `+` `&` and at the connectors `e`, `ed`, `and`, `y`, `et`, and each part is looked up. Parts not found are listed in Review under "Not in the character list", once per name with a count, and count toward the badge. A hint, not an error (as D7 for cues). | `[ASSUMED]` |
-| Group names, never checked | `ALL`, `EVERYONE`, `EVERYBODY`, `TUTTI`, `TUTTE`; `OTHERS`, `THE OTHERS`, `ALL OTHERS`, `ALL THE OTHERS`, `ALTRI`, `GLI ALTRI`, `TUTTI GLI ALTRI`, `ALTRE`, `LE ALTRE`, `TUTTE LE ALTRE`; and `ALL / EVERYONE / TUTTI / TUTTE` followed by `BUT`, `EXCEPT`, `TRANNE`, `MENO`, `ECCETTO` or `SALVO` and anything. The names after `BUT` are not checked either. | `[LOCKED]` for the three forms named in the request; the rest `[ASSUMED]` |
-| Other collective speakers | `CORO`, `DONNE` and the like are ordinary names: add them to the list. | `[ASSUMED]` |
-| Listed but silent | Review also shows characters in the list with no speech of their own. Not counted in the badge. | `[ASSUMED]` |
-| Editing | The frontmatter is one block: double-tap the front page or the character page, or use "Edit whole script…". Pen ink on either page belongs to that block and stays on the page it was drawn on. | `[ASSUMED]` |
-| Tolerance | A `---` with no closing `---`, or with script lines such as `(action)` between the two, is not frontmatter; the lines stay in the script and appear in Review. A frontmatter without displayable values gives no front page; without characters, no character page. | `[ASSUMED]` |
+| Stage manager | Yes: the one user it is built and tested for | The prompt book: script, cues, ink, boards, history |
+| Writer or director | Edits the text, never at the same time as the stage manager (D15) | A script whose edits cost nobody a re-alignment |
+| Operators (lights, sound, video) | No | Cue lists on paper and as CSV, one per department |
+| Cast | No | Script pages, replaced pages after a change, the changes that reach each character |
 
-Not built: the call list itself, a character list longer than one page, layout options, checking the names after `ALL BUT`.
+### 1.4 What it is not
 
-Older releases: r1.0 and r0.1 do not know frontmatter. They keep the text but show its lines as unrecognised at the top of page 1.
+Not a show-control system: no console or playback export (D9), no timing data (D4). Not a co-editing tool (D15). Not a calling tool yet: a follow-along view is postponed (D11), and standbys and warnings are out of scope (D5). Not planned at all: score or bar-number cueing, handwriting recognition, any server.
 
-### 5.13 Comments, to-do notes, cue list columns, automatic numbers — built in r1.4
+## 2. Requirements
 
-**Change request (r1.4):** commented-out blocks to stage changes without losing content; quick notes to review after rehearsals; cue list printed only from its panel; separate columns for the margin text and the description; a shorter cue line with the cue word marked; a blank number becomes the last plus one.
+### 2.1 Constraints
 
-| Point | Design | Status |
+These bind every capability. Each restates a decision; the numbering is new in v2.0.
+
+| # | Constraint | Basis |
 |---|---|---|
-| Comment | Lines between two lines holding `%%`, or one line `%% text %%`. A block of its own; ends the block above. Blank lines inside are kept. | `[LOCKED]` |
-| Unclosed `%%` | Not a comment. The line is an unrecognised line; the text after it stays in the script. | `[ASSUMED]` |
-| On the page | No text and no height: a `%%` marker in the left gutter, never printed. Tap: content, Restore, Edit text. | `[ASSUMED]` |
-| Making one | “Comment out” in a block's text editor; “Restore” on a comment. One undo each. | `[ASSUMED]` |
-| Cues and ink | Cues inside are not parsed. Ink on the block becomes orphaned and re-attaches when the same text is back. | `[ASSUMED]` |
-| Scope | Whole lines. A span inside a speech is backlog. | `[ASSUMED]` |
-| To-do notes | No new syntax: a department with `review: true` in `config.json` (“To do” tick box in Settings). Same token as a cue. | `[LOCKED]` |
-| Where they show | Margin tag as any cue. Not in the cue list, CSV or cue prints. Review: “To do”, first section, counted, with a tick that deletes the token. | `[ASSUMED]` |
-| Default | New shows get `TODO`, red (`#d62828`). Existing department lists are left alone. | `[LOCKED]` |
-| Names | The short text of a cue is “Margin”, the long one “Description”; “comment” is the `%%` block. The token is unchanged: `{DEPT label \| margin \| description}`. | `[LOCKED]` |
-| Cue list columns | Dept, No., Margin, Description, Act / scene, Cue line, P. Description only when some listed cue has one. CSV: same positions as r1.3, headers renamed. | `[ASSUMED]` |
-| Cue line | Two words, the cue word, two words; `…` where the speech goes on. The word is boxed in the department colour; `[word]` in the CSV. Standalone cues keep `▸`. | `[ASSUMED]` |
-| Cue list print | Only from the cue list panel. The top-bar Print offers book and script. | `[LOCKED]` |
-| Blank number | On a newly pinned cue only: last label of the department before that point, trailing number plus one; none before gives 1; a last label with no digits gives none. Ends and to-do notes get no number. No renumbering (D7 stands). | `[ASSUMED]` |
+| C1 | The tool is one HTML file. No install, no server, no third-party libraries. The only third-party content is one embedded font (Inter, SIL Open Font License 1.1). | D12 `[ASSUMED]`, G6 |
+| C2 | The tool never uses the network. | D12 `[ASSUMED]` |
+| C3 | It is built and tested for Chrome or Edge on a laptop with touchscreen and pen. Elsewhere it still works, with the show kept in the browser and moved by backup files. | D13 `[LOCKED]`, K6, A7 |
+| C4 | One editor at a time. No merge, no co-editing. | D15 `[LOCKED]` |
+| C5 | The script format is the convention already in use, plus `#` headings, one cue token and an optional frontmatter. No new markup inside the script body. | D3, D19 `[LOCKED]` |
+| C6 | A show is a set of plain files the user owns, readable and hand-editable without the tool. | D10 `[LOCKED]`, as amended |
+| C7 | Nothing generated is stored as a source. Cue lists, pages and page numbers are computed. | D8, D9 |
+| C8 | A show written by an older release must still open. Every exception is stated under "Compatibility" in `CHANGELOG.md`. | release rule since r1.0 |
+| C9 | The interface is in English and Italian. Every user-facing text exists in both. | as built, r0 |
+| C10 | Hints, not errors. The tool lists what looks wrong and never refuses, drops or silently corrects what the stage manager or the writer typed. | D7, K7, K8 |
+| C11 | Cue lists are documentation only. A cue is a position in the text, with no timing data. | D4, D9 `[LOCKED]` |
 
-### 5.14 Changes after the first rehearsals — built in r1.6
+### 2.2 Capabilities
 
-**Requests as received (2026-10-08).** In them "block" means a blocking board, the reading of §5.10, and "cue" a cue token shown as a tag in the margin.
-
-1. "Adding blocks on a single page makes just a column with plenty of white space. Might be better to use fully the page by providing flexibility in their arrangements, for example limit to 8 per page in 2 columns. Would fill first a column, then moving on Z pattern with 2 columns. So 2 are 1 column, 3 are 1 - 2 / 3 - blank, 4 are 1 - 2 / 3 - 4, 5 are 1 - 2 / 3 - 4 / 5 - blank etc."
-2. "Add names to the blocks that don't disappear into the options when we have many on the page, like leaving menu on top and name at the bottom."
-3. "Having a light gray fine grid helps a lot when doing blockings."
-4. "Moving existing cues requires copy pasting the underlying annotation, would be much better to support press with mouse or finger and move it around until release."
-
-The client has seen the five decisions marked `[ASSUMED]` below and did not object, but did not confirm them either.
-
-| Point | Design | Status |
-|---|---|---|
-| Arrangement | One column up to two boards; two columns row by row from three; order of the tokens. Detail in §5.5. | `[LOCKED]` |
-| More than 8 boards | "+ Board", "Board here" and image paste refuse a ninth with a message. A page that already has more, typed in the script text, still shows them all in two columns with more rows. | `[ASSUMED]` |
-| Name | Under the drawing, always shown, printed; buttons above. | `[LOCKED]` |
-| Buttons on a narrow board | Under 420 px wide the buttons collapse into one "⋯" button that opens the same actions in a popover. Without this they are cut off in two columns. | `[ASSUMED]` |
-| Grid | A light grey fine grid behind the ink on every board and template. | `[LOCKED]` |
-| Grid control | A show setting (Off, Fine, Coarse; default Fine), not a toolbar button. It prints when it is on. | `[ASSUMED]` |
-| Moving a cue | Press the tag, drag, release on a word. Detail in §5.3. | `[LOCKED]` |
-| Finger | A finger must hold a tag for 0.3 s before it drags. A quick swipe that starts on a tag still scrolls. Mouse and pen drag at once. | `[ASSUMED]` |
-| Where a cue lands | Always after a word. Board tags are not draggable in this release. | `[ASSUMED]` |
-
-**As built — points beyond the requests**
-
-- Existing shows look different: a page with three or more boards is rearranged, and every board gains the fine grid, on screen and in print. No file format change.
-- The grid strengths were set on screenshots, lower than first planned, with separate values for night mode and print. How they look on the real screen and on paper is not known.
-- The shared text edit that removes a line now merges the blank lines above it with those below. This also changes deleting a cue or a board whose token sits on its own line: one blank line is left, not two.
-- A pen or mouse tap that slips more than 8 px but stays on the tag does nothing: neither a move nor the cue editor.
-- Not built: dragging board tags, dropping a cue onto a line of its own, dragging the boxed word instead of the tag, reordering boards, snap to grid, a grid step per board.
-
-### 5.15 History, variants, locked pages, changes — built in r1.7
-
-**Request (2026-10-09):** "git versioning below with tags for meaningful moments (revisions, branches for specific shows) with support to lock pages and reprint for rehearsals. Assume that actors will manage their notes on their own. I'd need to produce new pages, and a simple diff like github to align actors on what affects them."
-
-| Point | Decision | Status |
-|---|---|---|
-| Storage | A git repository in `.git`, inside the show file or beside `script.md` in a show folder. Written by the tool itself: loose objects (zlib), refs, `HEAD`, a minimal `config`. No index, no packs. This amends D10: git is inside the show and sees the individual files again. | `[LOCKED]` by the request; the subset of git `[ASSUMED]` |
-| Revision | A commit of every show file (`script.md`, `script.ink.json`, `config.json`, `boards/`, `templates/`) plus a lightweight tag. The typed name is the commit message; the tag is the name made safe for a ref (`Prova-1`, then `Prova-1-2`). Saved only on request. | `[ASSUMED]` |
-| Variant | A branch, `main` first. Creating one points a new branch at the current commit and moves `HEAD`. Changing variant checks out its last commit. No merge in the tool (D15). | `[LOCKED]` branches; no merge `[ASSUMED]` |
-| Nothing is lost | Before a restore or a change of variant, the show is committed on the current branch as "Before going to …" when it differs from the last commit. | `[ASSUMED]` |
-| Restore | Replaces the show files with those of a commit and reloads. `HEAD` stays on the branch. | `[ASSUMED]` |
-| Lock | `config.json` gains `lock: { name, rev, pages, n, cont, sig, keys }`, each a list joined by spaces: page labels; blocks starting on each page; whether the page opens mid-block; a hash of what each page held; a hash of every block in order. `rev` is the tag. Being in `config.json`, the lock belongs to the variant and to the revision. | `[ASSUMED]` |
-| Locked layout | Blocks are matched to the locked ones by their words (cue tokens ignored). A page starts at its first surviving block. Overflow goes to the next page when that page opened mid-block before, otherwise to inserted pages `12A`, `12B` (`12A1` after `12A`; `12+1` when `12A` already exists). An emptied page is dropped. Past the last locked page numbering continues. This adds to §6 without changing the page geometry. | `[ASSUMED]` |
-| Changed page | Its blocks, or the way they break over the page, differ from the lock. Marked at the foot; listed in History; "Print changed pages" prints script pages only. | `[ASSUMED]` |
-| Actors' notes | Not handled: an actor moves their own notes to the replaced page. Hence the smallest possible set of reprinted pages. | `[LOCKED]` by the request |
-| Changes | Block by block (longest common run of unchanged blocks, then pairs sharing half their words), word by word inside a changed block. Kinds: added, cut, changed, cues only. | `[ASSUMED]` |
-| What reaches a character | Text changes in a speech they speak (joined names included), in an action that spells their name in capitals, and in the speech just before one of theirs in the same scene. Cue-only changes and comments are left out. | `[ASSUMED]` |
-
-Not built: merging a correction into several variants inside the tool; reading packed git objects; a read-only view of an old revision; history for a show kept only in the browser.
-
-## 6. Page layout `[LOCKED]`
-
-Left page (script):
-
-| Name column | Text column | Cue margin |
-|---|---|---|
-| Character name | Dialogue; actions in italics | Cue tags with connector lines |
-
-- Simultaneous speech: the text column splits into one sub-column per speaker, name on top, text underneath.
-- Right page (facing): the boards whose `{BOARD}` tokens fall on the left page. One board fills the page; several share it.
-- Page numbers are computed at render time and are never used as identifiers.
-
-## 7. Scope tiers
-
-### R0 — rehearsal, 2026-10-08
-
-| ID | Requirement | Built | Checked how |
-|---|---|---|---|
-| R0.1 | Paste or open the script text. Tolerant parse. Review list of unclassified lines. | Yes | Automated, with deliberately messy input |
-| R0.2 | Page view in the §6 layout, including simultaneous speech. | Yes | Automated + screenshots |
-| R0.3 | Edit any block's text in place. | Yes | Automated |
-| R0.4 | Tap a word → cue pin. Standalone cue between lines. Department, optional label, optional description. | Yes | Automated, mouse and simulated touch |
-| R0.5 | Ink over script pages: pen, eraser, undo, a few colours. Block-anchored with the "check" flag. | Yes | Automated, simulated pen. Not on a real pen. |
-| R0.6 | Boards on the facing page: add at a point, choose image or blank, ink on it. | Yes | Automated |
-| R0.7 | Cue list view, department filter, CSV export. | Yes | Automated |
-| R0.8 | Print through the browser: script page left, boards right. | Yes | PDF output: page size and page count. Not on a printer. |
-| R0.9 | Save and load in folder mode (Chrome/Edge). Autosave. Export-all button as backup. | Yes | Automated against a browser-private folder through the same file interface. The real folder dialog was not exercised. |
-
-Test record, 2026-10-06: 79 automated checks pass in Chromium 141 on Linux, no script errors. Build R0.1 (boxed cue words): the same 79 plus 5 new ones pass, including a check that no word moves when cues are added. A generated 375-page script (147,000 words, 318 cues) loads in about 0.4 s; pinning a cue takes about 60 ms. The pen eraser end could not be simulated; the barrel-button eraser path was.
-
-### R1 — released as r1.0
-
-| ID | Requirement | Spec | Built | Checked how |
+| Capability | File | Prefix | Requirements | First release |
 |---|---|---|---|---|
-| R1.1 | Cue ends: token, pairing, one-tap entry, margin tag, cue list columns, review hints. | §5.11 | Yes | Automated, incl. missing and repeated numbers |
-| R1.2 | Running rail in the cue margin. | §5.11 | Yes | Automated across a 13-page span; screenshot; PDF |
-| R1.3 | Board templates: kept in the configuration, Templates view to draw them, a base per board and per template, chains, greyed locked rendering of the chain, loop guard. | §5.10 | Yes | Automated, simulated pen; screenshots |
-| R1.4 | Template picker when adding a board, default template, change a board's base, "Copy to templates", rename carries through, delete guard. | §5.10 | Yes | Automated, incl. save to a folder and reload |
+| Script text: format, editing, undo, frontmatter, comments | `docs/specs/01-script-text.md` | TXT | 27 | r0 |
+| Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 41 | r0 |
+| Ink over the script | `docs/specs/03-ink.md` | INK | 11 | r0 |
+| Boards and templates | `docs/specs/04-boards.md` | BRD | 27 | r0 |
+| Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 11 | r0 |
+| Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
+| Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 14 | r0 |
+| History, variants and changes | `docs/specs/08-history.md` | HIS | 12 | r1.7 |
+| Workbench: Review, find, settings, language | `docs/specs/09-workbench.md` | UI | 8 | r0 |
 
-Test record for r1.0, 2026-10-06: 145 automated checks pass in Chromium 141 on Linux, no script errors: the 84 from r0.1, 23 for cue ends, 38 for templates. Same limits as before: simulated pen and touch, a browser-private folder instead of the real folder dialog, PDF instead of a printer. A show folder written by r0.1 opens in r1.0; a show using ends or templates opened in r0.1 would show `{/…}` tokens as unknown cues and ignore templates.
+## 3. Consequences
 
-### r1.1 — built 2026-10-07, not yet committed or tagged
+**The constraints contradict some of what was asked for.** Ten conflicts are recorded with their resolutions in `docs/decisions.md` §2. The ones the product carries every day:
 
-| ID | Requirement | Spec | Built | Checked how |
-|---|---|---|---|---|
-| R1.5 | Frontmatter block, front page with values in written order, title larger, title wins over Settings. | §5.12 | Yes | Automated; screenshot |
-| R1.6 | Character list, speaker check with group names excluded, Review sections. | §5.12 | Yes | Automated |
-| R1.7 | Character page; aliases resolved to the full name. | §5.12 | Yes | Automated; screenshot |
+| What was wanted | What the constraints allow | Conflict |
+|---|---|---|
+| Ink as the way to write cues | Ink is not data. Cues are pinned by tapping; ink is for everything else. | K3 |
+| Ink that never needs re-aligning | Ink is anchored to its block and flagged when that block's text changes. Re-alignment shrinks to the lines that changed. | K4 |
+| The drawing tools of Excalidraw | A built-in pen and reusable templates. No shapes, text objects or movable props. | K5, K9 |
+| Any browser | Saving to disk needs Chrome or Edge. | K6 |
+| Collaboration as in Word | One editor at a time. | K2 |
 
-Test record for r1.1, 2026-10-07: 151 automated checks pass in Chromium 153 (Playwright headless shell) on Linux, no script errors: 127 existing and 24 new. The r1.0 suite as committed runs 127 checks here, not the 145 recorded above; the difference was not investigated. Same limits as before: simulated pen, no real folder dialog, no printer. The front page and the character page were not printed, and a list of more than 30 characters was not tried.
+**Everything is hand-written and lives in one file.** Zip, git objects, CSV, storage, pen, layout. Each covers only what the tool needs. How it is put together, and what that costs, is in `docs/architecture.md`.
 
-### r1.4 — built 2026-10-07
+**The page is frozen so that ink can hold.** Fixed geometry, one embedded font, no reflow. Several things a writer might want (emphasis, a manual page break) are absent for that reason.
 
-| ID | Requirement | Spec | Built | Checked how |
-|---|---|---|---|---|
-| R1.8 | `%%` comments: parse, marker, comment out and restore, Review section. | §5.13 | Yes | Automated, incl. ink coming back |
-| R1.9 | To-do notes as a review department; Review section with tick. | §5.13 | Yes | Automated |
-| R1.10 | Cue list: Margin and Description columns, short cue line with marked word, print only from the panel. | §5.13 | Yes | Automated; screenshot |
-| R1.11 | Blank number on a new cue becomes last plus one. | §5.13 | Yes | Automated |
+**The tool can only be fully verified on the device.** Pen, finger and palm behaviour, the real file dialogs and paper are outside what the automated checks reach. Until a device trial is recorded, every release since r1.5 is checked in simulation only.
 
-Test record for r1.4, 2026-10-07: 205 automated checks pass in Chromium (Playwright headless shell) on Linux: 166 existing, 39 new in `test/notes-todos.test.js`. Two test files, `parse-undo` and `zipshow`, stop with an error before their first check; they do the same on r1.3 as committed and were not investigated. Not printed on paper; the comment marker was not tried with a real pen or finger.
+**The tool reports and never blocks (C10).** A mistake does not stop a rehearsal. It also does not stop a wrong page from being printed: the Review badge is the only signal.
 
-### r1.6 — built 2026-10-08, committed on branch r1.6, not yet tagged
-
-| ID | Requirement | Spec | Built | Checked how |
-|---|---|---|---|---|
-| R1.12 | Facing page: one column up to two boards, two columns row by row from three; 8 per page through the interface. | §5.5, §5.14 | Yes | Automated, 1 to 9 boards, incl. a pen stroke on the second board of a row; screenshot |
-| R1.13 | Board name under the drawing, tap to rename; "⋯" button on figures under 420 px. | §5.5, §5.14 | Yes | Automated, incl. print layout in the browser and the Templates view; screenshots; PDF written, not opened |
-| R1.14 | Grid on boards and templates; show setting Off, Fine, Coarse; `boardGrid` in `config.json`. | §5.5, §5.8, §5.14 | Yes | Automated, incl. save and reopen, night and print styles; screenshots; PDF written, not opened |
-| R1.15 | Move a cue by dragging its tag to a word: mouse, pen, finger after a 0.3 s hold; edge scroll; one undo. | §5.3, §5.7, §5.14 | Yes | Automated with a real mouse drag and a simulated finger and pen; not on the device |
-
-Test record for r1.6, 2026-10-08: `npm test` reports "ok 376 checks, 13 files" for the browser checks (Chromium, Playwright headless shell, on Linux), with no file in `test/KNOWN_FAILING`: 243 existing, 72 new in `test/boards.test.js`, 61 new in `test/cue-move.test.js`. Before them the same run passes the 67 checks of `test/unit` (3 files, no browser; its totals line is not printed): 18 existing, 23 new in `boards`, 26 new in `cue-move`. 443 checks in all.
-
-Not verified:
-
-- Nothing of r1.6 has run on the rehearsal laptop.
-- The finger hold, the pen drag and the palm behaviour during a cue drag are simulated only (synthetic touch and pen events). Whether 0.3 s and 8 px suit a real finger is not known.
-- Nothing was printed on paper. The grid strength and the two-column arrangement on paper are unchecked; hairlines may print faint.
-- The PDFs the checks write (`boards-names.pdf`, `grid.pdf`) were not opened. Print was checked through the print styles in the browser only.
-- The real screen: grid lightness was judged on screenshots by the build agents, not on the laptop's display.
-
-### r1.7 — built 2026-10-09, not yet committed or tagged
-
-History as a git repository inside the show, variants as branches, locked page numbers with inserted pages and a changed-pages print, changes per character (§5.15). 33 browser checks in `test/history.test.js`, 15 unit checks in `test/unit/compare.test.js`. Not yet tried on the laptop; nothing printed on paper.
-
-### Backlog — ordered after the first rehearsal
-
-A call list built from the character list (§5.12). Renumber command with an old→new log (must keep cue pairs together). Hint for out-of-order labels. Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Dragging board tags and reordering boards. Dropping a cue onto a line of its own. Anything further that rehearsals show.
-
-### R2 — later
-
-Follow-along view for the stage manager (D11); it can use R1.1 to show what is running. Standbys and warnings. More than one device at a time is not planned (D15).
-
-### Cast and crew — ideas, not scheduled
-
-Collected on 2026-10-08 and 09. None is designed or decided; the cast would mostly use a phone.
-
-- Notes with an addressee (character, department or all), the rehearsal day and a state (open, solved), kept as a history; filters in Review by person, by day and by state.
-- Rehearsal calendar: date, time, place, agenda and scenes per day; who is called, computed from the scenes (needs the actor's name beside each character); a call sheet per day; the notes of a day attached to that rehearsal.
-- A page per person: their notes with the lines they refer to, readable on a phone.
-- Memory practice: a button that hides the actor's own lines, so the part can be rehearsed from the cues of the others; a line is shown again on request.
-- Later, on top of memory practice: speech to text on the device that listens to the actor and checks or corrects the spoken line against the script. Open: it must work without a network and without a library (D12), and the browser's built-in recognition may send the audio to a server.
-- Pronunciation: mark where the stress falls and whether a vowel is open or closed on a word (*àncora* / *ancóra*, *pèsca* / *pésca*), shown to the cast without changing the script text; read a word or a line aloud. The simplest form: tapping a word opens its page in an online pronunciation dictionary. Open: reading aloud uses the voices installed on the device, which differ in quality and may not have Italian; the dictionary link needs a network, which the tool itself never uses (D12).
-- Further off: the cast writing back (own notes, replies, marking a note solved) and a shared position during rehearsal. Both need more than one device at a time (D15) and a server (D12).
-
-## 8. Assumptions
+## 4. Assumptions
 
 | # | Assumption | Breaks if wrong |
 |---|---|---|
 | A1 | Spoken-word play. No score. | Cue anchoring |
 | A2 | One person edits at a time. | K2, storage |
-| A3 | The pen reports as a pen to the browser. Client answered "yes" to Q21; read as all four device checks passing. Not itemised. | D14, R0.5 |
-| A7 | That laptop runs Chrome or Edge and is the machine that holds the show folder. Not stated in the answer. | R0.9 — in another browser the tool still works, but only with the in-browser fallback and backup files |
-| A4 | A4 portrait. Q19 was answered "yes", which names neither a size nor single/double-sided, so this stands. | Page model |
+| A3 | The pen reports as a pen to the browser. The client answered "yes" to Q21; read as all four device checks passing. Not itemised. | D14, all of `docs/specs/05-input.md` |
+| A4 | A4 portrait. Q19 was answered "yes", which names neither a size nor single- or double-sided, so this stands. | Page model |
 | A5 | 80–150 pages, a few hundred cues. | Performance |
 | A6 | The old Excalidraw workflow stays available as fallback during the first rehearsals. Nothing is migrated destructively. | Risk posture |
+| A7 | The laptop runs Chrome or Edge and is the machine that holds the show. Not stated in the answer. | Storage: in another browser the tool still works, but only with the in-browser fallback and backup files |
 
-## 9. Open questions
-
-One at a time.
+## 5. Open questions
 
 | # | Question | Blocks |
 |---|---|---|
-| ~~Q14~~ | Answered: laptop with touchscreen and pen → D13. Browser and "same machine" not stated → A7. | — |
-| ~~Q15~~ | Answered: assume one editor → D15. | — |
-| ~~Q16~~ | Answered: follow-along view, later → D11, R2. | — |
-| ~~Q17~~ | Answered: "yes solid draft" → K1 accepted. | — |
-| ~~Q18~~ | Answered: acceptable for now, needs templates to draw on stage plans with props → D16, §5.10. | — |
-| ~~Q20~~ | Answered: "will fix manually" → the real script is not shared; K7. | — |
-| Q21 | Answered "yes". Read as: pen draws without scrolling, resting hand stays quiet, eraser end erases, print lines up. The answer does not say which were tried. | A3 — correct this if any of the four was not checked |
-| Q19 | Answered "yes" to a two-part question. Still unknown: paper size, and single- or double-sided printing. A4 and the built print order stand. | §6, low priority |
-| ~~Q22~~ | Answered: templates are boards marked as template, a template can depend on another, no movable props → D16, D18, §5.10. | — |
-| ~~Q23~~ | Resolved by Q22: "depending on" means linked. | — |
-| ~~Q26~~ | Answered: "live in configurations so they don't appear in the final script" → D18, K10, §5.10. | — |
-| ~~Q24~~ | Answered: "build it now" → r1.0. Which file goes into the 2026-10-08 rehearsal is still the client's choice; r0.1 remains available as a git tag. | — |
-| Q25 | Cue ends were built as assumed (`{/SND 5}`, one list row per cue). Not explicitly confirmed; change requests go to the backlog. | §5.11 |
-| **Q27** | **Where should the git repository live so it outlasts this session: a folder on the laptop, a GitHub repository, or only the downloadable archive?** | **PLAN §8 — ACTIVE** |
+| **Q27** | **Where should the git repository of this project live so that it outlasts one machine: a second folder, a GitHub repository, or only a downloadable archive?** Observed on 2026-10-09: the repository has no remote; it exists in one folder on one machine. | **Losing the project; `PLAN.md` — active** |
+| Q21 | Answered "yes". Read as: pen draws without scrolling, resting hand stays quiet, eraser end erases, print lines up. The answer does not say which were tried. | A3: correct this if any of the four was not checked |
+| Q19 | Answered "yes" to a two-part question. Still unknown: paper size, and single- or double-sided printing. A4 and the built print order stand. | PAG, low priority |
+| Q25 | Cue ends were built as assumed (`{/SND 5}`, one list row per cue). Not explicitly confirmed. | CUE-9 to CUE-19 |
 
-## 10. Sources
+Readings shown to the client, or built on, that were neither confirmed nor vetoed:
+
+- The five `[ASSUMED]` decisions of r1.6: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30, CUE-32). The client saw them and did not object.
+- The `[ASSUMED]` rows of r1.7 in `docs/specs/08-history.md` and PAG-14 to PAG-17.
+- "Live in configurations" read as "part of the show's settings", not as strokes inside `config.json` (`docs/specs/04-boards.md`, Consequences).
+- Silence on the `[ASSUMED]` decisions and conflicts of `docs/decisions.md` has been treated as acceptance since the first day.
+
+## 6. Releases
+
+| Release | Date | Content | Capability files | In git |
+|---|---|---|---|---|
+| r0 | 2026-10-06 | Script view, tolerant parser, cue pins, ink, boards, cue list, print, show folder | 01 to 07, 09 | Not in this repository |
+| r0.1 | 2026-10-06 | Cue words boxed instead of underlined | 02 | Not in this repository |
+| r1.0 | 2026-10-06 | Cue ends, board templates | 02, 04 | Commit `33118d4`, the first; no tag |
+| r1.1 | 2026-10-07 | Frontmatter, front page, character list | 01, 06 | Tag `r1.1` |
+| r1.2 | 2026-10-07 | A show is one `.zip` file | 07 | Tag `r1.2` |
+| r1.3 | 2026-10-07 | Linking cues, descriptions, exports per department; "runs" removed | 02 | Tag `r1.3` |
+| r1.4 | 2026-10-07 | `%%` comments, to-do notes, cue list columns, automatic numbers | 01, 02 | Tag `r1.4` |
+| r1.5 | 2026-10-08 | Fix: a reopened show file saved only its first change; development tooling | 07 | Tag `r1.5`, branch `master` |
+| r1.6 | 2026-10-08 | Boards in two columns, board names, grid, moving a cue | 02, 04, 05 | Commit `d0b53c0` on branch `r1.6`, no tag |
+| r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e` on branch `r1.6`, no tag |
+
+What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
+
+## 7. Sources
 
 - Obsidian licence: https://obsidian.md/license
 - Folder access browser support: https://web.dev/articles/files/open-a-directory
 - Prompt book conventions: https://theatrecrafts.com/pages/home/topics/stage-management/the-prompt-book/
-- Tools surveyed in v0.1 and now dropped: Excalidraw plugin, obsidian-fountain, Downstage, DigiScript, Pandoc. DigiScript (https://github.com/dreamteamprod/DigiScript) stays relevant as a reference for R2.
+- Tools surveyed in v0.1 and dropped: Excalidraw plugin, obsidian-fountain, Downstage, DigiScript, Pandoc. DigiScript (https://github.com/dreamteamprod/DigiScript) stays relevant as a reference for a follow-along view.
+- Earlier forms of this specification: v0.1 to v1.0, the last at git `953336a`, organised by release.

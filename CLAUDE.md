@@ -4,7 +4,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 
 ## Rules that are easy to break
 
-- **Never edit `promptbook.html`.** It is the built release (290 KB, base64 fonts). Edit `src/`, then run `python3 build.py`. Never Read or grep it either: search `src/`.
+- **Never edit `promptbook.html`.** It is the built release (330 KB, base64 fonts). Edit `src/`, then run `python3 build.py`. Never Read or grep it either: search `src/`.
 - **Tests run against `promptbook.html`, not `src/`.** A test result is meaningless until the build has run after the last `src/` change.
 - **No libraries, no npm runtime packages, no network.** The zip reader/writer, IndexedDB wrapper and CSV export are hand-written on purpose.
 - `build.py` asserts that the JS contains no `</script`. Split such strings.
@@ -17,7 +17,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 | File | Lines | Content |
 |---|---|---|
 | `src/core.js` | ~1180 | `STR` strings, helpers (`h`, `sv`), constants (`PAPERS`, `GEO`, `VERSION`), state `S`, **parse** (`parseMeta`, `classify`, `parseScript`, `analyze`, `tokenize`, `reparse`, `pairCues`), text edits (`serialize`, `textWith`, `textInsertAfter`, `cutToken`), ink bookkeeping (`attachInk`, `inkFile`), undo history (`undo`, `redo`, `commitText`), compare (`lcs`, `diffBlocks`, `diffFor`), locked page numbers (`makeLock`, `lockPlan`), **layout** (`buildRow`, `measure`, `paginate`) |
-| `src/view.js` | ~1300 | Page rendering, ink drawing, facing page and boards, board templates, navigation and find, pointer handling (pen, touch, palm), popovers (`openPin`, `openCueEdit`), block editor (`editGroup`), cue list and review (`collectCues`, `reviewData`, `renderDrawer`), CSV, print |
+| `src/view.js` | ~1430 | Page rendering, ink drawing, facing page and boards, board templates, navigation and find, pointer handling (pen, touch, palm), popovers (`openPin`, `openCueEdit`), block editor (`editGroup`), cue list and review (`collectCues`, `reviewData`, `renderDrawer`), CSV, print |
 | `src/io.js` | ~960 | Folder store (File System Access), zip (`buildZip`, `readZip`), save loop (`saveNow`), draft and IndexedDB, open and import, git history (`gPut`, `gSave`, `gCheckout`, `histSave`, `openHistory`, `openDiff`), dialogs, settings, `bindUI`, `SAMPLE`, `init`, and the `window.PB` export on the last line |
 | `src/style.css` | ~280 | All styles, including print |
 | `src/index.html` | ~60 | Shell with the `/*FONTS*/`, `/*CSS*/`, `/*JS*/` placeholders |
@@ -32,12 +32,19 @@ Sections inside the JS files are marked `/* ---------- name ---------- */`. Grep
 
 ## Documents
 
-Read only the part that is needed; do not load these whole.
+Read only the part that is needed; do not load these whole. Each capability file has the same three parts: Intent (the request, in the client's words), Requirements (one ID each, with the test files that check it), Consequences (design, limits, compatibility, not built, not verified).
 
-- `SPEC.md` (500 lines): what the tool must do. §5.2 script text, §5.3 cues, §5.4 ink, §5.5 boards, §5.8 data shapes, §5.10 to §5.13 features added per release, §6 page layout (locked).
+- `SPEC.md`: entry point. How the specification is organised, goals G1 to G6, constraints C1 to C11, assumptions, open questions, table of releases.
+- `docs/specs/`: one file per capability. `01-script-text.md` (TXT), `02-cues.md` (CUE), `03-ink.md` (INK), `04-boards.md` (BRD), `05-input.md` (INP), `06-pages-print.md` (PAG, page layout locked), `07-storage.md` (STO, data shapes in §2.3, compatibility in §2.4), `08-history.md` (HIS), `09-workbench.md` (UI).
+- `docs/decisions.md`: decisions D1 to D19 and conflicts K1 to K10, with what follows from each.
+- `docs/architecture.md`: C4 diagrams (context, containers, components) and the component table that maps to sections of `src/`.
+- `docs/verification.md`: check record per release, test file to requirement mapping, what was never verified.
+- `docs/review-2026-10-09.md`: known defects (X), refactor opportunities (F), technical debt (T).
 - `CHANGELOG.md`: one entry per release, written for the user.
-- `PLAN.md`: schedule and backlog.
-- `SYNTAX-COMPARISON.md`: background on the script syntax choice. Rarely needed.
+- `PLAN.md`: next actions, backlog, risks.
+- `docs/background/syntax-comparison.md`: background on the script syntax choice. Rarely needed.
+
+A change in behaviour starts in the capability file: quote the request under Intent, add or change the requirement rows (never renumber an ID), write the consequences. Then the code.
 
 ## Build and tests: hooks do it
 
@@ -72,5 +79,5 @@ node test/x.test.js                 # one file, every PASS and FAIL line (after 
 
 1. Change `src/`, set `VERSION` in `src/core.js`.
 2. `npm test`: builds and runs every check; all pass.
-3. Add the entry to `CHANGELOG.md`, update `SPEC.md` if behaviour changed.
+3. Add the entry to `CHANGELOG.md`. Update the capability file in `docs/specs/`, the release table in `SPEC.md` §6 and the record in `docs/verification.md` §3.
 4. Commit `src/` and `promptbook.html` together, tag `rX.Y`.

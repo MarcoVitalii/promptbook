@@ -3,7 +3,22 @@
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
 - **Use it:** open `promptbook.html` in Chrome or Edge. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. Older show folders still open (Menu → “Open older show folder…”) and can be converted with “Save as show file…”.
-- **What it is meant to do:** `SPEC.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`.
+- **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`.
+
+## Documents
+
+The documentation is specification-driven. Every level answers three questions in the same order: intent (why, in the client's words), requirements (what must hold, one ID each), consequences (the design that follows, its cost, what is not built and what was never verified).
+
+| Path | What |
+|---|---|
+| `SPEC.md` | Entry point: goals, constraints, assumptions, open questions, releases |
+| `docs/specs/01` … `09` | Script text, cues, ink, boards, input, pages and print, storage, history, workbench |
+| `docs/decisions.md` | Every decision and conflict, with its source and its consequences |
+| `docs/architecture.md` | C4 diagrams: system context, containers, components; how a change travels |
+| `docs/verification.md` | What was checked and how, release by release; what never was |
+| `docs/review-2026-10-09.md` | Criticalities, refactor opportunities, technical debt |
+| `PLAN.md` | Next actions, backlog, risks |
+| `CHANGELOG.md` | One entry per release, written for the user |
 
 ## Layout of this repository
 
@@ -40,6 +55,6 @@ npm test             # the same, even when nothing changed
 
 1. Change `src/`, set `VERSION` in `src/core.js`.
 2. `npm test` — builds `promptbook.html` and runs every check; all must pass.
-3. Add the entry to `CHANGELOG.md`, commit, tag (`r1.0`, `r1.1`, …).
+3. Add the entry to `CHANGELOG.md`; update the capability file in `docs/specs/`, `SPEC.md` §6 and `docs/verification.md` §3; commit; tag (`r1.1`, `r1.2`, …).
 
-The file a show uses is whatever `promptbook.html` it opens. To go back, check out an older tag and use that file; show folders written by a newer release stay readable by older ones unless the changelog says otherwise.
+The file a show uses is whatever `promptbook.html` it opens. To go back, check out an older tag and use that file. A show written by a newer release is readable by an older one only where the compatibility table in `docs/specs/07-storage.md` says so.
