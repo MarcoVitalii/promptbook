@@ -1,8 +1,8 @@
 # Promptbook — Specification
 
 **Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
-**Tool described:** r1.7 (`VERSION` in `src/core.js`).
-**State:** r1.6 and r1.7 are built and committed on branch `r1.6`, not tagged. Checked in a simulated browser only: nothing since r1.5 is recorded as having run on the rehearsal laptop, and nothing has been printed on paper (`docs/verification.md`).
+**Tool described:** r1.8 (`VERSION` in `src/core.js`).
+**State:** r1.6, r1.7 and r1.8 are built and committed on branch `master`; r1.8 is tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). Checked in a simulated browser only: nothing since r1.5 is recorded as having run on the rehearsal laptop, and nothing has been printed on paper (`docs/verification.md`).
 
 ---
 
@@ -100,7 +100,7 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
 | Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 14 | r0 |
 | History, variants and changes | `docs/specs/08-history.md` | HIS | 12 | r1.7 |
-| Workbench: Review, find, settings, language | `docs/specs/09-workbench.md` | UI | 8 | r0 |
+| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 11 | r0 |
 
 ## 3. Consequences
 
@@ -147,6 +147,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 
 - The five `[ASSUMED]` decisions of r1.6: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30, CUE-32). The client saw them and did not object.
 - The `[ASSUMED]` rows of r1.7 in `docs/specs/08-history.md` and PAG-14 to PAG-17.
+- r1.8: which keys do what (UI-9), and the reading of "more modern", "less taxing on the eyes" and "less crowded" as the colours, the tag labels and the corner dock that were built (`docs/specs/09-workbench.md`). The client has not seen them.
 - "Live in configurations" read as "part of the show's settings", not as strokes inside `config.json` (`docs/specs/04-boards.md`, Consequences).
 - Silence on the `[ASSUMED]` decisions and conflicts of `docs/decisions.md` has been treated as acceptance since the first day.
 
@@ -162,8 +163,9 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | r1.3 | 2026-10-07 | Linking cues, descriptions, exports per department; "runs" removed | 02 | Tag `r1.3` |
 | r1.4 | 2026-10-07 | `%%` comments, to-do notes, cue list columns, automatic numbers | 01, 02 | Tag `r1.4` |
 | r1.5 | 2026-10-08 | Fix: a reopened show file saved only its first change; development tooling | 07 | Tag `r1.5`, branch `master` |
-| r1.6 | 2026-10-08 | Boards in two columns, board names, grid, moving a cue | 02, 04, 05 | Commit `d0b53c0` on branch `r1.6`, no tag |
-| r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e` on branch `r1.6`, no tag |
+| r1.6 | 2026-10-08 | Boards in two columns, board names, grid, moving a cue | 02, 04, 05 | Commit `d0b53c0`. The tag `r1.6` and the branch `r1.6` both point at `a3d735b`, which is later and contains r1.7 |
+| r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e`, on `master`; no tag |
+| r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
 
 What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
 

@@ -1,6 +1,6 @@
 # Promptbook — Architecture
 
-**Describes:** r1.7 as built (`src/` at git `953336a`). **Model:** C4, levels 1 to 3, drawn as Mermaid flowcharts.
+**Describes:** r1.7 as built (`src/` at git `953336a`); r1.8 added the key table and the corner dock to the Shell and changed no boundary. **Model:** C4, levels 1 to 3, drawn as Mermaid flowcharts.
 **Companion files:** `SPEC.md` (why and what), `docs/review-2026-10-09.md` (where the structure below falls short).
 
 How to read the diagrams: a box is a person, a software system, a container (something that runs or stores data on its own) or a component (a part inside one container). The second line of a box, in square brackets, says which. An arrow points from the part that acts to the part acted on, and its label says what for; where a label is passive ("read by"), read it that way round. A dashed arrow is either an optional outside tool (levels 1 and 2) or a call that goes against the intended layering (level 3).
@@ -221,7 +221,7 @@ Three components have no arrows, to keep the picture readable. `Strings` and `St
 | Draft and backup | `io.js`, `bundle` … `importBundle`, `idb` | The show as one JSON object; draft in `localStorage`; last handle in IndexedDB | STO-5, STO-7 |
 | Git history | `io.js`, HISTORY | Loose objects, trees, commits, refs; commit, checkout, revision, variant, restore | HIS-1 to HIS-6 |
 | History and Changes dialogs | `io.js`, `openHistory`, `openDiff` | The two dialogs over the git history and the comparison | HIS-7, HIS-10 |
-| Shell | `io.js`, DIALOGS, TOOLBAR | Dialog frame, Settings, menu, toolbar, keyboard, paste, start screen, sample, `init`, and `window.PB` for the tests | UI |
+| Shell | `io.js`, DIALOGS, TOOLBAR | Dialog frame, Settings, menu, toolbar and corner dock, keyboard (`KEYS`, `KEYMAP`, `openKeys`), paste, start screen, sample, `init`, and `window.PB` for the tests | UI |
 
 ## 5. How a change travels
 

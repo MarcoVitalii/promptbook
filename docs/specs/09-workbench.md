@@ -1,8 +1,8 @@
 # Workbench — UI
 
-**Covers:** what surrounds the pages: the Review panel, find and jump, Settings, view toggles, night mode, language, the start screen.
-**Code:** `src/view.js` (`reviewData`, `renderDrawer`, `findNext`, `jumpTo`, `updOutline`), `src/io.js` (`openSettings`, `bindUI`, `showStart`, `init`), `src/core.js` (`STR`, `t`).
-**Checks:** `test/interact`, `test/misc`, `test/scale-folder`, `test/frontmatter`, `test/notes-todos`, `test/cue-ends`, `test/unit/parse`.
+**Covers:** what surrounds the pages: the Review panel, find and jump, Settings, view toggles, night mode, language, the start screen, the toolbar and the corner dock, keyboard shortcuts.
+**Code:** `src/view.js` (`reviewData`, `renderDrawer`, `findNext`, `jumpTo`, `updOutline`), `src/io.js` (`openSettings`, `bindUI`, `KEYS`, `KEYMAP`, `openKeys`, `showStart`, `init`), `src/view.js` (`pageStep`), `src/style.css` (colours, toolbar, `#dock`), `src/core.js` (`STR`, `t`).
+**Checks:** `test/interact`, `test/misc`, `test/shortcuts`, `test/scale-folder`, `test/frontmatter`, `test/notes-todos`, `test/cue-ends`, `test/unit/parse`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -10,6 +10,8 @@
 ## 1. Intent
 
 Most of this capability was not asked for. It was added while building R0 because each part was cheap and reduced the risk of the first rehearsal: a tolerant parser needs somewhere to show what it could not read; a tool for a dark theatre needs a dark screen; an Italian company needs an Italian interface.
+
+- **Change request, r1.8 (2026-10-09):** "provide a more modern look to the page that is less taxing on the eyes, with cues more visible, top bar less crowded and potential shortcut support".
 
 One principle runs through it (C10): the tool reports, it does not refuse. Everything doubtful is listed in one place, Review, as a hint the stage manager can act on or ignore.
 
@@ -25,6 +27,9 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 | UI-6 | Night mode gives a dark screen for a dark theatre. Print is always light. | as built | r0 | boards |
 | UI-7 | The start screen shows the version of the tool and offers: reopen the last show, open a show file, open an older show folder, continue the unsaved draft, try the sample scene, start from pasted text, import a backup. In a browser that cannot save show files it says so. | as built; version r1.0 | r0, r1.0 | scale-folder, misc |
 | UI-8 | View settings (facing page, cues, ink, night, finger, language) are remembered in the browser, not in the show. | as built | r0 | — |
+| UI-9 | Keys act when no text field has the focus, no dialog is open and no cue box is open: B, C, I, N toggle boards, cues, ink and night; 1 to 4 pick a pen, E the eraser, F the finger; + and − zoom, 0 fits; Page Down and Page Up go one page, Home and End to the ends of the script; L and R open the cue list and Review; / goes to Find. Ctrl+S saves now. Ctrl+P opens the tool's own print choices, never the browser's print. | change request 2026-10-09 `[ASSUMED]` (which keys) | r1.8 | shortcuts |
+| UI-10 | "?" (key, corner button, or Menu) lists every shortcut, in the interface language. The tooltip of a button names its key. | change request 2026-10-09 | r1.8 | shortcuts |
+| UI-11 | The toolbar is one row from 1280 px wide: controls sit in groups (tools, undo, view toggles, panels); Find is a magnifier that widens when used. Night mode, zoom and help are not in the toolbar: they float in the bottom right corner of the desk. | change request 2026-10-09 | r1.8 | shortcuts |
 
 ## 3. Consequences
 
@@ -38,6 +43,14 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 
 **Strings are a table, not markup.** Every text is a key in `STR` with an English and an Italian value; a unit check requires both. Messages raised by the zip reader and the file dialogs are not in that table and appear in English in either language (`docs/review-2026-10-09.md`, X10).
 
+**The look, since r1.8.** Paper and text are no longer near white and near black, in day or night; the desk is closer to the paper; a lit toggle is a tint instead of a black block. None of this touches the page geometry (PAG): fonts, sizes and line breaks of the script are as before, and print is unchanged except for the cue tags (CUE-7).
+
+**Single-letter keys are a trade.** They are fast and need no modifier, but a letter typed with the focus outside a field now does something. They are off while a cue box is open because there a letter picks a department (CUE-3). The keys were chosen, not asked for: `[ASSUMED]`.
+
+**Ctrl+P is taken over** for the same reason as Ctrl+F: only pages near the screen are drawn, so the browser's own print would give a few pages.
+
 **Not built:** a hint for out-of-order cue labels (CUE-5); keyboard access to every control; any language besides English and Italian.
 
-**Not verified:** night mode and the grid strength in it were judged on screenshots, not on the laptop's display in a dark room.
+**Not verified:** the new colours, the tag labels and the corner dock were judged on screenshots only; whether the dock gets under a hand or a pen on the laptop is not known. Shortcuts were not tried on an Italian keyboard (/ and ? need Shift there).
+
+**Not verified, earlier:** night mode and the grid strength in it were judged on screenshots, not on the laptop's display in a dark room.

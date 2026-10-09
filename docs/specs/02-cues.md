@@ -19,6 +19,7 @@ Later requests, as received:
 
 - **Ends, r1.0:** "support for end of cues (e.g. when a music should stop)". Until then a stop could only be written as another cue with "stop" in its description, which keeps the list flat: it cannot show what is running at a given line, or what was never stopped.
 - **Change request, r1.3:** "not all video/audio cues need an end"; "fading can be another cue to signal the change or something an operator needs to remember"; a longer optional description shown only in the cue list; exports per department.
+- **Change request, r1.8:** "cues more visible", part of a request about the look of the page (quoted in full in `09-workbench.md`). Read as: the tag and the box round the cue word must be found by colour at a glance; nothing about where a cue sits changes.
 - **Change request, r1.4:** quick notes to review after rehearsals; cue list printed only from its panel; separate columns for the margin text and the description; a shorter cue line with the cue word marked; a blank number becomes the last plus one.
 - **After the first rehearsals, 2026-10-08, r1.6:** "Moving existing cues requires copy pasting the underlying annotation, would be much better to support press with mouse or finger and move it around until release."
 
@@ -44,7 +45,7 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| CUE-7 | A cue shows as a coloured tag in the right margin with a line to its word. The "Cues" toggle hides tags, lines and boxes: a clean view for the writer. | D8 | r0 | interact, cuebox |
+| CUE-7 | A cue shows as a tag in the right margin with a line to its word. The label of the tag (department and number) is a block filled with the department colour, its text dark or white, whichever reads better; the label of an end is outlined, not filled. The "Cues" toggle hides tags, lines and boxes: a clean view for the writer. | D8 | r0, filled label r1.8 | interact, cuebox, shortcuts |
 | CUE-8 | The cue word is boxed in the department colour with a light tint. Cues from several departments on one word give nested boxes, up to three. The line to the margin leaves from the bottom corner of the box. The box takes no space: adding a cue moves no text and flags no ink. | R0.1 delivery | r0.1 | cuebox |
 
 ### 2.3 Ends and linking cues

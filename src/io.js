@@ -802,6 +802,7 @@ function applyLang() {
   $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   $$('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); });
   $$('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  $$('[data-k]').forEach(el => { el.title = t(el.dataset.tt || el.dataset.t || 'review') + '  (' + el.dataset.k + ')'; });
 }
 function applyPaper() {
   const pp = paper(), st = document.documentElement.style;
@@ -834,6 +835,7 @@ function buildMenu() {
   add(t('mHistory'), openHistory, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
+  add(t('keys'), openKeys);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
   add(t('mOpen'), () => openZipFile(), !fs);
   add(t('mOpenFolder'), () => openFolder(), !fd);
@@ -842,7 +844,7 @@ function buildMenu() {
 function bindUI() {
   const pens = $('#pens');
   for (const c of INKS) {
-    const b = h('button', 'sw'); b.type = 'button'; b.dataset.c = c; b.style.setProperty('--c', c === BLACK ? 'var(--tx)' : c);
+    const b = h('button', 'sw'); b.type = 'button'; b.dataset.c = c; b.title = String(INKS.indexOf(c) + 1); b.style.setProperty('--c', c === BLACK ? 'var(--tx)' : c);
     b.onclick = () => { S.tool.colour = c; S.tool.mode = 'pen'; applyView(); };
     pens.appendChild(b);
   }
@@ -857,6 +859,7 @@ function bindUI() {
   $('#outline').onchange = e => { const b = S.byId.get(+e.target.value); e.target.value = ''; if (b) jumpTo(b); };
   $('#search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(e.target.value.trim(), e.shiftKey ? -1 : 1); } });
   $('#search').addEventListener('input', () => { S.findAt = null; });
+  $('#bKeys').onclick = openKeys;
   $('#bReview').onclick = () => toggleDrawer('review');
   $('#bList').onclick = () => toggleDrawer('cues');
   $('#bPrint').onclick = e => {
@@ -871,10 +874,47 @@ function bindUI() {
     });
   };
 }
+/* ---------- keys ---------- */
+/* the shortcuts dialog: keys, then the string that says what they do */
+const KEYS = [
+  ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
+  ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
+  ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Esc', 'kEsc'], ['?', 'keys']
+];
+let keysClose = null;
+function openKeys() {
+  keysClose = openDlg(t('keys'), (body, foot, close) => {
+    const tb = h('table', 'keys');
+    for (const [ks, s] of KEYS) {
+      const r = h('tr'), d = h('td');
+      for (const x of ks.split(' ')) d.appendChild(h('kbd', null, x));
+      r.append(d, h('td', null, t(s))); tb.appendChild(r);
+    }
+    body.append(tb, h('p', 'hint', t('kHint')));
+    dlgBtn(foot, t('close'), 'pri', () => { keysClose = null; close(); });
+  }, true);
+}
+const focusFind = () => { $('#search').focus(); $('#search').select(); };
+const press = id => () => $(id).click();
+const KEYMAP = {
+  b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), e: press('#bErase'), f: press('#bFinger'),
+  l: press('#bList'), r: press('#bReview'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
+  '/': focusFind, '?': openKeys, pagedown: () => pageStep(1), pageup: () => pageStep(-1),
+  home: () => { desk.scrollTop = 0; }, end: () => { desk.scrollTop = desk.scrollHeight; }
+};
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
+  if (e.key === 'Escape') {
+    if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
+    cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
+  }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
-  if (mod && k === 'f' && S.loaded && $('#dlg').hidden) { e.preventDefault(); $('#search').focus(); $('#search').select(); return; }
+  if (mod && !e.altKey && !e.shiftKey && S.loaded && $('#dlg').hidden) {
+    if (k === 'f') { e.preventDefault(); focusFind(); return; }
+    if (k === 's') { e.preventDefault(); saveNow(); return; }
+    /* the browser's own print would give only the pages drawn near the screen */
+    if (k === 'p') { e.preventDefault(); $('#bPrint').click(); return; }
+  }
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
   if (!S.loaded || !$('#dlg').hidden) return;
@@ -882,7 +922,12 @@ document.addEventListener('keydown', e => {
   if (mod && !e.altKey) {
     if (k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
     else if (k === 'y') { e.preventDefault(); redo(); }
+    return;
   }
+  if (mod || e.altKey || e.isComposing || POP || S.editing) return;
+  const pen = /^[1-9]$/.test(k) && $$('#pens .sw')[+k - 1];
+  const fn = pen ? () => pen.click() : KEYMAP[k];
+  if (fn) { e.preventDefault(); $('#menu').hidden = true; fn(); }
 });
 document.addEventListener('paste', e => {
   if (!S.loaded || S.editing || S.mode === 'templates' || !$('#dlg').hidden) return;

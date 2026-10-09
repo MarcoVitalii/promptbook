@@ -39,6 +39,7 @@ Three properties of the method to keep in mind when reading a green result:
 | r1.5 | 2026-10-08 | No count recorded | The defect behind the `zipshow` failure was fixed: a reopened show file saved only its first change. The test runner, `test/unit` and the hooks date from this release. |
 | r1.6 | 2026-10-08 | 443 pass: 376 browser in 13 files (243 existing, 72 new in `boards`, 61 new in `cue-move`), 67 unit in 3 files (18 existing, 23 new in `boards`, 26 new in `cue-move`). Nothing in `test/KNOWN_FAILING`. | See §4. |
 | r1.7 | 2026-10-09 | 33 new browser checks in `history`, 15 new unit checks in `compare`. The history was read back with git itself (`git fsck`, `git log`, `git diff`). | See §4. |
+| r1.8 | 2026-10-10 | 530 pass, none fail: 448 browser in 15 files (413 existing, 35 new in `shortcuts`), 82 unit in 4 files. Nothing in `test/KNOWN_FAILING`. Node 24.21.0, Playwright headless Chromium on Linux (WSL2). | No existing check had to change for the new toolbar. Day and night were looked at on screenshots at 1500 px; one row of toolbar was measured at 1500 and 1280 px. Not printed, PDF not opened. See §4. |
 
 **Measured on 2026-10-09 for this restructuring**, at git `953336a`, Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2): **495 checks pass, none fail**: 413 browser checks in 14 files and 82 unit checks in 4 files. `test/KNOWN_FAILING` is empty. The 4 browser checks beyond the r1.7 record are those added to `test/misc` with the Eraser and Finger fix (`ad08c1e`).
 
@@ -61,6 +62,7 @@ Three properties of the method to keep in mind when reading a green result:
 | `templates` | 38 | BRD-14 to BRD-27, PAG-11, PAG-12, STO-8, STO-13 |
 | `boards` | 72 | BRD-5, BRD-7 to BRD-13, BRD-26, STO-13, UI-6 |
 | `cue-move` | 61 | CUE-25 to CUE-34, INP-8 to INP-10 |
+| `shortcuts` | 35 | UI-9 to UI-11, CUE-7 |
 | `history` | 33 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19, STO-6 |
 
 Requirements with no automated check: TXT-9, TXT-18, TXT-20, CUE-4, INK-11, BRD-4, BRD-6, BRD-19, PAG-3, PAG-20, STO-9, STO-10, STO-14, HIS-4, HIS-12, UI-8. Six of these state that something does not exist or is not done (BRD-6, BRD-19, PAG-3, PAG-20, STO-10, HIS-4) and are checked by reading the code. CUE-4 is a timing with a person. The others are gaps: BRD-4 (image reduction), STO-9 (unused images dropped), HIS-12 (the message for packed history), TXT-9, TXT-20, INK-11, UI-8.
@@ -73,7 +75,8 @@ Collected from every release. Nothing in this list has a recorded trial.
 
 **On the device**
 
-- Nothing of r1.6 or r1.7 has run on the rehearsal laptop. r1.0, r1.3 and r1.4 are each recorded as "not yet tried on the laptop". r0.1 is recorded as tried. Which release ran in the rehearsal of 2026-10-08, the one the r1.6 requests came from, is not recorded.
+- r1.8: the colours by day and in a dark room, the filled tag labels, and whether the corner dock gets under a hand or the pen. The shortcuts on a real keyboard, an Italian one in particular (/ and ? need Shift). The filled labels on paper, in colour and on a black-and-white printer.
+- Nothing of r1.6, r1.7 or r1.8 has run on the rehearsal laptop. r1.0, r1.3 and r1.4 are each recorded as "not yet tried on the laptop". r0.1 is recorded as tried. Which release ran in the rehearsal of 2026-10-08, the one the r1.6 requests came from, is not recorded.
 - A real pen. The pen's eraser end could not even be simulated.
 - The palm rule: a hand resting on the screen while the pen writes or hovers (INP-3).
 - The finger hold on a cue tag, the pen drag from a tag, and a palm landing during a drag (INP-8, INP-9). Whether 0.3 s and 8 px suit a real finger is not known.
@@ -131,6 +134,7 @@ Until v1.0 the specification numbered requirements by scope tier. The tier IDs c
 | — (r1.2, no ID) | Show file | STO-1, STO-2, STO-4, STO-5, STO-9, STO-11 |
 | — (r1.3, no ID) | Linking cues, descriptions, exports per department | CUE-11 to CUE-14, CUE-19, CUE-20, CUE-39 |
 | — (r1.7, no ID) | History, variants, locked pages, changes | HIS-1 to HIS-12, PAG-13 to PAG-20 |
+| — (r1.8, no ID) | Look, cue labels, toolbar, shortcuts | UI-9 to UI-11, CUE-7 |
 
 ## 6. Consequences
 

@@ -2,45 +2,65 @@
 html,body{height:100%;margin:0}
 :root{
   --pw:793px;--ph:1122px;--text-w:399px;
-  --paper:#fffdf7;--tx:#1b1a17;--tx2:#57534b;--muted:#8a857a;--rule:#d8d2c4;
-  --desk:#dedad0;--ui:#f5f3ee;--ui2:#eae7df;--ui-b:#cfc9bb;--ui-ink:#24221e;--acc:#a3391f;--sel:#ffe7a0;
+  /* soft paper on a quiet desk: no pure white, no pure black, so a long evening does not glare */
+  --paper:#faf7f0;--tx:#24221d;--tx2:#57534b;--muted:#8a857a;--rule:#ddd7ca;
+  --desk:#e4e1da;--ui:#f8f7f3;--ui2:#edebe5;--ui-b:#d9d5cb;--ui-ink:#2a2824;--acc:#a3391f;--sel:#ffe7a0;
+  --shadow:0 1px 2px rgba(40,34,20,.10),0 6px 22px rgba(40,34,20,.10);
 }
 body.night{
-  --paper:#17181a;--tx:#e6e2d8;--tx2:#b5b0a4;--muted:#807c72;--rule:#35373b;
-  --desk:#0b0c0d;--ui:#1c1d20;--ui2:#26282c;--ui-b:#3a3c41;--ui-ink:#e2dfd6;--acc:#e58a68;--sel:#5d4c10;
+  --paper:#1c1d20;--tx:#d9d5cb;--tx2:#aaa59a;--muted:#807c72;--rule:#35373b;
+  --desk:#111214;--ui:#1a1b1e;--ui2:#26282c;--ui-b:#36383d;--ui-ink:#d9d6cd;--acc:#e58a68;--sel:#5d4c10;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 22px rgba(0,0,0,.35);
 }
 body{font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ui-ink);background:var(--desk);
   display:flex;flex-direction:column;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#desk,.dbody,.dbox>.body{scrollbar-width:thin;scrollbar-color:var(--ui-b) transparent}
 
 /* ---------- toolbar ---------- */
-#bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
-#bar button,.btn{background:var(--ui2);border:1px solid var(--ui-b);border-radius:6px;min-height:36px;min-width:34px;padding:0 8px;cursor:pointer;white-space:nowrap}
-#bar button:disabled,.btn:disabled{opacity:.4;cursor:default}
-#bar button.on,.btn.on{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
+#bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
+#bar button,#dock button{background:transparent;color:var(--ui-ink);border:0;border-radius:7px;min-height:36px;min-width:36px;padding:0 10px;cursor:pointer;white-space:nowrap}
+@media (hover:hover){#bar button:hover:not(:disabled),#dock button:hover{background:color-mix(in srgb,var(--ui-ink) 9%,transparent)}}
+#bar button:disabled{opacity:.35;cursor:default}
+/* a lit toggle is a tint, not a black block: three of them are lit most of the time */
+#bar button.on,#dock button.on{background:color-mix(in srgb,var(--acc) 15%,var(--ui));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+.grp{display:flex;align-items:center;gap:2px;padding:2px;background:var(--ui2);border-radius:9px}
+.btn{background:var(--ui2);border:1px solid var(--ui-b);border-radius:7px;min-height:36px;min-width:34px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.on{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
 .btn.pri{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
 .btn.sm{min-height:30px;font-size:13px}
 .btn.danger{color:var(--acc)}
-#bar .sw{width:28px;min-width:28px;height:28px;min-height:28px;border-radius:50%;padding:0;background:var(--c);border:3px solid var(--ui);box-shadow:0 0 0 1px var(--ui-b)}
-#bar .sw.on{background:var(--c);box-shadow:0 0 0 3px var(--ui-ink)}
-.sep{width:1px;height:26px;background:var(--ui-b);margin:0 1px}
+#pens{display:flex;align-items:center;gap:1px;padding:0 3px}
+#bar .sw,#bar .sw:hover:not(:disabled){width:28px;min-width:28px;height:28px;min-height:28px;border-radius:50%;padding:0;background:var(--c);border:4px solid var(--ui2)}
+#bar .sw.on{background:var(--c);box-shadow:0 0 0 2px var(--ui-ink)}
+.sep{width:1px;height:22px;background:var(--ui-b);margin:0 3px}
 .grow{flex:1}
-#who{display:flex;flex-direction:column;justify-content:center;line-height:1.2;max-width:150px;min-width:0}
-#showName{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#outline,#search{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px}
-#outline{max-width:120px}#search{width:96px}
+#who{display:flex;flex-direction:column;justify-content:center;line-height:1.25;max-width:200px;min-width:0;margin-right:4px}
+#showName{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#outline,#search{min-height:36px;border:1px solid transparent;border-radius:7px;background-color:var(--ui2);color:var(--ui-ink);padding:0 10px}
+#outline{max-width:150px;cursor:pointer}
+/* find is a magnifier until it is used */
+#search{width:42px;padding:0 0 0 40px;transition:width .15s;background-repeat:no-repeat;background-position:12px 50%;background-size:16px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238a857a' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.6'/%3E%3Cpath d='M10.6 10.6L14 14'/%3E%3C/svg%3E")}
+#search:focus,#search:not(:placeholder-shown){width:210px;padding:0 8px 0 36px;background-color:var(--paper);border-color:var(--ui-b);color:var(--tx)}
 #status{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #status.err{color:var(--acc);font-weight:700}
 #bReview b{color:var(--acc)}
-#menu{position:absolute;left:10px;top:46px;background:var(--ui);border:1px solid var(--ui-b);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;display:flex;flex-direction:column;min-width:230px;z-index:20}
-#menu button{border:0;background:transparent;text-align:left;border-radius:6px;min-height:38px}
-#menu button:hover{background:var(--ui2)}
+#menu{position:absolute;left:10px;top:calc(100% - 2px);background:var(--ui);border:1px solid var(--ui-b);border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.2);padding:6px;display:flex;flex-direction:column;min-width:230px;z-index:20}
+#bar #menu button{text-align:left;min-height:38px;padding:0 12px}
 #banner{background:var(--sel);color:var(--tx);padding:7px 12px;display:flex;gap:10px;align-items:center;font-size:13px;border-bottom:1px solid var(--ui-b)}
 #banner span{margin-right:auto}
+body.night #banner{background:color-mix(in srgb,var(--sel) 40%,var(--ui))}
 
 /* ---------- work area ---------- */
 #work{flex:1;display:flex;min-height:0}
+#deskwrap{flex:1;display:flex;min-width:0;min-height:0;position:relative}
+/* zoom, night and help float over the corner of the desk, out of the toolbar */
+#dock{position:absolute;right:22px;bottom:16px;z-index:4;display:flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
+  background:color-mix(in srgb,var(--ui) 90%,transparent);border:1px solid var(--ui-b);box-shadow:0 4px 18px rgba(0,0,0,.16);backdrop-filter:blur(6px)}
 #desk{flex:1;overflow:auto;padding:14px;touch-action:none;position:relative;overscroll-behavior:contain}
 #zoomwrap{margin:0 auto;position:relative}
 #spreads{transform-origin:0 0;position:absolute;left:0;top:0}
@@ -48,7 +68,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 body:not(.facing) .page.facing{display:none}
 
 .page{position:relative;flex:none;width:var(--pw);height:var(--ph);background:var(--paper);color:var(--tx);overflow:hidden;
-  box-shadow:0 1px 4px rgba(0,0,0,.28);user-select:none;-webkit-user-select:none;
+  box-shadow:var(--shadow);border-radius:2px;user-select:none;-webkit-user-select:none;
   font-family:"PB","Segoe UI",Arial,sans-serif;font-size:15px;line-height:22px;
   text-rendering:geometricPrecision;font-kerning:normal;font-variant-ligatures:none;font-synthesis:none}
 .phead{position:absolute;left:38px;right:46px;top:20px;font-size:11px;line-height:14px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;
@@ -92,19 +112,22 @@ body:not(.facing) .page.facing{display:none}
 
 .w{cursor:pointer;border-radius:2px}
 /* a box round the cue word; drawn as a shadow so it never moves the text */
-.w.cued{box-shadow:var(--ring,0 0 0 1.5px var(--c));background:color-mix(in srgb,var(--c) 13%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.w.cued{box-shadow:var(--ring,0 0 0 1.5px var(--c));background:color-mix(in srgb,var(--c) 26%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .w.sel{background:var(--sel)}
 @media (hover:hover){.w:hover{background:color-mix(in srgb,var(--tx) 9%,transparent)}}
 .row.flash{animation:fl 1.5s}
 @keyframes fl{0%,55%{background:var(--sel)}100%{background:transparent}}
 
 .tags{position:absolute;inset:0;pointer-events:none}
-.tag{position:absolute;pointer-events:auto;width:166px;text-align:left;font:400 12px/15px "PB","Segoe UI",Arial,sans-serif;color:var(--tx);
-  background:color-mix(in srgb,var(--c) 17%,var(--paper));border:0;border-left:4px solid var(--c);border-radius:0 4px 4px 0;padding:2px 6px 3px;cursor:pointer;overflow-wrap:anywhere}
-.tag b{font-weight:700}
-.tag.unk{border-left-style:dotted}
+/* the label is a block of the department colour, so a cue is found by colour before it is read */
+.tag{position:absolute;pointer-events:auto;width:166px;text-align:left;font:400 12.5px/16px "PB","Segoe UI",Arial,sans-serif;color:var(--tx);
+  background:color-mix(in srgb,var(--c) 15%,var(--paper));border:0;border-radius:5px;padding:2px 6px 2px 2px;cursor:pointer;overflow-wrap:anywhere}
+.tag b{font-weight:700;background:var(--c);color:var(--ct,#fff);border-radius:3.5px;padding:0 5px;margin-right:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tag.unk{outline:1.5px dotted var(--c);outline-offset:-1.5px}
 .tag.etag{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--c)}
+.tag.etag b{background:none;color:inherit;padding:0 3px}
 .tag.etag b::before{content:"";display:inline-block;width:7px;height:7px;background:var(--c);margin-right:5px}
+.tag.btag b{background:var(--tx2);color:var(--paper)}
 .tag .nd{color:var(--c);font-weight:700}
 /* a cue tag being dragged to another word: lifted under a finger, dimmed in place, a copy at the pointer */
 .tag.lift{box-shadow:0 2px 8px rgba(0,0,0,.35)}
@@ -115,8 +138,8 @@ body:not(.facing) .page.facing{display:none}
 .w.drop,.w.cued.drop{box-shadow:0 0 0 2px var(--dc);background:color-mix(in srgb,var(--dc) 30%,transparent)}
 .tag.btag b::before{content:"";display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;margin-right:5px}
 .links,.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.links path{fill:none;stroke-width:1.2}
-.links path.rail{stroke-width:2.4;opacity:.8;stroke-linejoin:round}
+.links path{fill:none;stroke-width:1.5}
+.links path.rail{stroke-width:2.8;opacity:.85;stroke-linejoin:round}
 .ink path,.bstrokes path,.bstatic path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .bbase{opacity:var(--tfade,.4);filter:grayscale(1)}
 .bgrid{fill:none;stroke:var(--muted);stroke-width:.5px;opacity:.2;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -167,7 +190,7 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dupe{color:var(--acc);font-weight:700}
 .cl .notes{font-size:12px;white-space:pre-wrap}
 .cl .notes+.notes{margin-top:3px}
-.cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
 #drawer.wide{width:580px}
 .rv .todo{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--ui-b)}
 .rv .todo .it{border-bottom:0;border-left:5px solid var(--c);padding-left:8px}
@@ -217,10 +240,14 @@ textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6
 .drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
+table.keys{border-collapse:collapse;width:100%;font-size:13px}
+.keys td{padding:5px 0;border-bottom:1px solid var(--ui-b)}
+.keys td:first-child{white-space:nowrap;padding-right:14px}
+kbd{display:inline-block;min-width:24px;text-align:center;font:600 12px/20px ui-monospace,Consolas,monospace;padding:0 6px;margin-right:4px;border:1px solid var(--ui-b);border-bottom-width:2px;border-radius:5px;background:var(--ui2)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
 
 #start{position:fixed;inset:0;z-index:35;background:var(--desk);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
-.card{background:var(--ui);border:1px solid var(--ui-b);border-radius:14px;padding:26px 28px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.card{background:var(--ui);border:1px solid var(--ui-b);border-radius:16px;padding:28px 30px;max-width:520px;width:100%;box-shadow:0 10px 34px rgba(0,0,0,.14)}
 .card h1{margin:0;font-size:24px;letter-spacing:.01em}
 .card .sub{color:var(--muted);margin:2px 0 18px}
 .card .btn{display:block;width:100%;min-height:46px;margin-top:8px;text-align:left;font-size:15px}
@@ -251,13 +278,13 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,.noprint,.flag,.ghost{display:none!important}
-  #work{display:block}
+  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}
   #spreads{transform:none!important;position:static;width:auto!important}
   .spread{display:block;margin:0}
-  .page{box-shadow:none;break-after:page;break-inside:avoid}
+  .page{box-shadow:none;border-radius:0;break-after:page;break-inside:avoid}
   .bcap{visibility:hidden}
   .bgrid{opacity:.24}.bgrid.maj{opacity:.38}
   body.pr-book .page.facing{display:block!important}

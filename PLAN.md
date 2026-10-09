@@ -1,7 +1,7 @@
 # Promptbook — Plan
 
 **Plan:** v1.0, 2026-10-09. Restructured with `SPEC.md` v2.0: this file now holds only what is ahead. What the tool must do is in `SPEC.md` and `docs/specs/`; why it is built this way is in `docs/decisions.md`; how each release was checked is in `docs/verification.md`.
-**State:** r1.7 is built and committed on branch `r1.6`, not tagged. r1.6 and r1.7 are checked in a simulated browser only.
+**State:** r1.8 is built, committed on `master` and tagged. r1.7 is on `master` without a tag. r1.6, r1.7 and r1.8 are checked in a simulated browser only.
 
 ---
 
@@ -19,6 +19,7 @@ The first rehearsal with the tool was on 2026-10-08. The plan since then is driv
 | r1.5 | Fix for the show file; development tooling | Last tagged release; opens r1.6 shows. |
 | r1.6 | Fixes from the first rehearsals | Device trial (§3, action 4). Tag. Confirmation of five `[ASSUMED]` decisions. |
 | r1.7 | History, variants, locked pages, changes | Device trial (§3, action 5). Tag. Confirmation of its `[ASSUMED]` rows. |
+| r1.8 | Look, cue labels, toolbar and dock, shortcuts | Device trial (§3, action 5a). Confirmation of the keys (UI-9). |
 
 Which release ran in the rehearsal of 2026-10-08 is not recorded. The earlier question of whether to take r0.1 or r1.0 into it is overtaken.
 
@@ -26,7 +27,7 @@ Which release ran in the rehearsal of 2026-10-08 is not recorded. The earlier qu
 
 In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-09.md`); the rest are carried from the plan as it stood.
 
-1. **Decide where the repository lives** (Q27) and put a copy there. Today it has no remote. Then tag r1.6 and r1.7, or state that they are not releases until their device trial, and bring `master` up from r1.5.
+1. **Decide where the repository lives** (Q27) and put a copy there. Today it has no remote. `master` now holds everything up to r1.8. Still open: r1.7 has no tag, and the tag `r1.6` points at `a3d735b`, a commit after r1.7, not at the r1.6 release (`d0b53c0`); move it or leave it, but decide.
 2. **Fix the two ways of losing work found in the review:** two boards saved in one file (X1); a damaged settings or ink file opened as empty and then overwritten (X2).
 3. **Name the pointer thresholds in one place** (F7), so that they can be tuned during the trial below.
 4. **Try r1.6 on the laptop before a rehearsal relies on it.** Nothing of r1.6 has run there; the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only; nothing was printed on paper and the PDF was not opened. Device trial of the cue drag, with finger and pen, and of the grid:
@@ -40,6 +41,7 @@ In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-
    - A system `pointercancel` in mid-drag ends the drag with no change.
    - Grid lightness on the real screen and on paper; hairlines may print faint on a laser printer.
 5. **Try r1.7 on the laptop:** the real file dialogs; a revision, a variant, a restore; a locked show after an edit, and "Print changed pages" on paper; a change list printed for one actor. Keep the show file of a week's rehearsals and note its size (X6).
+5a. **Try r1.8 on the laptop:** the colours by day and in the dark; whether the tag labels read at arm's length; whether the corner dock is in the way of the hand or the pen; the shortcuts on its keyboard (/ and ? on an Italian layout); one page with cues printed. Confirm or change the keys (UI-9).
 6. **Try the r1.0 features on the laptop** if that was never done: place an end on a sound cue, draw a stage template, base a second template on it, add a board.
 7. **Print one facing page with three or more boards** from r1.6 and look at it: two columns, names under the drawings, grid.
 8. **Confirm or change the five decisions of r1.6** marked `[ASSUMED]`: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30).
@@ -103,7 +105,7 @@ Console or playback export. Real-time co-editing. Score or bar-number cueing. Ha
 
 ## 9. Releases and versioning
 
-Releases are kept in a git repository whose root is the project. Tags that exist: `r1.1`, `r1.2`, `r1.3`, `r1.4`, `r1.5`. r0 and r0.1 are not in this repository; r1.0 is its first commit (`33118d4`) and has no tag; r1.6 and r1.7 are committed and not yet tagged. The table of releases is in `SPEC.md` §6.
+Releases are kept in a git repository whose root is the project. Tags that exist: `r1.1` to `r1.6` and `r1.8`. r0 and r0.1 are not in this repository; r1.0 is its first commit (`33118d4`) and has no tag; r1.7 is committed and has no tag; the tag `r1.6` is on `a3d735b`, later than the r1.6 release. The table of releases is in `SPEC.md` §6.
 
 Rule for every release:
 

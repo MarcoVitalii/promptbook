@@ -1,5 +1,17 @@
 # Changelog
 
+## r1.8 — 2026-10-10
+
+A calmer screen, cues that stand out, a shorter toolbar and keyboard shortcuts. Checked in a simulated browser only: the colours, the tags and the corner controls were judged on screenshots, not on the rehearsal laptop, and nothing was printed on paper.
+
+- Softer colours by day and by night: no pure white paper, no pure black text, a lit button is a tint and not a black block.
+- The label of a cue in the margin is a block of the department colour; an end keeps an outlined label. The box round the cue word is stronger. Printed pages show the same tags.
+- The toolbar is one row, in groups. Night mode, zoom and “?” moved to the bottom right corner of the desk. Find is a magnifier until you use it.
+- Shortcuts, when you are not typing in a field: B boards, C cues, I ink, N night, 1–4 pens, E eraser, F finger, + − 0 zoom, Page Down / Page Up, Home / End, L cue list, R Review, / find, Ctrl+S save now. Press ? for the list.
+- Ctrl+P now opens the tool’s print choices. Before, it ran the browser’s print, which gives only a few pages.
+
+Compatibility: nothing in the show file changes.
+
 ## r1.7 — 2026-10-09
 
 History of the show, variants for venues, page numbers that hold once a script is handed out, and a list of changes per character. Checked in a simulated browser only: not yet run on the rehearsal laptop, and nothing was printed on paper. The history was read back with git itself (`git fsck`, `git log`, `git diff`).

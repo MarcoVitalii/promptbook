@@ -91,7 +91,7 @@ function layoutTags(i) {
   const els = list.map(o => {
     const d = o.c.board ? null : deptOf(o.c.dept);
     const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end || o.c.links.length ? ' etag' : '')); tg.type = 'button';
-    tg.style.setProperty('--c', cueColour(o.c));
+    tg.style.setProperty('--c', cueColour(o.c)); tg.style.setProperty('--ct', inkOn(cueColour(o.c)));
     tg.dataset.b = o.b.id; tg.dataset.s = o.c.s;
     tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : cueName(o.c)));
     const tip = [o.c.links.length ? t('endsCue', o.c.links.map(cueName).join(', ')) : '', o.c.notes ? t('hasNotes') + ': ' + o.c.notes : ''].filter(Boolean).join(' · ');
@@ -573,6 +573,12 @@ function jumpTo(b, quiet) {
   renderVisible();
   const row = rowEl(i, b);
   if (row) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); }
+}
+function pageStep(d) {
+  if (S.mode === 'templates' || !S.pages.length) return;
+  const i = clamp(currentPage() + d, 0, S.pages.length - 1);
+  desk.scrollTop = Math.max(0, i * (paper().h + GAP) * S.view.zoom + wrap.offsetTop - 8);
+  renderVisible();
 }
 function findNext(q, dir) {
   if (!q || !S.blocks.length) return;

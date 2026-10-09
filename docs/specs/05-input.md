@@ -38,7 +38,7 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 | INP-8 | Finger hold on a tag: a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts. A quick finger tap on a tag opens the cue editor. Board tags do not lift. | `[ASSUMED]` | r1.6 | cue-move |
 | INP-9 | The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. | as built | r1.6 | cue-move |
 | INP-10 | Escape cancels a drag and closes the open popover or menu. A system `pointercancel` ends a drag with no change. | as built | r1.6 | cue-move |
-| INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. | as built | r0 | interact |
+| INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. The single-key shortcuts added in r1.8 are UI-9 (`09-workbench.md`); they are off while the cue pin is open, so the department letters keep their meaning. | as built | r0 | interact |
 
 ## 3. Consequences
 

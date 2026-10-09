@@ -21,31 +21,44 @@
 <header id="bar">
   <button id="bMenu" data-tt="menu">&#9776;</button>
   <span id="who"><b id="showName"></b><span id="status"></span></span>
-  <select id="outline" data-tt="jump"></select>
-  <input id="search" type="search" data-tp="find" autocomplete="off">
-  <span class="sep"></span>
-  <span id="pens"></span>
-  <button id="bErase" data-t="eraser"></button>
-  <button id="bFinger" data-t="finger" data-tt="fingerTip"></button>
-  <button id="bUndo" data-tt="undo">&#8630;</button>
-  <button id="bRedo" data-tt="redo">&#8631;</button>
-  <span class="sep"></span>
-  <button id="bFacing" data-t="boards" data-tt="boardsTip"></button>
-  <button id="bCues" data-t="cues" data-tt="cuesTip"></button>
-  <button id="bInk" data-t="ink" data-tt="inkTip"></button>
-  <button id="bNight" data-tt="night">&#9790;</button>
-  <button id="zOut" data-tt="zoomOut">&minus;</button>
-  <button id="zFit" data-t="fit"></button>
-  <button id="zIn" data-tt="zoomIn">+</button>
+  <span class="grp">
+    <span id="pens"></span>
+    <button id="bErase" data-t="eraser" data-k="E"></button>
+    <button id="bFinger" data-t="finger" data-tt="fingerTip" data-k="F"></button>
+  </span>
+  <span class="grp">
+    <button id="bUndo" data-tt="undo" data-k="Ctrl+Z">&#8630;</button>
+    <button id="bRedo" data-tt="redo" data-k="Ctrl+Y">&#8631;</button>
+  </span>
   <span class="grow"></span>
-  <button id="bReview" hidden></button>
-  <button id="bList" data-t="cueList"></button>
-  <button id="bPrint" data-t="print"></button>
+  <select id="outline" data-tt="jump"></select>
+  <input id="search" type="search" data-tp="find" data-tt="kFind" data-k="Ctrl+F" autocomplete="off">
+  <span class="grp">
+    <button id="bFacing" data-t="boards" data-tt="boardsTip" data-k="B"></button>
+    <button id="bCues" data-t="cues" data-tt="cuesTip" data-k="C"></button>
+    <button id="bInk" data-t="ink" data-tt="inkTip" data-k="I"></button>
+  </span>
+  <span class="grp">
+    <button id="bReview" data-k="R" hidden></button>
+    <button id="bList" data-t="cueList" data-k="L"></button>
+    <button id="bPrint" data-t="print" data-k="Ctrl+P"></button>
+  </span>
   <div id="menu" hidden></div>
 </header>
 <div id="banner" hidden></div>
 <div id="work">
-  <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+  <div id="deskwrap">
+    <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+    <div id="dock">
+      <button id="bNight" data-tt="night" data-k="N">&#9790;</button>
+      <span class="sep"></span>
+      <button id="zOut" data-tt="zoomOut" data-k="&minus;">&minus;</button>
+      <button id="zFit" data-t="fit" data-tt="kFit" data-k="0"></button>
+      <button id="zIn" data-tt="zoomIn" data-k="+">+</button>
+      <span class="sep"></span>
+      <button id="bKeys" data-tt="keys" data-k="?">?</button>
+    </div>
+  </div>
   <aside id="drawer" hidden></aside>
 </div>
 <div id="pop" hidden></div>

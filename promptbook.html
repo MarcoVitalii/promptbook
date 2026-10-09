@@ -20,45 +20,65 @@
 html,body{height:100%;margin:0}
 :root{
   --pw:793px;--ph:1122px;--text-w:399px;
-  --paper:#fffdf7;--tx:#1b1a17;--tx2:#57534b;--muted:#8a857a;--rule:#d8d2c4;
-  --desk:#dedad0;--ui:#f5f3ee;--ui2:#eae7df;--ui-b:#cfc9bb;--ui-ink:#24221e;--acc:#a3391f;--sel:#ffe7a0;
+  /* soft paper on a quiet desk: no pure white, no pure black, so a long evening does not glare */
+  --paper:#faf7f0;--tx:#24221d;--tx2:#57534b;--muted:#8a857a;--rule:#ddd7ca;
+  --desk:#e4e1da;--ui:#f8f7f3;--ui2:#edebe5;--ui-b:#d9d5cb;--ui-ink:#2a2824;--acc:#a3391f;--sel:#ffe7a0;
+  --shadow:0 1px 2px rgba(40,34,20,.10),0 6px 22px rgba(40,34,20,.10);
 }
 body.night{
-  --paper:#17181a;--tx:#e6e2d8;--tx2:#b5b0a4;--muted:#807c72;--rule:#35373b;
-  --desk:#0b0c0d;--ui:#1c1d20;--ui2:#26282c;--ui-b:#3a3c41;--ui-ink:#e2dfd6;--acc:#e58a68;--sel:#5d4c10;
+  --paper:#1c1d20;--tx:#d9d5cb;--tx2:#aaa59a;--muted:#807c72;--rule:#35373b;
+  --desk:#111214;--ui:#1a1b1e;--ui2:#26282c;--ui-b:#36383d;--ui-ink:#d9d6cd;--acc:#e58a68;--sel:#5d4c10;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 6px 22px rgba(0,0,0,.35);
 }
 body{font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ui-ink);background:var(--desk);
   display:flex;flex-direction:column;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#desk,.dbody,.dbox>.body{scrollbar-width:thin;scrollbar-color:var(--ui-b) transparent}
 
 /* ---------- toolbar ---------- */
-#bar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
-#bar button,.btn{background:var(--ui2);border:1px solid var(--ui-b);border-radius:6px;min-height:36px;min-width:34px;padding:0 8px;cursor:pointer;white-space:nowrap}
-#bar button:disabled,.btn:disabled{opacity:.4;cursor:default}
-#bar button.on,.btn.on{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
+#bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
+#bar button,#dock button{background:transparent;color:var(--ui-ink);border:0;border-radius:7px;min-height:36px;min-width:36px;padding:0 10px;cursor:pointer;white-space:nowrap}
+@media (hover:hover){#bar button:hover:not(:disabled),#dock button:hover{background:color-mix(in srgb,var(--ui-ink) 9%,transparent)}}
+#bar button:disabled{opacity:.35;cursor:default}
+/* a lit toggle is a tint, not a black block: three of them are lit most of the time */
+#bar button.on,#dock button.on{background:color-mix(in srgb,var(--acc) 15%,var(--ui));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 45%,transparent)}
+.grp{display:flex;align-items:center;gap:2px;padding:2px;background:var(--ui2);border-radius:9px}
+.btn{background:var(--ui2);border:1px solid var(--ui-b);border-radius:7px;min-height:36px;min-width:34px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.on{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
 .btn.pri{background:var(--ui-ink);color:var(--ui);border-color:var(--ui-ink)}
 .btn.sm{min-height:30px;font-size:13px}
 .btn.danger{color:var(--acc)}
-#bar .sw{width:28px;min-width:28px;height:28px;min-height:28px;border-radius:50%;padding:0;background:var(--c);border:3px solid var(--ui);box-shadow:0 0 0 1px var(--ui-b)}
-#bar .sw.on{background:var(--c);box-shadow:0 0 0 3px var(--ui-ink)}
-.sep{width:1px;height:26px;background:var(--ui-b);margin:0 1px}
+#pens{display:flex;align-items:center;gap:1px;padding:0 3px}
+#bar .sw,#bar .sw:hover:not(:disabled){width:28px;min-width:28px;height:28px;min-height:28px;border-radius:50%;padding:0;background:var(--c);border:4px solid var(--ui2)}
+#bar .sw.on{background:var(--c);box-shadow:0 0 0 2px var(--ui-ink)}
+.sep{width:1px;height:22px;background:var(--ui-b);margin:0 3px}
 .grow{flex:1}
-#who{display:flex;flex-direction:column;justify-content:center;line-height:1.2;max-width:150px;min-width:0}
-#showName{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#outline,#search{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px}
-#outline{max-width:120px}#search{width:96px}
+#who{display:flex;flex-direction:column;justify-content:center;line-height:1.25;max-width:200px;min-width:0;margin-right:4px}
+#showName{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#outline,#search{min-height:36px;border:1px solid transparent;border-radius:7px;background-color:var(--ui2);color:var(--ui-ink);padding:0 10px}
+#outline{max-width:150px;cursor:pointer}
+/* find is a magnifier until it is used */
+#search{width:42px;padding:0 0 0 40px;transition:width .15s;background-repeat:no-repeat;background-position:12px 50%;background-size:16px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238a857a' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.6'/%3E%3Cpath d='M10.6 10.6L14 14'/%3E%3C/svg%3E")}
+#search:focus,#search:not(:placeholder-shown){width:210px;padding:0 8px 0 36px;background-color:var(--paper);border-color:var(--ui-b);color:var(--tx)}
 #status{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #status.err{color:var(--acc);font-weight:700}
 #bReview b{color:var(--acc)}
-#menu{position:absolute;left:10px;top:46px;background:var(--ui);border:1px solid var(--ui-b);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;display:flex;flex-direction:column;min-width:230px;z-index:20}
-#menu button{border:0;background:transparent;text-align:left;border-radius:6px;min-height:38px}
-#menu button:hover{background:var(--ui2)}
+#menu{position:absolute;left:10px;top:calc(100% - 2px);background:var(--ui);border:1px solid var(--ui-b);border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.2);padding:6px;display:flex;flex-direction:column;min-width:230px;z-index:20}
+#bar #menu button{text-align:left;min-height:38px;padding:0 12px}
 #banner{background:var(--sel);color:var(--tx);padding:7px 12px;display:flex;gap:10px;align-items:center;font-size:13px;border-bottom:1px solid var(--ui-b)}
 #banner span{margin-right:auto}
+body.night #banner{background:color-mix(in srgb,var(--sel) 40%,var(--ui))}
 
 /* ---------- work area ---------- */
 #work{flex:1;display:flex;min-height:0}
+#deskwrap{flex:1;display:flex;min-width:0;min-height:0;position:relative}
+/* zoom, night and help float over the corner of the desk, out of the toolbar */
+#dock{position:absolute;right:22px;bottom:16px;z-index:4;display:flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
+  background:color-mix(in srgb,var(--ui) 90%,transparent);border:1px solid var(--ui-b);box-shadow:0 4px 18px rgba(0,0,0,.16);backdrop-filter:blur(6px)}
 #desk{flex:1;overflow:auto;padding:14px;touch-action:none;position:relative;overscroll-behavior:contain}
 #zoomwrap{margin:0 auto;position:relative}
 #spreads{transform-origin:0 0;position:absolute;left:0;top:0}
@@ -66,7 +86,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 body:not(.facing) .page.facing{display:none}
 
 .page{position:relative;flex:none;width:var(--pw);height:var(--ph);background:var(--paper);color:var(--tx);overflow:hidden;
-  box-shadow:0 1px 4px rgba(0,0,0,.28);user-select:none;-webkit-user-select:none;
+  box-shadow:var(--shadow);border-radius:2px;user-select:none;-webkit-user-select:none;
   font-family:"PB","Segoe UI",Arial,sans-serif;font-size:15px;line-height:22px;
   text-rendering:geometricPrecision;font-kerning:normal;font-variant-ligatures:none;font-synthesis:none}
 .phead{position:absolute;left:38px;right:46px;top:20px;font-size:11px;line-height:14px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;
@@ -110,19 +130,22 @@ body:not(.facing) .page.facing{display:none}
 
 .w{cursor:pointer;border-radius:2px}
 /* a box round the cue word; drawn as a shadow so it never moves the text */
-.w.cued{box-shadow:var(--ring,0 0 0 1.5px var(--c));background:color-mix(in srgb,var(--c) 13%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.w.cued{box-shadow:var(--ring,0 0 0 1.5px var(--c));background:color-mix(in srgb,var(--c) 26%,transparent);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .w.sel{background:var(--sel)}
 @media (hover:hover){.w:hover{background:color-mix(in srgb,var(--tx) 9%,transparent)}}
 .row.flash{animation:fl 1.5s}
 @keyframes fl{0%,55%{background:var(--sel)}100%{background:transparent}}
 
 .tags{position:absolute;inset:0;pointer-events:none}
-.tag{position:absolute;pointer-events:auto;width:166px;text-align:left;font:400 12px/15px "PB","Segoe UI",Arial,sans-serif;color:var(--tx);
-  background:color-mix(in srgb,var(--c) 17%,var(--paper));border:0;border-left:4px solid var(--c);border-radius:0 4px 4px 0;padding:2px 6px 3px;cursor:pointer;overflow-wrap:anywhere}
-.tag b{font-weight:700}
-.tag.unk{border-left-style:dotted}
+/* the label is a block of the department colour, so a cue is found by colour before it is read */
+.tag{position:absolute;pointer-events:auto;width:166px;text-align:left;font:400 12.5px/16px "PB","Segoe UI",Arial,sans-serif;color:var(--tx);
+  background:color-mix(in srgb,var(--c) 15%,var(--paper));border:0;border-radius:5px;padding:2px 6px 2px 2px;cursor:pointer;overflow-wrap:anywhere}
+.tag b{font-weight:700;background:var(--c);color:var(--ct,#fff);border-radius:3.5px;padding:0 5px;margin-right:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tag.unk{outline:1.5px dotted var(--c);outline-offset:-1.5px}
 .tag.etag{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--c)}
+.tag.etag b{background:none;color:inherit;padding:0 3px}
 .tag.etag b::before{content:"";display:inline-block;width:7px;height:7px;background:var(--c);margin-right:5px}
+.tag.btag b{background:var(--tx2);color:var(--paper)}
 .tag .nd{color:var(--c);font-weight:700}
 /* a cue tag being dragged to another word: lifted under a finger, dimmed in place, a copy at the pointer */
 .tag.lift{box-shadow:0 2px 8px rgba(0,0,0,.35)}
@@ -133,8 +156,8 @@ body:not(.facing) .page.facing{display:none}
 .w.drop,.w.cued.drop{box-shadow:0 0 0 2px var(--dc);background:color-mix(in srgb,var(--dc) 30%,transparent)}
 .tag.btag b::before{content:"";display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;margin-right:5px}
 .links,.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.links path{fill:none;stroke-width:1.2}
-.links path.rail{stroke-width:2.4;opacity:.8;stroke-linejoin:round}
+.links path{fill:none;stroke-width:1.5}
+.links path.rail{stroke-width:2.8;opacity:.85;stroke-linejoin:round}
 .ink path,.bstrokes path,.bstatic path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .bbase{opacity:var(--tfade,.4);filter:grayscale(1)}
 .bgrid{fill:none;stroke:var(--muted);stroke-width:.5px;opacity:.2;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -185,7 +208,7 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dupe{color:var(--acc);font-weight:700}
 .cl .notes{font-size:12px;white-space:pre-wrap}
 .cl .notes+.notes{margin-top:3px}
-.cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
 #drawer.wide{width:580px}
 .rv .todo{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--ui-b)}
 .rv .todo .it{border-bottom:0;border-left:5px solid var(--c);padding-left:8px}
@@ -235,10 +258,14 @@ textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6
 .drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
+table.keys{border-collapse:collapse;width:100%;font-size:13px}
+.keys td{padding:5px 0;border-bottom:1px solid var(--ui-b)}
+.keys td:first-child{white-space:nowrap;padding-right:14px}
+kbd{display:inline-block;min-width:24px;text-align:center;font:600 12px/20px ui-monospace,Consolas,monospace;padding:0 6px;margin-right:4px;border:1px solid var(--ui-b);border-bottom-width:2px;border-radius:5px;background:var(--ui2)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
 
 #start{position:fixed;inset:0;z-index:35;background:var(--desk);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
-.card{background:var(--ui);border:1px solid var(--ui-b);border-radius:14px;padding:26px 28px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.card{background:var(--ui);border:1px solid var(--ui-b);border-radius:16px;padding:28px 30px;max-width:520px;width:100%;box-shadow:0 10px 34px rgba(0,0,0,.14)}
 .card h1{margin:0;font-size:24px;letter-spacing:.01em}
 .card .sub{color:var(--muted);margin:2px 0 18px}
 .card .btn{display:block;width:100%;min-height:46px;margin-top:8px;text-align:left;font-size:15px}
@@ -269,13 +296,13 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,.noprint,.flag,.ghost{display:none!important}
-  #work{display:block}
+  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}
   #spreads{transform:none!important;position:static;width:auto!important}
   .spread{display:block;margin:0}
-  .page{box-shadow:none;break-after:page;break-inside:avoid}
+  .page{box-shadow:none;border-radius:0;break-after:page;break-inside:avoid}
   .bcap{visibility:hidden}
   .bgrid{opacity:.24}.bgrid.maj{opacity:.38}
   body.pr-book .page.facing{display:block!important}
@@ -305,31 +332,44 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 <header id="bar">
   <button id="bMenu" data-tt="menu">&#9776;</button>
   <span id="who"><b id="showName"></b><span id="status"></span></span>
-  <select id="outline" data-tt="jump"></select>
-  <input id="search" type="search" data-tp="find" autocomplete="off">
-  <span class="sep"></span>
-  <span id="pens"></span>
-  <button id="bErase" data-t="eraser"></button>
-  <button id="bFinger" data-t="finger" data-tt="fingerTip"></button>
-  <button id="bUndo" data-tt="undo">&#8630;</button>
-  <button id="bRedo" data-tt="redo">&#8631;</button>
-  <span class="sep"></span>
-  <button id="bFacing" data-t="boards" data-tt="boardsTip"></button>
-  <button id="bCues" data-t="cues" data-tt="cuesTip"></button>
-  <button id="bInk" data-t="ink" data-tt="inkTip"></button>
-  <button id="bNight" data-tt="night">&#9790;</button>
-  <button id="zOut" data-tt="zoomOut">&minus;</button>
-  <button id="zFit" data-t="fit"></button>
-  <button id="zIn" data-tt="zoomIn">+</button>
+  <span class="grp">
+    <span id="pens"></span>
+    <button id="bErase" data-t="eraser" data-k="E"></button>
+    <button id="bFinger" data-t="finger" data-tt="fingerTip" data-k="F"></button>
+  </span>
+  <span class="grp">
+    <button id="bUndo" data-tt="undo" data-k="Ctrl+Z">&#8630;</button>
+    <button id="bRedo" data-tt="redo" data-k="Ctrl+Y">&#8631;</button>
+  </span>
   <span class="grow"></span>
-  <button id="bReview" hidden></button>
-  <button id="bList" data-t="cueList"></button>
-  <button id="bPrint" data-t="print"></button>
+  <select id="outline" data-tt="jump"></select>
+  <input id="search" type="search" data-tp="find" data-tt="kFind" data-k="Ctrl+F" autocomplete="off">
+  <span class="grp">
+    <button id="bFacing" data-t="boards" data-tt="boardsTip" data-k="B"></button>
+    <button id="bCues" data-t="cues" data-tt="cuesTip" data-k="C"></button>
+    <button id="bInk" data-t="ink" data-tt="inkTip" data-k="I"></button>
+  </span>
+  <span class="grp">
+    <button id="bReview" data-k="R" hidden></button>
+    <button id="bList" data-t="cueList" data-k="L"></button>
+    <button id="bPrint" data-t="print" data-k="Ctrl+P"></button>
+  </span>
   <div id="menu" hidden></div>
 </header>
 <div id="banner" hidden></div>
 <div id="work">
-  <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+  <div id="deskwrap">
+    <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+    <div id="dock">
+      <button id="bNight" data-tt="night" data-k="N">&#9790;</button>
+      <span class="sep"></span>
+      <button id="zOut" data-tt="zoomOut" data-k="&minus;">&minus;</button>
+      <button id="zFit" data-t="fit" data-tt="kFit" data-k="0"></button>
+      <button id="zIn" data-tt="zoomIn" data-k="+">+</button>
+      <span class="sep"></span>
+      <button id="bKeys" data-tt="keys" data-k="?">?</button>
+    </div>
+  </div>
   <aside id="drawer" hidden></aside>
 </div>
 <div id="pop" hidden></div>
@@ -367,6 +407,8 @@ en: {
   cueAfter: 'Cue after “{0}”', cueOwn: 'Cue on its own line, after this block', ownLine: 'On its own line',
   boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
   save: 'Save', cancel: 'Cancel', close: 'Close',
+  keys: 'Keyboard shortcuts', kHint: 'Single keys work when no text field has the focus and no cue box is open.', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
+  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu',
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
@@ -432,6 +474,8 @@ it: {
   cueAfter: 'Cue dopo «{0}»', cueOwn: 'Cue su riga propria, dopo questo blocco', ownLine: 'Su riga propria',
   boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
+  keys: 'Scorciatoie da tastiera', kHint: 'I tasti singoli funzionano quando nessun campo di testo è attivo e nessun riquadro dei cue è aperto.', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
+  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu',
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
@@ -515,7 +559,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.7';
+const VERSION = 'r1.8';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -1306,6 +1350,12 @@ function elTx(b, from, to) {
   return tx;
 }
 function cueColour(c) { if (c.board) return 'var(--muted)'; const d = deptOf(c.dept); return d ? d.colour : '#888888'; }
+/* dark or white text, whichever reads better on a department colour */
+function inkOn(col) {
+  const m = /^#([0-9a-f]{6})$/i.exec(col); if (!m) return 'var(--paper)';
+  const n = parseInt(m[1], 16), lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * lin(n >> 16) + 0.7152 * lin(n >> 8 & 255) + 0.0722 * lin(n & 255) > 0.179 ? '#16150f' : '#fff';
+}
 
 /* fr: null for the whole block, or { from, to, off, cont, first, last } for a page fragment */
 function buildRow(g, fr) {
@@ -1613,7 +1663,7 @@ function layoutTags(i) {
   const els = list.map(o => {
     const d = o.c.board ? null : deptOf(o.c.dept);
     const tg = h('button', 'tag' + (o.c.board ? ' btag' : d ? '' : ' unk') + (o.c.end || o.c.links.length ? ' etag' : '')); tg.type = 'button';
-    tg.style.setProperty('--c', cueColour(o.c));
+    tg.style.setProperty('--c', cueColour(o.c)); tg.style.setProperty('--ct', inkOn(cueColour(o.c)));
     tg.dataset.b = o.b.id; tg.dataset.s = o.c.s;
     tg.appendChild(h('b', null, o.c.board ? (o.c.label || t('board')) : cueName(o.c)));
     const tip = [o.c.links.length ? t('endsCue', o.c.links.map(cueName).join(', ')) : '', o.c.notes ? t('hasNotes') + ': ' + o.c.notes : ''].filter(Boolean).join(' · ');
@@ -2095,6 +2145,12 @@ function jumpTo(b, quiet) {
   renderVisible();
   const row = rowEl(i, b);
   if (row) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); }
+}
+function pageStep(d) {
+  if (S.mode === 'templates' || !S.pages.length) return;
+  const i = clamp(currentPage() + d, 0, S.pages.length - 1);
+  desk.scrollTop = Math.max(0, i * (paper().h + GAP) * S.view.zoom + wrap.offsetTop - 8);
+  renderVisible();
 }
 function findNext(q, dir) {
   if (!q || !S.blocks.length) return;
@@ -3756,6 +3812,7 @@ function applyLang() {
   $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   $$('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); });
   $$('[data-tp]').forEach(el => { el.placeholder = t(el.dataset.tp); });
+  $$('[data-k]').forEach(el => { el.title = t(el.dataset.tt || el.dataset.t || 'review') + '  (' + el.dataset.k + ')'; });
 }
 function applyPaper() {
   const pp = paper(), st = document.documentElement.style;
@@ -3788,6 +3845,7 @@ function buildMenu() {
   add(t('mHistory'), openHistory, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
+  add(t('keys'), openKeys);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
   add(t('mOpen'), () => openZipFile(), !fs);
   add(t('mOpenFolder'), () => openFolder(), !fd);
@@ -3796,7 +3854,7 @@ function buildMenu() {
 function bindUI() {
   const pens = $('#pens');
   for (const c of INKS) {
-    const b = h('button', 'sw'); b.type = 'button'; b.dataset.c = c; b.style.setProperty('--c', c === BLACK ? 'var(--tx)' : c);
+    const b = h('button', 'sw'); b.type = 'button'; b.dataset.c = c; b.title = String(INKS.indexOf(c) + 1); b.style.setProperty('--c', c === BLACK ? 'var(--tx)' : c);
     b.onclick = () => { S.tool.colour = c; S.tool.mode = 'pen'; applyView(); };
     pens.appendChild(b);
   }
@@ -3811,6 +3869,7 @@ function bindUI() {
   $('#outline').onchange = e => { const b = S.byId.get(+e.target.value); e.target.value = ''; if (b) jumpTo(b); };
   $('#search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(e.target.value.trim(), e.shiftKey ? -1 : 1); } });
   $('#search').addEventListener('input', () => { S.findAt = null; });
+  $('#bKeys').onclick = openKeys;
   $('#bReview').onclick = () => toggleDrawer('review');
   $('#bList').onclick = () => toggleDrawer('cues');
   $('#bPrint').onclick = e => {
@@ -3825,10 +3884,47 @@ function bindUI() {
     });
   };
 }
+/* ---------- keys ---------- */
+/* the shortcuts dialog: keys, then the string that says what they do */
+const KEYS = [
+  ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
+  ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
+  ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Esc', 'kEsc'], ['?', 'keys']
+];
+let keysClose = null;
+function openKeys() {
+  keysClose = openDlg(t('keys'), (body, foot, close) => {
+    const tb = h('table', 'keys');
+    for (const [ks, s] of KEYS) {
+      const r = h('tr'), d = h('td');
+      for (const x of ks.split(' ')) d.appendChild(h('kbd', null, x));
+      r.append(d, h('td', null, t(s))); tb.appendChild(r);
+    }
+    body.append(tb, h('p', 'hint', t('kHint')));
+    dlgBtn(foot, t('close'), 'pri', () => { keysClose = null; close(); });
+  }, true);
+}
+const focusFind = () => { $('#search').focus(); $('#search').select(); };
+const press = id => () => $(id).click();
+const KEYMAP = {
+  b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), e: press('#bErase'), f: press('#bFinger'),
+  l: press('#bList'), r: press('#bReview'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
+  '/': focusFind, '?': openKeys, pagedown: () => pageStep(1), pageup: () => pageStep(-1),
+  home: () => { desk.scrollTop = 0; }, end: () => { desk.scrollTop = desk.scrollHeight; }
+};
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return; }
+  if (e.key === 'Escape') {
+    if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
+    cancelDrag(); if (POP) { closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
+  }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
-  if (mod && k === 'f' && S.loaded && $('#dlg').hidden) { e.preventDefault(); $('#search').focus(); $('#search').select(); return; }
+  if (mod && !e.altKey && !e.shiftKey && S.loaded && $('#dlg').hidden) {
+    if (k === 'f') { e.preventDefault(); focusFind(); return; }
+    if (k === 's') { e.preventDefault(); saveNow(); return; }
+    /* the browser's own print would give only the pages drawn near the screen */
+    if (k === 'p') { e.preventDefault(); $('#bPrint').click(); return; }
+  }
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
   if (!S.loaded || !$('#dlg').hidden) return;
@@ -3836,7 +3932,12 @@ document.addEventListener('keydown', e => {
   if (mod && !e.altKey) {
     if (k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
     else if (k === 'y') { e.preventDefault(); redo(); }
+    return;
   }
+  if (mod || e.altKey || e.isComposing || POP || S.editing) return;
+  const pen = /^[1-9]$/.test(k) && $$('#pens .sw')[+k - 1];
+  const fn = pen ? () => pen.click() : KEYMAP[k];
+  if (fn) { e.preventDefault(); $('#menu').hidden = true; fn(); }
 });
 document.addEventListener('paste', e => {
   if (!S.loaded || S.editing || S.mode === 'templates' || !$('#dlg').hidden) return;
