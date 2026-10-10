@@ -839,6 +839,10 @@ function blockSpan(bid, g, after) {
 /* where a block dropped at (x, y) would go: the nearest edge between two blocks of that script page. Never above the
    frontmatter, never inside a block that runs over two pages, and none where the block already is. */
 function blockDrop(x, y) {
+  const best = edgeAt(x, y);
+  return best && blockSpan(P.bid, best.g, best.after) ? best : null;
+}
+function edgeAt(x, y) {
   const el = document.elementFromPoint(x, y), pg = el && el.closest && el.closest('.page.script'); if (!pg) return null;
   let best = null, bd = Infinity;
   for (const row of $$('.pbody > .row', pg)) {
@@ -848,19 +852,36 @@ function blockDrop(x, y) {
     for (const after of [false, true]) {
       if (!fl.includes(after ? 'l' : 'f')) continue;
       const ey = after ? r.bottom : r.top, d = Math.abs(y - ey);
-      if (d < bd) { bd = d; best = { g: b.g, after, pg, y: ey }; }
+      if (d < bd) { bd = d; best = { g: b.g, after, pg, y: ey, at: el }; }
     }
   }
-  return best && blockSpan(P.bid, best.g, best.after) ? best : null;
+  return best;
 }
-function placeBlockDrop() {
-  const d = blockDrop(P.x, P.y), o = P.drop;
-  if (o && d && o.g === d.g && o.after === d.after && o.pg === d.pg) return;
-  if (o) o.el.remove();
-  if (d) {
+/* the block a line put at that edge would stand before, as an index in S.blocks */
+function edgeIndex(d) {
+  const tb = gBlocks(d.g);
+  return d.after ? S.blocks.indexOf(tb[tb.length - 1]) + 1 : S.blocks.indexOf(tb[0]);
+}
+/* where a cue dropped at (x, y) would get a line of its own: in the space between two blocks (and 4 px into the text
+   on either side), or on a line that holds only cues. Undefined anywhere else, where a word may be the target; null
+   where the cue already is. */
+function cueLineDrop(x, y) {
+  const d = edgeAt(x, y); if (!d || d.at.closest('.tag') || !S.blocks.includes(gBlocks(d.g)[0])) return undefined;
+  const z = pageScale(d.pg);
+  if (!d.at.closest('.row.mark') && Math.abs(y - d.y + 4 * z) > 8 * z) return undefined;
+  return textCueOwn(P.cue, edgeIndex(d)) === null ? null : d;
+}
+/* show the place a release would use: a line between two blocks, or a word in the colour of the cue */
+function setDrop(d) {
+  const o = P.drop;
+  if (o && d && (d.pg ? o.g === d.g && o.after === d.after && o.pg === d.pg : o.el === d.el)) return;
+  if (o) clearDrop(o);
+  if (d && d.pg) {
     const pr = d.pg.getBoundingClientRect();
-    d.el = h('div', 'dropline noprint'); d.el.style.top = r1((d.y - pr.top) / pageScale(d.pg)) + 'px'; d.pg.appendChild(d.el);
-  }
+    d.el = h('div', 'dropline noprint'); d.el.style.top = r1((d.y - pr.top) / pageScale(d.pg)) + 'px';
+    if (P.cue) d.el.style.background = cueColour(P.cue);
+    d.pg.appendChild(d.el);
+  } else if (d) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
   P.drop = d;
 }
 function moveDrag(e) {
@@ -870,13 +891,11 @@ function moveDrag(e) {
 }
 function placeDrag() {
   P.ghost.style.left = (P.x + 14) + 'px'; P.ghost.style.top = (P.y - 36) + 'px';
-  if (P.row) { placeBlockDrop(); return; }
-  const d = dropTarget(P.x, P.y);
-  if (P.drop && (!d || d.el !== P.drop.el)) clearDrop(P.drop);
-  if (d && (!P.drop || d.el !== P.drop.el)) { d.el.classList.add('drop'); d.el.style.setProperty('--dc', cueColour(P.cue)); }
-  P.drop = d;
+  if (P.row) { setDrop(blockDrop(P.x, P.y)); return; }
+  const d = cueLineDrop(P.x, P.y);
+  setDrop(d === undefined ? dropTarget(P.x, P.y) : d);
 }
-function clearDrop(d) { d.el.classList.remove('drop'); d.el.style.removeProperty('--dc'); }
+function clearDrop(d) { if (d.pg) d.el.remove(); else { d.el.classList.remove('drop'); d.el.style.removeProperty('--dc'); } }
 /* px to scroll per frame while a cue is held near the top or bottom edge of the work area, faster nearer the edge */
 function dragSpeed() {
   const r = desk.getBoundingClientRect(), a = P.y - r.top, z = r.bottom - P.y;
@@ -917,7 +936,7 @@ function endDrag(p, commit) {
   if (p.raf) cancelAnimationFrame(p.raf);
   p.ghost.remove(); p.tag.classList.remove('moving', 'lift');
   if (p.row) p.row.classList.remove('moving');
-  if (p.drop) { if (p.row) p.drop.el.remove(); else clearDrop(p.drop); }
+  if (p.drop) clearDrop(p.drop);
   S.lastTap = null;   // the next tap is not the second half of a double tap
   if (!commit || !p.drop) return;
   if (p.row) {
@@ -927,7 +946,8 @@ function endDrag(p, commit) {
   }
   /* looked up again: the script may have been parsed anew while the tag was in the air */
   const b = S.byId.get(+p.tag.dataset.b), c = b && b.cues.find(q => q.s === +p.tag.dataset.s);
-  const tb = S.byId.get(p.drop.b.id), nt = c && !c.board && tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
+  const tb = p.drop.pg ? null : S.byId.get(p.drop.b.id), ok = c && !c.board;
+  const nt = !ok ? null : p.drop.pg ? (S.blocks.includes(gBlocks(p.drop.g)[0]) ? textCueOwn(c, edgeIndex(p.drop)) : null) : tb === p.drop.b ? textMoveCue(c, tb, p.drop.wi) : null;
   if (nt) { const n = S.pairs.length; if (commitText(nt) && S.pairs.length < n) toast(t('moveUnpaired')); }
 }
 function cancelDrag() { if (P && P.k === 'drag') { const p = P; P = null; endDrag(p, false); } }

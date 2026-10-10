@@ -1,7 +1,7 @@
 # Cues — CUE
 
 **Covers:** cue tokens, pinning, margin tags, ends and linking cues, the running rail, to-do notes, automatic numbers, moving a cue, the cue list and its exports.
-**Code:** `src/core.js` (`mkCue`, `splitLinks`, `fmtToken`, `pairCues`, `textEdits`, `textMoveCue`), `src/view.js` (`layoutTags`, drag, `openPin`, `openCueEdit`, `collectCues`, `cueTable`, `csvText`).
+**Code:** `src/core.js` (`mkCue`, `splitLinks`, `fmtToken`, `pairCues`, `textEdits`, `textMoveCue`, `textCueOwn`), `src/view.js` (`layoutTags`, drag, `openPin`, `openCueEdit`, `collectCues`, `cueTable`, `csvText`).
 **Checks:** `test/interact`, `test/cuebox`, `test/cue-ends`, `test/notes-todos`, `test/cue-move`, `test/unit/cue-move`, `test/unit/parse`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
@@ -24,6 +24,7 @@ Later requests, as received:
 - **Change request, 2026-10-10 (second):** "keep consisten the terms, now boards have remove and cues have delete. keep one and make a hotkey for it for when the cue is selected." Read as `[ASSUMED]`: "selected" is the cue whose box is open, since that is the only way a cue is picked.
 - **Change request, r1.4:** quick notes to review after rehearsals; cue list printed only from its panel; separate columns for the margin text and the description; a shorter cue line with the cue word marked; a blank number becomes the last plus one.
 - **After the first rehearsals, 2026-10-08, r1.6:** "Moving existing cues requires copy pasting the underlying annotation, would be much better to support press with mouse or finger and move it around until release."
+- **Change request, 2026-10-11:** "bring back the feature of having a cue between lines, like blocks." Read as `[ASSUMED]`: a cue on a line of its own could always be pinned (CUE-2), but since r1.6 a dragged cue could land only on a word (CUE-32); a dragged cue must also be able to land between two blocks, at the place a line marks, as a dragged block does (TXT-28).
 
 ## 2. Requirements
 
@@ -87,9 +88,10 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 | CUE-29 | Within 48 px of the top or bottom of the work area the script scrolls, up to 14 px per frame and faster nearer the edge, so a cue can be carried to another page. | as built | r1.6 | cue-move |
 | CUE-30 | Release on a target: the token is cut from its place and written after that word, behind the cues already there. Every field moves unchanged: number, margin text, description, links. One undo step. Release on the word the cue already follows as its last cue: nothing changes and no undo step is added. | "always after a word" `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
 | CUE-31 | Release without a target, Escape, or a cancelled pointer: nothing changes. A press and release within 8 px still opens the cue editor. A pen or mouse tap that slips more than 8 px but stays on the tag does nothing. | as built | r1.6 | cue-move |
-| CUE-32 | Every cue tag can be dragged (a board tag moves its whole line instead, TXT-28): cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was and gets one where it lands, so words are never joined. A cue cannot be dropped onto a line of its own. | `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
+| CUE-32 | Every cue tag can be dragged (a board tag moves its whole line instead, TXT-28): cues, ends, linking cues, to-do notes, cues on a line of their own. A cue on its own line dropped on a word becomes a word cue and its line is removed; the blank lines above and below it merge, so no doubled blank line is left. A token written tight against the text (`uno{LX 1}due`) leaves a space where it was and gets one where it lands, so words are never joined. Until CUE-43 a cue could not be dropped onto a line of its own. | `[ASSUMED]` | r1.6 | cue-move, unit/cue-move |
 | CUE-33 | A move that breaks a pair (an end above its start, a start below its end) is kept, and a message says the two no longer match. | as built | r1.6 | cue-move, unit/cue-move |
 | CUE-34 | No drag while a block's text is being edited. While a drag runs, other pointers are ignored. | as built | r1.6 | cue-move |
+| CUE-43 | A dragged cue can also be released between two blocks. The place is the space between two blocks of a script page, and 4 px (at zoom 1) into the text above and below it, or a line that holds only cues (its upper half: above it; its lower half: below it). There a line in the cue's colour marks the place, as for a block (TXT-30), and no word is highlighted; anywhere else CUE-28 applies. On release the token is cut from its place and written on a line of its own directly under the block above the place, every field unchanged, one undo step. A cue that has a line to itself moves as that line, with its blank lines (TXT-28). At the place where the cue already stands there is no line and a release changes nothing. Never inside speeches said together, nor inside a block that runs over two pages. CUE-33 applies. | request 2026-10-11 `[ASSUMED]` | next | cue-move, unit/cue-move |
 
 ### 2.6 Cue list and exports
 
@@ -117,6 +119,8 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 **No renumbering (D7).** The tool fills a blank number on a new cue and nothing else. A cue placed between 5 and 6 becomes a second 6 and is marked as a duplicate. A renumber command with an old-to-new log is backlog, and it must keep cue pairs together.
 
 **Pairs are found by position and label, so they can break.** A move can put an end above its start; the move is kept and a message says so. An end without a number re-pairs by position: if its cue's department is changed and another open cue of the new department sits between them, the end closes that one instead.
+
+**A word or a line: the pointer's height decides (CUE-43).** The space between two blocks is 8 px at zoom 1, 16 px with the allowance into the text. That is narrow for a finger; it has not been tried on the laptop. The cost on the other side: 4 px at the top of a block's first line and at the bottom of its last line no longer pick a word. A cue dropped between blocks is written without a blank line above it, as the pin's "On its own line" does.
 
 **Removing a token on its own line merges the blank lines around it.** This is a shared text edit, so since r1.6 it also applies to deleting a cue or a board: one blank line is left, not two.
 

@@ -823,12 +823,14 @@ function cutToken(raw, s, e) {
   if (/[ \t]$/.test(a) && (z === '' || /^[ \t\n]/.test(z))) a = a.replace(/[ \t]+$/, '');
   return a + z;
 }
-/* text after several token edits at once: [{ b, s, e, text }], text null removes the token */
-function textEdits(edits) {
+/* text after several token edits at once: [{ b, s, e, text }], text null removes the token; ins = { j, line }
+   also puts a new line before block j (j = S.blocks.length puts it last), tight under the block above it */
+function textEdits(edits, ins) {
   const by = new Map();
   for (const ed of edits) { let q = by.get(ed.b); if (!q) by.set(ed.b, q = []); q.push(ed); }
   const out = []; let carry = 0;   // blank lines above a line that is removed: they merge with those below it
   for (const b of S.blocks) {
+    if (ins && S.blocks[ins.j] === b) out.push(ins.line);
     let raw = b.raw; const q = by.get(b);
     if (q) {
       q.sort((x, y) => y.s - x.s);
@@ -840,6 +842,7 @@ function textEdits(edits) {
     for (let k = 0; k < gap; k++) out.push('');
     out.push(raw); carry = 0;
   }
+  if (ins && ins.j === S.blocks.length) out.push(ins.line);
   return out.join('\n') + '\n';
 }
 /* text with cue c moved to just after word wi of block tb (after the cues already there); null when that is where it is */
@@ -854,6 +857,15 @@ function textMoveCue(c, tb, wi) {
   /* a token glued to the next word (uno{LX 1}due) is followed by text: keep the moved token apart from it */
   const tail = sp(tb.raw[pos]) ? '' : ' ';
   return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
+}
+/* text with cue c moved to a line of its own before block j (j = S.blocks.length puts it last); null when that is
+   where it is. A cue that already has a line to itself moves as that line, with the blank lines above it. */
+function textCueOwn(c, j) {
+  if (!c || !c.b || !(j >= 0 && j <= S.blocks.length)) return null;
+  const raw = c.b.raw, sp = x => x === undefined || /\s/.test(x);
+  if (c.b.type === 'mark' && c.b.cues.length === 1) return textMoveBlocks(S.blocks.indexOf(c.b), 1, j);
+  const cut = c.s > 0 && !sp(raw[c.s - 1]) && !sp(raw[c.e]) ? ' ' : null;
+  return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }], { j, line: raw.slice(c.s, c.e) });
 }
 
 /* text with blocks [i0, i0+n) moved to stand before block j (j = S.blocks.length puts them last); null when that is

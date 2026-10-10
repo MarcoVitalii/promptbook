@@ -21,7 +21,7 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 | Pen eraser end or barrel button | Erases the strokes it touches | Same |
 | Finger tap on a word | Opens the cue pin | — |
 | Finger drag | Scrolls | Scrolls |
-| Finger held 0.3 s on a cue tag, then dragged | Moves the cue to the word it is released on (CUE-25) | — |
+| Finger held 0.3 s on a cue tag, then dragged | Moves the cue to the word it is released on (CUE-25), or to a line of its own between two blocks (CUE-43) | — |
 | Pen or mouse dragged from a cue tag | Same, at once; the pen draws no ink | — |
 | The same gestures on the grip in the left gutter of a block, or on a board tag | Move the block to the place it is released on (TXT-28) | — |
 | Finger tap between blocks | Standalone cue or board | — |

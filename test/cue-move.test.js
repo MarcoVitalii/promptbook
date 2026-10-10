@@ -144,8 +144,8 @@ const OUT = process.env.OUT || path.join('.cache', 'out');
   await reset();
   from = await tag('LX 1');
   a = await word('otto');
-  await mouseDrag(from, { x: a.x + a.w + 40, y: a.y + a.h + 5 }, false);
-  ok((await marks()).drop === 'otto', 'right of a line end and a little below it, the last word of the line is the target');
+  await mouseDrag(from, { x: a.x + a.w + 40, y: a.cy + 2 }, false);
+  ok((await marks()).drop === 'otto', 'right of a line end, the last word of the line is the target');
   await page.mouse.up();
   ok(count(await text(), 'otto {LX 1 | luce | nota}\n') === 1 && count(await text(), '{LX 1') === 1, 'and receives the cue');
 
@@ -156,6 +156,55 @@ const OUT = process.env.OUT || path.join('.cache', 'out');
   ok(await text() === T.replace('{VID 1 | filmato}\n\n', '').replace('undici', 'undici {VID 1 | filmato}'), 'a cue on its own line dropped on a word becomes a word cue; its line is gone and no blank line is added');
   await page.keyboard.press('Control+z');
   ok(await text() === T, 'undo puts the line back');
+
+  /* ---- onto a line of its own, between two blocks ---- */
+  await reset();
+  // the row that holds a word (or, with mark = true, the line of its own that follows that row)
+  const rowOf = (s, mark) => ev(([s, mark]) => {
+    let row = Array.from(document.querySelectorAll('.page.script .w')).find(w => w.textContent === s).closest('.row');
+    if (mark) row = row.nextElementSibling;
+    const r = row.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, mark: row.classList.contains('mark') };
+  }, [s, mark]);
+  const lines = () => ev(() => document.querySelectorAll('.dropline').length);
+  from = await tag('LX 1'); to = await word('sette');
+  let rw = await rowOf('sette');
+  await mouseDrag(from, { x: to.cx, y: rw.bottom - 4 }, false);
+  m = await marks();
+  ok(m.ghost === 1 && m.drop === '' && await lines() === 1, 'in the space between two blocks no word is highlighted and a line marks the place');
+  ok(await ev(() => { const l = document.querySelector('.dropline'), g = document.querySelector('.tag.ghost'); return !!l.style.background && l.style.background === getComputedStyle(l).backgroundColor && !!g.style.getPropertyValue('--c'); }), 'the line has a colour of its own, set from the cue');
+  await page.mouse.move(to.cx, to.cy, { steps: 3 });
+  ok((await marks()).drop === 'sette' && await lines() === 0, 'back over a word, the word is the target again and the line is gone');
+  await page.mouse.move(to.cx, rw.bottom - 4, { steps: 3 });
+  await page.mouse.up(); await frame();
+  const owned = T.replace(' {LX 1 | luce | nota}', '').replace('otto\n', 'otto\n{LX 1 | luce | nota}\n');
+  ok(await text() === owned, 'released there, the cue has a line of its own under the upper block, all its fields kept');
+  ok(clean(await marks()) && await lines() === 0 && await page.locator('#pop').isHidden(), 'nothing is left behind and nothing opens');
+  ok(await ev(() => PB.S.blocks.filter(b => b.type === 'mark' && b.cues.some(c => c.dept === 'LX')).length) === 1, 'it is read as a cue between lines');
+  await page.keyboard.press('Control+z');
+  ok(await text() === T, 'one Ctrl+Z puts it back on its word');
+
+  await reset();
+  from = await tag('VID 1'); to = await word('due'); rw = await rowOf('due');
+  await mouseDrag(from, { x: to.cx, y: rw.bottom - 4 });
+  await frame();
+  ok(await text() === T.replace('{VID 1 | filmato}\n\n', '').replace('MARCO: cinque', '{VID 1 | filmato}\n\nMARCO: cinque'), 'a cue on its own line dragged between two other blocks moves as that line');
+  await page.keyboard.press('Control+z');
+  ok(await text() === T, 'undo puts the line back');
+
+  await reset();
+  from = await tag('VID 1'); to = await word('dieci'); rw = await rowOf('dieci');
+  await mouseDrag(from, { x: to.cx, y: rw.bottom - 4 }, false);
+  ok(await lines() === 0, 'no line is shown at the place where the cue already stands');
+  const steps = await ev(() => PB.S.hist.length);
+  await page.mouse.up();
+  ok(await text() === T && await ev(() => PB.S.hist.length) === steps, 'released there: text unchanged, no undo step');
+
+  await reset();
+  from = await tag('LX 1'); to = await word('dieci'); rw = await rowOf('dieci', true);
+  ok(rw.mark, 'the line of VID 1 follows the speech above it');
+  await mouseDrag(from, { x: to.cx, y: rw.bottom - 5 });
+  await frame();
+  ok(count(await text(), '{VID 1 | filmato}\n{LX 1 | luce | nota}\n\nMARCO: dodici') === 1 && count(await text(), '{LX 1') === 1, 'dropped on the lower half of a line that holds a cue, it gets the next line');
 
   /* ---- a pair broken by the move ---- */
   await reset();

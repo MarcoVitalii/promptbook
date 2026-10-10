@@ -27,6 +27,20 @@ is(move('ANNA: uno{SND 2}due {LX 1}\n', 'LX 1', 'uno'), 'ANNA: uno{SND 2} {LX 1}
 is(move('ANNA: uno due\ntre {LX 1} quattro\n', 'LX 1', 'due'), 'ANNA: uno due {LX 1}\ntre quattro\n', 'to the end of an earlier line of the same speech');
 is(move('ANNA: uno due {LX 1}\ntre quattro\n', 'LX 1', 'quattro'), 'ANNA: uno due\ntre quattro {LX 1}\n', 'from the end of a line: no space is left before the line end');
 is(move('ANNA: uno\n\n{VID 1}\n\nMARCO: due\n', 'VID 1', 'due'), 'ANNA: uno\n\nMARCO: due {VID 1}\n', 'an own-line cue between blank lines leaves one blank line, not two');
+// to a line of its own: the text edit behind dropping a tag between two blocks
+const own = (before, name, j) => { C.load(before); return C.textCueOwn(cue(name), j); };
+is(own('ANNA: uno {LX 1} due\n\nMARCO: tre\n', 'LX 1', 1), 'ANNA: uno due\n{LX 1}\n\nMARCO: tre\n', 'a word cue dropped between two blocks gets a line of its own under the upper block');
+is(own('ANNA: uno {LX 1 | luce | nota} due\n\nMARCO: tre\n', 'LX 1', 2), 'ANNA: uno due\n\nMARCO: tre\n{LX 1 | luce | nota}\n', 'after the last block, with every field kept');
+is(own('ANNA: uno\n\nMARCO: tre {LX 1}\n', 'LX 1', 0), '{LX 1}\nANNA: uno\n\nMARCO: tre\n', 'before the first block');
+is(own('ANNA: uno{LX 1}due\n\nMARCO: tre\n', 'LX 1', 1), 'ANNA: uno due\n{LX 1}\n\nMARCO: tre\n', 'a glued token leaves its neighbours as two words');
+is(own('ANNA: uno\n\n{VID 1}\n\nMARCO: due\n\nANNA: tre\n', 'VID 1', 3), 'ANNA: uno\n\nMARCO: due\n\n{VID 1}\n\nANNA: tre\n', 'a cue that has a line to itself moves as that line, blank lines kept');
+is(own('ANNA: uno\n\n{VID 1}\n\nMARCO: due\n', 'VID 1', 1), null, 'dropped just above its own line: nothing to do');
+is(own('ANNA: uno\n\n{VID 1}\n\nMARCO: due\n', 'VID 1', 2), null, 'dropped just below its own line: nothing to do');
+is(own('ANNA: uno\n\n{VID 1} {LX 2}\n\nMARCO: due\n', 'LX 2', 3), 'ANNA: uno\n\n{VID 1}\n\nMARCO: due\n{LX 2}\n', 'one of two cues sharing a line leaves the other where it was');
+C.load('ANNA: uno {SND 5} due {/SND 5}\n\nMARCO: tre\n');
+ok(S.pairs.length === 1 && C.commitText(C.textCueOwn(cue('/SND 5'), 2)) && S.pairs.length === 1 && S.blocks[2].type === 'mark', 'an end moved to a line of its own below still closes its cue');
+C.undo();
+ok(C.serialize() === 'ANNA: uno {SND 5} due {/SND 5}\n\nMARCO: tre\n', 'and one undo puts it back');
 C.load('ANNA: uno\n');
 ok(C.textMoveCue(null, S.blocks[0], 0) === null && C.textMoveCue({ b: S.blocks[0], s: 0, e: 0 }, S.blocks[0], 99) === null, 'a missing cue or word gives nothing to do');
 

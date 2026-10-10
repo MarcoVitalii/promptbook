@@ -1,5 +1,11 @@
 # Changelog
 
+## Not yet released
+
+- A cue can be dragged between two lines again, as a block can: carry its tag to the space between two blocks, and release where the line in the cue's colour shows. The cue gets a line of its own there. Released on a word it goes after that word, as before. Checked in a simulated browser with the mouse; not tried with a finger, for which the space between two blocks may be narrow.
+
+**Compatibility.** Nothing changes in the files.
+
 ## r1.10 — 2026-10-10
 
 The script for the actors, and notes sent to them from the prompt book. Checked in a simulated browser only, at the width of a phone: never tried on a real phone, and never opened from a chat or mail attachment.
