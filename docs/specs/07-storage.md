@@ -1,6 +1,6 @@
 # Storage — STO
 
-**Covers:** where a show is kept, the show file, the older show folder, the in-browser fallback, autosave, changes made outside the tool, the shapes of the saved data, compatibility between releases.
+**Covers:** where a show is kept, the show file, the in-browser fallback, autosave, changes made outside the tool, the shapes of the saved data, compatibility between releases.
 **Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import), `src/core.js` (`normCfg`, `inkFile`, `attachInk`).
 **Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
@@ -11,9 +11,10 @@
 
 The script was "unversioned on the only PC that has it" (Q9). The intent is that a show is a set of plain files the user owns: readable and hand-editable without the tool, with no account and no server (D10, C1, C2).
 
-Two later needs changed where those files sit:
+Three later requests changed where those files sit:
 
 - **r1.2, one file:** a folder of loose files is awkward to move between machines. A show became one `.zip` file holding the same files. Older folders still open.
+- **r1.10, only the file:** "time to prune silly or old features to keep the code light. remove support for older folders, work only on zipped show files." A show folder no longer opens (STO-6 and STO-12 withdrawn).
 - **r1.7, history:** the request for "git versioning below" put a git repository inside the show (`08-history.md`).
 
 Writing straight into a file on disk works only in Chrome and Edge (K6). The intent for any other browser, and for the moment before a file is chosen, is that the tool stays usable and nothing is lost: the show is kept in the browser and can be exported.
@@ -29,8 +30,8 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | STO-3 | Every change is saved without a command, shortly after it is made. The status beside the title says "Saving soon", "Saving…", "Saved hh:mm" or "Save failed". Leaving the page with unsaved changes or after a failed save asks first. | R0.9 | r0 | scale-folder, zipshow |
 | STO-4 | A folder zipped by hand (Explorer, Finder) opens as it is: the extra top-level folder is ignored, and so is the clutter macOS adds. | r1.2 | r1.2 | zipshow |
 | STO-5 | A file that is not a zip is refused with a message, and the open show stays open. | as built | r1.2 | zipshow |
-| STO-6 | Older show folders still open ("Open older show folder…"). "Save as show file…" converts one, images and history included; only the show's own files are copied, so the zip never contains the empty file the save dialog creates or other stray files. | D10 as amended | r1.2, r1.7 | scale-folder, history |
-| STO-7 | The start screen offers to reopen the last show file or folder with one click. | as built | r0 | scale-folder |
+| STO-6 | **Withdrawn in r1.10.** Until r1.9: older show folders still opened ("Open older show folder…") and "Save as show file…" converted one, images and history included. | D10 as amended | r1.2 to r1.9 | — |
+| STO-7 | The start screen offers to reopen the last show file with one click. A folder remembered by an older release is not offered. | as built | r0 | scale-folder |
 | STO-8 | A show that is not on disk is kept in the browser: a banner says so and offers "Save as show file…" and "Export backup". The start screen offers to continue that draft. "Export backup" and "Import backup…" move the whole show as one `.promptbook.json` file, images included. | K6, as built | r0 | misc, templates |
 | STO-9 | Images no board or template uses are dropped from a show file on save. | r1.2 | r1.2 | — |
 | STO-10 | Nothing generated is stored as a source. Cue lists are computed on screen and exported on demand (C7). | D9 | r0 | — |
@@ -39,8 +40,8 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| STO-11 | Show file: if another program replaces the file (sync, copy over), it is reloaded when nothing is unsaved; otherwise a banner asks "Keep mine" or "Load that version". Nothing is overwritten while the question is open. | r1.2; fixed r1.5 | r1.2 | zipshow |
-| STO-12 | Show folder: if `script.md` is edited in another program while the tool is open, the tool reloads it without a re-import; ink on untouched blocks is undisturbed, ink on a changed block is flagged (INK-4). If both sides changed, it asks instead of overwriting. | K4, as built | r0 | scale-folder |
+| STO-11 | Show file: if another program replaces the file (sync, copy over), it is reloaded when nothing is unsaved; otherwise a banner asks "Keep mine" or "Load that version". Nothing is overwritten while the question is open. | r1.2; fixed r1.5 | r1.2 | zipshow, scale-folder |
+| STO-12 | **Withdrawn in r1.10** with the show folder. Until r1.9: `script.md` edited in another program while the tool was open was reloaded without a re-import. What remains is STO-11: when the whole show file is replaced, ink on untouched blocks is undisturbed and ink on a changed block is flagged (INK-4). | K4, as built | r0 to r1.9 | — |
 
 ### 2.3 Data shapes
 
@@ -60,19 +61,21 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
   "templates": [], "defaultTemplate": null, "recentTemplates": [],
   "templateFade": 0.4,
   "boardGrid": 25,
-  "lock": null }
+  "lock": null,
+  "castId": "" }
 ```
 
 | Field | Meaning | Read as | Since |
 |---|---|---|---|
 | `title` | Show title; the script's own `title` wins (TXT-13) | text | r0 |
 | `paper` | `A4` or `Letter` | anything else is `A4` | r0 |
-| `departments` | `code`, `name`, `colour`, `review` (to-do notes, CUE-21) | codes are put in capitals and stripped to letters, digits, `_`, `-`; `BOARD` is not allowed; an empty list gives the defaults | r0; `review` r1.4 |
+| `departments` | `code`, `name`, `colour`, `review` (to-do notes, CUE-21), `cast` (notes for the actors, CST-1; a cast department is always `review` too; the key is written as `false` from r1.10) | codes are put in capitals and stripped to letters, digits, `_`, `-`; `BOARD` is not allowed; an empty list gives the defaults | r0; `review` r1.4; `cast` r1.10 |
 | `defaultBoard` | `image`, `h`: the background set with "Use as default" before r1.0 | kept working until a default template is chosen (BRD-27) | r0 |
 | `templates` | Template names, in order | names without a file are dropped | r1.0 |
 | `defaultTemplate`, `recentTemplates` | The default template; the last used, newest first, at most 12 | — | r1.0 |
 | `templateFade` | Strength of the greyed chain | kept between 0.15 and 0.8; 0.4 when missing | r1.0 |
 | `boardGrid` | Grid step in board units: `0` off, `25` fine, `50` coarse | a missing or other value is 25 | r1.6 |
+| `castId` | The name of the show in the files for the cast (CST-15); written when the first is saved | anything but text is `""` | r1.10 |
 | `lock` | Locked page numbers (PAG-14) | dropped unless all five lists are present | r1.7 |
 | `runs` (per department) | "Cues run until stopped", r1.0 to r1.2 | ignored | removed r1.3 |
 
@@ -112,22 +115,26 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | r1.5 | r1.4 | Opens. |
 | r1.6 | r1.5 | Opens; the grid setting is ignored. |
 | r1.7 | r1.6 | Opens and keeps the history when it saves a show file; plain page numbers, no History menu; drops the history when a show folder is saved as a show file. |
+| A show folder, never saved as a show file | r1.10 and later | Cannot be opened. Zip the folder and open the zip (STO-4), or open it in r1.9 and use "Save as show file…". |
+| r1.10, with a cast department | r1.9 | Opens; notes for the cast are to-do notes; the "Cast" mark is lost when r1.9 saves the settings. |
 
 ## 3. Consequences
 
 **A show file is rewritten whole on every save.** The files of an open show file live in memory; a save builds the archive again and replaces the file. This is simple and atomic. It also means the cost of one pen stroke is the size of the show, history included (`docs/review-2026-10-09.md`, X6).
 
-**In a show file, `script.md` cannot be edited from outside while the tool is open.** Unzip, edit, zip again; or use "Edit whole script…". The outside-edit path of STO-12 exists only for an older show folder. This is the price of D10's amendment in r1.2.
+**In a show file, `script.md` cannot be edited from outside while the tool is open.** Unzip, edit, zip again; or use "Edit whole script…". The outside-edit path of STO-12 existed only for a show folder and went with it in r1.10. This is the price of D10's amendments.
 
 **The parts of a show file are read into memory when it is opened, board images included.** Until r1.5 they were read lazily from the file, which stopped working once the file had been rewritten: after a show file was opened, only the first change was saved. A user who worked in r1.2 to r1.4 on a show opened from its file may have lost what came after the first change. The checks for the show file (`test/zipshow`) were written at r1.2 and released without being run; at r1.4 the file was recorded as stopping with an error before its first check, not investigated; the defect was found and fixed in r1.5.
 
-**Storage needs Chrome or Edge (K6, A7).** In another browser the tool still works, with the in-browser fallback and backup files only. Chrome and Edge refuse the top level of Desktop, Documents and Downloads as a show folder; a sub-folder is fine.
+**Storage needs Chrome or Edge (K6, A7).** In another browser the tool still works, with the in-browser fallback and backup files only.
 
 **Compatibility is kept by convention.** Nothing in `config.json` or in the show file says which release wrote it or which release is needed to read it; `version` in the ink file and in the backup is written and never read. The table above is the only guard, and it relies on the user reading the changelog (`docs/review-2026-10-09.md`, X7).
 
-**Files are left behind.** The tool does not delete the file of a renamed or removed board or template. One exception since r1.7: restoring a revision or changing variant in a show folder removes the files in `boards/` and `templates/` that the revision does not have (`docs/review-2026-10-09.md`, X9).
+**Files are left behind.** The tool does not delete the file of a renamed or removed board or template. One exception since r1.7: restoring a revision or changing variant replaces the show's files with those of the revision, so boards and templates the revision does not have are gone from the working files (they stay in the history).
 
 **Board files are named after the board**, in lower case with accents and punctuation dropped (`boards/sala-a.json`). Two boards whose names come out the same share one file (`docs/review-2026-10-09.md`, X1).
+
+**Not verified (r1.10):** opening a real show folder zipped by Explorer or Finder with its hidden `.git` folder; the check uses an archive built in the test.
 
 **Not built:** zip64 (a show file over 4 GB), encrypted zip entries, a format version checked on open.
 

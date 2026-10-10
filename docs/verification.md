@@ -56,7 +56,7 @@ Three properties of the method to keep in mind when reading a green result:
 | `misc` | 19 | INK-2, INK-3, INK-5, INK-8, INP-5 to INP-7, CUE-6, UI-3, PAG-4, STO-2, STO-8 |
 | `palm` | 4 | INP-2, INP-3 |
 | `cuebox` | 5 | CUE-7, CUE-8, UI-4 |
-| `scale-folder` | 22 | PAG-1, PAG-5, PAG-6, INP-1, INP-4, STO-3, STO-6, STO-7, STO-12, INK-4, INK-5, UI-5, UI-7 |
+| `scale-folder` | 22 | PAG-1, PAG-5, PAG-6, INP-1, INP-4, STO-3, STO-7, STO-11, INK-4, INK-5, UI-5, UI-7 |
 | `zipshow` | 11 | STO-1 to STO-5, STO-11 |
 | `frontmatter` | 24 | TXT-11 to TXT-21, PAG-7 to PAG-9, INK-10, CUE-17 |
 | `cue-ends` | 46 | CUE-9 to CUE-20, CUE-37 to CUE-39, CUE-41, INK-6 |
@@ -66,11 +66,17 @@ Three properties of the method to keep in mind when reading a green result:
 | `cue-move` | 62 | CUE-25 to CUE-34, INP-8 to INP-10, TXT-28 |
 | `block-move` | 34 | TXT-28 to TXT-31 |
 | `shortcuts` | 44 | UI-9 to UI-11, CUE-7, CUE-42, UI-12 |
-| `history` | 33 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19, STO-6 |
+| `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
+| `unit/cast` | 15 | CST-1, CST-2, CST-5, CST-6 |
+| `cast` | 56 | CST-1, CST-3 to CST-5, CST-7 to CST-16, CST-18 to CST-20 |
 
-Requirements with no automated check: TXT-9, TXT-18, TXT-20, CUE-4, INK-11, BRD-4, BRD-6, BRD-19, PAG-3, PAG-20, STO-9, STO-10, STO-14, HIS-4, HIS-12, UI-8. Six of these state that something does not exist or is not done (BRD-6, BRD-19, PAG-3, PAG-20, STO-10, HIS-4) and are checked by reading the code. CUE-4 is a timing with a person. The others are gaps: BRD-4 (image reduction), STO-9 (unused images dropped), HIS-12 (the message for packed history), TXT-9, TXT-20, INK-11, UI-8.
+**r1.10, 2026-10-11, show folders removed.** `sh scripts/check.sh full --force`: 558 checks in 17 files pass. The folder half of `scale-folder` now runs on a show file (same 22 checks); the two folder checks of `history` are gone. Not done: a real show folder zipped by Explorer or Finder and opened.
+
+Requirements with no automated check: CST-17 (notes exported from one device and opened on another), CST-21 (the warning when the browser keeps nothing), TXT-9, TXT-18, TXT-20, CUE-4, INK-11, BRD-4, BRD-6, BRD-19, PAG-3, PAG-20, STO-9, STO-10, STO-14, HIS-4, HIS-12, UI-8. Six of these state that something does not exist or is not done (BRD-6, BRD-19, PAG-3, PAG-20, STO-10, HIS-4) and are checked by reading the code. CUE-4 is a timing with a person. The others are gaps: BRD-4 (image reduction), STO-9 (unused images dropped), HIS-12 (the message for packed history), TXT-9, TXT-20, INK-11, UI-8.
 
 The mapping is by test file, not by single check. It was made by reading the sentence of every passing check against the requirement tables.
+
+**r1.10, 2026-10-10.** `sh scripts/check.sh full`: every file passes, the two new ones included (`unit/cast` 15 checks, `cast` 56). The actors' file was looked at on screenshots at 390 px and 1200 px wide, in Italian, by day. Not done: a real phone, an attachment opened from a chat or mail app, Safari, Firefox, night mode, print (`docs/specs/10-cast.md` §3).
 
 ## 4. Never verified
 
@@ -85,7 +91,7 @@ Collected from every release. Nothing in this list has a recorded trial.
 - The palm rule: a hand resting on the screen while the pen writes or hovers (INP-3).
 - The finger hold on a cue tag, the pen drag from a tag, and a palm landing during a drag (INP-8, INP-9). Whether 0.3 s and 8 px suit a real finger is not known.
 - The four device checks behind Q21 ("yes"): pen draws without scrolling, resting hand stays quiet, eraser end erases, print lines up. The answer does not say which were tried.
-- The real file dialogs, and Chrome's refusal of top-level folders.
+- The real file dialogs.
 - A show file with a long history (HIS).
 - The time it takes the stage manager to pin a cue; the target is under 3 seconds (CUE-4).
 - The real script. It was not shared (Q20); the parser has only seen the sample and deliberately messy test text.

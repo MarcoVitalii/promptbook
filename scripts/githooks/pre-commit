@@ -1,5 +1,5 @@
 #!/bin/sh
-# Refuses a commit whose promptbook.html is not what src/ builds, or whose checks without a browser fail.
+# Refuses a commit whose promptbook.html or promptbook-cast.html is not what src/ builds, or whose checks without a browser fail.
 cd "$(git rev-parse --show-toplevel)" || exit 1
 sh scripts/check.sh fast >/dev/null || { sh scripts/check.sh fast --force; exit 1; }
-git diff --quiet -- promptbook.html || { echo "promptbook.html was rebuilt from src/ and differs from what is staged. Run: git add promptbook.html"; exit 1; }
+git diff --quiet -- promptbook.html promptbook-cast.html || { echo "promptbook.html or promptbook-cast.html was rebuilt from src/ and differs from what is staged. Run: git add promptbook.html promptbook-cast.html"; exit 1; }

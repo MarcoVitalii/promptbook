@@ -23,7 +23,7 @@ The request names git, tags and branches. The intent is read as: use git's own f
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| HIS-1 | The history is a git repository in `.git`, inside the show file or beside `script.md` in a show folder. It is written by the tool itself: loose objects (zlib), refs, `HEAD`, a minimal `config`. No index, no packs. git accepts it (`git fsck`, `git log`, `git diff`). | `[LOCKED]` by the request; the subset of git `[ASSUMED]` | r1.7 | history |
+| HIS-1 | The history is a git repository in `.git`, inside the show file. It is written by the tool itself: loose objects (zlib), refs, `HEAD`, a minimal `config`. No index, no packs. git accepts it (`git fsck`, `git log`, `git diff`). | `[LOCKED]` by the request; the subset of git `[ASSUMED]` | r1.7 | history |
 | HIS-2 | A revision is a commit of every show file (`script.md`, `script.ink.json`, `config.json`, `boards/`, `templates/`) plus a lightweight tag. The typed name is the commit message; the tag is the name made safe for a ref (`Prova-1`, then `Prova-1-2`). A revision is saved only on request ("Save revision"). | `[ASSUMED]` | r1.7 | history |
 | HIS-3 | A variant is a branch, `main` first. "New variant" points a new branch at the show as it is now and moves `HEAD` to it. Picking another variant checks out its last commit. Each variant has its own text, cues, boards and revisions. | branches `[LOCKED]` | r1.7 | history |
 | HIS-4 | There is no merge in the tool: a change made in one variant does not reach the others. A correction every variant needs is made in each, or merged with git. | D15; `[ASSUMED]` | r1.7 | — |

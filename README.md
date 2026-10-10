@@ -2,7 +2,7 @@
 
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
-- **Use it:** open `promptbook.html` in Chrome or Edge. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. Older show folders still open (Menu → “Open older show folder…”) and can be converted with “Save as show file…”.
+- **Use it:** open `promptbook.html` in Chrome or Edge. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. A show folder from an early release no longer opens: zip the folder and open the zip.
 - **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`.
 
 ## Documents
@@ -25,9 +25,10 @@ The documentation is specification-driven. Every level answers three questions i
 | Path | What |
 |---|---|
 | `promptbook.html` | The release. Built file, committed so every tag carries a usable tool. |
-| `src/` | Source: `core.js` (parse, layout), `view.js` (rendering, input), `io.js` (storage, dialogs), `style.css`, `index.html` |
+| `promptbook-cast.html` | The script for the actors, built from the same sources. "Send to cast…" in the tool writes a copy with a show inside; this one is empty and opens `.cast.json` files. |
+| `src/` | Source: `core.js` (parse, layout), `view.js` (rendering, input), `io.js` (storage, dialogs), `style.css`, `index.html`; for the actors `cast.js`, `cast.css`, `cast.html` |
 | `fonts/` | Inter, Latin subset, SIL Open Font License 1.1 |
-| `build.py` | Joins `src/` and `fonts/` into `promptbook.html`. Needs Python 3 only. |
+| `build.py` | Joins `src/` and `fonts/` into `promptbook.html` and `promptbook-cast.html`. Needs Python 3 only. |
 | `test/` | Browser checks (Playwright, Chromium). `test/unit/` holds the checks that need no browser. |
 | `scripts/` | `check.sh` builds and tests; `hooks/` are run by Claude Code, `githooks/` by git. |
 | `package.json` | Development tools only, pinned. The tool itself has no dependencies. |

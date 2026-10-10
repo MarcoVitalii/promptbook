@@ -1,0 +1,1825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promptbook Cast</title>
+<!--
+  Promptbook Cast: the script for the actors, in one file. No install, no server, no libraries.
+  It shows the text, covers your own lines for practice, keeps your notes on this device
+  and shows the notes sent by the stage manager or the director.
+-->
+<style>
+:root{--bg:#f4f1ea;--paper:#fffdf8;--ink:#1b1a17;--muted:#6f6a60;--line:#d9d3c6;--ui:#ece7dc;--acc:#0b5fbd;--mine:#c98a00;--bar:#1b1a17;--own:#fff3c4;--fs:17px}
+body.night{--bg:#101114;--paper:#17181c;--ink:#e6e3dc;--muted:#9a958a;--line:#33353b;--ui:#22242a;--acc:#7fb2f0;--mine:#e0a52a;--bar:#4a4d55;--own:#3a3420}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:var(--fs)/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;-webkit-text-size-adjust:100%}
+button,select,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.grow{flex:1}
+#bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:var(--ui);border-bottom:1px solid var(--line);font-size:15px}
+#ttl{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bar button,#bar select{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+#bar select{max-width:42vw}
+#bar button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#bar button b{display:inline-block;min-width:20px;margin-left:4px;padding:0 5px;border-radius:10px;background:var(--acc);color:#fff;font-size:12px;line-height:20px;text-align:center}
+#text{position:relative;flex:1;overflow-y:auto;padding:16px 16px 40vh;scroll-behavior:smooth;--mw:36px}
+#text>*{max-width:680px;margin-left:auto;margin-right:auto}
+.b{position:relative;margin-top:12px;padding:2px calc(var(--mw) + 10px) 2px 8px;border-left:3px solid transparent;border-radius:4px}
+.b.sel{background:var(--ui)}
+.b.h1{margin-top:34px;font-size:1.35em;font-weight:700}
+.b.h2{margin-top:24px;font-size:1.1em;font-weight:700}
+.b.action,.b .it{font-style:italic}
+.b.action{color:var(--muted)}
+.b.para{color:var(--muted)}
+.nm{font-size:.8em;font-weight:700;letter-spacing:.04em}
+.nm small{font-weight:400;letter-spacing:0;color:var(--muted);margin-left:6px}
+.b.mine{border-left-color:var(--mine)}
+.b.mine .nm{color:var(--mine)}
+.b.chg{border-left-style:dotted;border-left-color:var(--acc)}
+.b.mine.chg{border-left-color:var(--mine)}
+.side{position:absolute;top:0;right:0;width:var(--mw);font-size:var(--fs);font-weight:400;font-style:normal;color:var(--ink);cursor:pointer}
+.side .note,.side .add{display:none}
+.dot{display:block;width:30px;height:30px;margin-left:auto;padding:0;border-radius:50%;border:2px solid var(--c);background:var(--paper);font-size:13px;font-weight:700;line-height:1}
+.dot.new{background:var(--c);color:#fff}
+.dot.plus{border-style:dashed}
+@media(min-width:860px){
+#text{--mw:260px}
+#text>*{max-width:950px}
+.side .dot{display:none}
+.side .note{display:flex;margin:0 0 4px;font-size:.78em}
+.side .note .nt{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.side .add{display:block;min-height:30px;padding:0 10px;border:1px dashed var(--line);border-radius:8px;background:var(--paper);font-size:.78em}
+}
+.hide .b.mine:not(.open) .ln{background:var(--bar);color:transparent;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;cursor:pointer}
+.hide .b.mine:not(.open) .ln *{color:transparent;border-color:transparent}
+.hide .b.mine.open .ln{cursor:pointer}
+.meta{text-align:center;padding:6vh 0 4vh}
+.meta .big{font-size:1.7em;font-weight:700;margin-bottom:.4em}
+.meta .chars{margin-top:1.6em;text-align:left;display:inline-block;font-size:.92em}
+.meta .chars i{color:var(--muted)}
+.note{display:flex;gap:8px;align-items:flex-start;margin:6px 0 2px;padding:6px 10px;border-radius:8px;font-size:.9em;line-height:1.35;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--c,var(--acc))}
+.note .nt{flex:1;white-space:pre-wrap;overflow-wrap:anywhere}
+.note .nh{display:block;font-size:.82em;font-weight:700;color:var(--muted)}
+.note.read{opacity:.55}
+.note.own{background:var(--own);border-color:transparent;border-left-color:var(--mine);white-space:pre-wrap;overflow-wrap:anywhere}
+.note.own.moved{border-left-style:dotted}
+.note button,.acts button,.btn{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.btn.pri{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.acts{display:flex;gap:8px;margin:6px 0 2px}
+.ed textarea{display:block;width:100%;min-height:76px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);resize:vertical}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:5}
+.box{width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;background:var(--paper);border-radius:14px 14px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.25)}
+@media(min-width:700px){#sheet{align-items:center}.box{border-radius:14px}}
+.box header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);font-weight:700}
+.box .body{overflow-y:auto;padding:12px 16px 18px}
+.box h3{margin:16px 0 6px;font-size:.85em;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.hint{color:var(--muted);font-size:.88em;margin:0 0 10px}
+.hint.warn{color:#b3261e}
+.btn.wide{display:block;width:100%;min-height:40px;margin:0 0 6px;text-align:left}
+.ed{margin-bottom:10px}
+.pick{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 0;border-bottom:1px solid var(--line)}
+.pick input{width:22px;height:22px;flex:none}
+.pick small{color:var(--muted);margin-left:auto}
+.chips{display:flex;gap:6px;margin-bottom:8px}
+.chip{min-height:34px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper)}
+.chip.on{background:var(--ink);color:var(--paper)}
+.item{display:block;width:100%;text-align:left;margin:0 0 6px;padding:8px 10px;border:1px solid var(--line);border-left:5px solid var(--c,var(--acc));border-radius:8px;background:var(--paper)}
+.item.read{opacity:.55}
+.item small{display:block;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mrow .btn{flex:1;min-height:42px;text-align:left}
+.mrow .btn.sq{flex:none;width:48px;text-align:center}
+.card{max-width:440px;margin:10vh auto 0;padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--paper);text-align:center}
+.card h1{margin:0 0 4px;font-size:1.4em}
+.card .btn{display:block;width:100%;min-height:46px;margin-top:12px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:10px;background:var(--ink);color:var(--paper);font-size:.9em;z-index:9}
+@media print{#bar,#sheet,#toast,.dot,.add{display:none!important}body{display:block}#text{overflow:visible;padding:0}}
+
+</style>
+</head>
+<body>
+<header id="bar">
+  <b id="ttl"></b>
+  <select id="outline"></select>
+  <span class="grow"></span>
+  <button id="bPart" type="button"></button>
+  <button id="bHide" type="button"></button>
+  <button id="bNotes" type="button"></button>
+  <button id="bMore" type="button">&#8943;</button>
+</header>
+<main id="text"></main>
+<div id="sheet" hidden></div>
+<div id="toast" hidden></div>
+<input id="filePick" type="file" hidden>
+<script type="application/json" id="pack">/*PACK*/</script>
+<script>
+'use strict';
+/* =====================================================================
+   Promptbook R0
+   parse  : text -> blocks, cues, board tokens
+   layout : blocks -> fixed-measure pages
+   view   : rendering, pins, pen, editing, boards
+   store  : show file (.zip, File System Access) | in-browser fallback
+   ===================================================================== */
+
+/* ---------- strings ---------- */
+const STR = {
+en: {
+  appSub: 'Prompt book', openFile: 'Open show file…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
+  pasteNew: 'Start from pasted text', contDraft: 'Continue the unsaved draft ({0})', importBk: 'Import a backup file…',
+  startHint: 'A show is one .zip file: script, ink, settings, boards and images together. Copy that file to move the show. Create it with “Start from pasted text” or the sample, then “Save as show file…”.',
+  noFs: 'This browser cannot save show files. Open the tool in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
+  menu: 'Menu', mOpen: 'Open show file…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
+  mSettings: 'Settings…', mClose: 'Close show', jump: 'Jump to act or scene', jumpTo: 'Jump to…', find: 'Find…',
+  eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
+  boards: 'Boards', boardsTip: 'Show the facing page', cues: 'Cues', cuesTip: 'Show or hide cues', ink: 'Ink', inkTip: 'Show or hide ink',
+  night: 'Night mode', fit: 'Fit', zoomIn: 'Zoom in', zoomOut: 'Zoom out', cueList: 'Cue list', print: 'Print', review: 'Review',
+  prBook: 'Book: script and facing pages', prScript: 'Script pages only',
+  stSaved: 'Saved {0}', stSaving: 'Saving…', stPending: 'Saving soon', stMem: 'Not on disk', stErr: 'Save failed',
+  cueAfter: 'Cue after “{0}”', cueOwn: 'Cue on its own line, after this block', ownLine: 'On its own line',
+  boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
+  save: 'Save', cancel: 'Cancel', close: 'Close',
+  keys: 'Keyboard shortcuts', kHint: 'Single keys work when no text field has the focus and no cue box is open.', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
+  kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu; leave Find',
+  editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
+  textTitle: 'Script text', pasteTitle: 'Paste the script',
+  fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
+  contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
+  bClear: 'Clear ink', bRename: 'Rename', bCreate: 'Add board', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
+  checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
+  rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
+  rvParaHint: 'Shown without a name. Edit them to add NAME: or to join them to the speech above.',
+  rvAmp: '“&” with no speech above', rvInk: 'Ink to check', rvOrph: 'Ink whose text was removed', rvUnk: 'Unknown departments', rvChars: 'Characters',
+  rvCharsHint: 'A name that appears once may be a typo or a misread line.',
+  rvNoChar: 'Not in the character list', rvNoCharHint: 'Speakers missing from “characters” at the top of the script. ALL, OTHERS, ALL BUT… are not checked.',
+  rvSilent: 'Listed but never speaks', titleInScript: 'Set by “title” at the top of the script',
+  all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Margin', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character',
+  csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
+  setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
+  deptHint: 'Changing a code does not rewrite cues already in the script.',
+  extChanged: 'This show was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
+  reloaded: 'Show reloaded, it was changed outside',
+  memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
+  errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
+  pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
+  afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
+  endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
+  moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
+  moveBlock: 'Drag to move this block', blockUnpaired: 'Moved. A cue and its end no longer match: check the order.', kDel: 'Delete the cue or the board whose box is open',
+  makeCue: 'Make it a cue', plainEnd: 'Make it a plain end', notes: 'Description (cue list only)', hasNotes: 'Description',
+  thEndPage: 'End p.', thEndLine: 'End line', thEndDesc: 'End note', endsAt: 'ends p. {0}', endedBy: 'ended by {0}', endsCue: 'ends {0}',
+  thEndedBy: 'Ended by', thEnds: 'Ends', thNotes: 'Description', csvDept: 'By dept (.zip)', printDept: 'Print by dept',
+  rvEnd: 'Ends with no cue to close',
+  nextLabel: 'blank = {0}', rvTodo: 'To do', deptReview: 'To do', deptReviewTip: 'Review notes, not cues: listed under Review and left out of the cue list',
+  rvNote: 'Commented out', rvNoteHint: 'Hidden on the page and in print. Tap to read or restore.', noteOut: 'Comment out', noteBack: 'Restore', noteTitle: 'Commented out',
+  templates: 'Templates', mTemplates: 'Templates…', tplBack: 'Back to script', tplNew: '+ Template', tplChild: 'New based on this',
+  tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
+  tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
+  tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
+  pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
+  gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse',
+  mHistory: 'History…', hiTitle: 'History', hiNeedFile: 'History is kept inside the show file. Use “Save as show file…” first.',
+  hiVariant: 'Variant', hiNewVar: 'New variant', hiVarName: 'Name of a new variant, e.g. a theatre',
+  hiVarHint: 'A variant is the show as it is given in one place or on one occasion, with revisions of its own. A change made in one variant does not reach the others.',
+  hiRevName: 'Name of this revision, e.g. Rehearsal 12 October', hiSave: 'Save revision', hiLockToo: 'Lock page numbers here',
+  hiNow: 'Now', hiNone: 'No revision yet.', hiChanges: 'Changes', hiRestore: 'Restore',
+  hiRestored: 'Back to “{0}”. What you had was kept as a revision.', hiSaved: 'Revision “{0}” saved', hiSwitched: 'Now on variant “{0}”',
+  hiBefore: 'Before going to “{0}”', hiTaken: 'That name is taken.', hiPacked: 'Part of this history was packed by git (gc or clone) and cannot be read here.',
+  hiErr: 'History: {0}',
+  lkOff: 'Page numbers are free: they move when text is added or cut.', lkOn: 'Page numbers are locked at “{0}”.',
+  lkChanged: 'Changed pages: {0}', lkGone: 'Pages now empty: {0}', lkNone: 'No page has changed.',
+  lkUnlock: 'Unlock', lkPrint: 'Print changed pages', lkMark: 'changed since “{0}”',
+  dfTitle: 'Changes', dfFrom: 'From', dfTo: 'To', dfWho: 'Show', dfAll: 'Everything, cues too', dfText: 'Text', dfNone: 'No changes.',
+  dfAdd: 'added', dfDel: 'cut', dfChg: 'changed', dfCue: 'cues', dfCueLine: 'the line before yours', dfCount: '{0} changes', dfFor: 'for {0}', dfBack: 'Back',
+  mCast: 'Send to cast…', caTitle: 'Send to cast', deptCast: 'Cast', deptCastTip: 'Notes for the actors: sent with “Send to cast…”, listed under Review, left out of the cue list',
+  caHint: 'The cast file holds the text without cues, comments and to-do notes, plus the notes of the departments marked “Cast”. An actor opens it in a browser, on a phone too: it shows the script, hides their own lines for practice and keeps their own notes on their device. Send a new file after a rehearsal: the notes they wrote stay with them.',
+  caNoDept: 'No department is marked “Cast” yet. The notes pinned under such a department are the ones the actors receive; its name tells them who is writing, for example Director.',
+  caAddDept: 'Add a “Notes” department', caDeptName: 'Notes', caCount: 'Notes for the cast: {0}', caNone: 'No note for the cast yet: the file will hold the text only.',
+  caEveryone: 'Everyone', caSaveHtml: 'Save the cast file (.html)', caSaveJson: 'Text and notes only (.cast.json)',
+  caJsonHint: 'The .html file is the reader with this show inside: one file to send. The .cast.json file is for who already keeps the reader and opens the show from its menu.',
+  caFor: 'For: blank = {0}', caNote: 'Note for the cast', rvCast: 'Notes for the cast',
+  acApp: 'Cast script', acOpen: 'Open a cast file…', acStart: 'Open the file you received from the stage manager (…-cast.html or .cast.json). Your part and your notes stay on this device.',
+  acPart: 'My part', acPartHint: 'Tick every name you speak under. Groups and choruses are listed as the script writes them: tick the ones you are part of.',
+  acHide: 'Hide my lines', acHideTip: 'Cover my lines to practise; tap a covered line to see it', acPickFirst: 'Tick your character first',
+  acNotes: 'Notes', acForMe: 'For me', acMine: 'My notes', acGot: 'Received', acAdd: '+ Note', acNotePh: 'Your note on this line',
+  acLost: 'My notes whose line has changed', acNoNotes: 'No notes.', acRead: 'Read', acSize: 'Text size', acExport: 'Export my notes', acImport: 'Import my notes…',
+  acSent: 'Sent {0}', acBad: 'This is not a cast file.', acNewer: 'This file needs a newer reader: ask for the .html cast file.', acLoaded: 'Show updated: {0}',
+  acTo: 'for {0}', acImported: 'Notes imported: {0}', acNoSpeak: 'No speaker found in this script.', acLang: 'Italiano',
+  acNews: 'What is new', acNewsFile: 'File of {0}', acNewsNotes: 'Notes to read: {0}', acNewsLines: 'Lines changed since the file before: {0}, mine {1}',
+  acNewsMoved: 'My notes on a line that changed: {0}', acNewsLost: 'My notes whose line was cut: {0}', acNewsNone: 'Nothing changed for you.',
+  acMoved: 'The line has changed since you wrote this. Save to keep the note here.', acAttach: 'Put on this line', acLostHint: 'Tap a line, then its note button, to put one of these back.',
+  acOlder: 'This file is older than the one opened last ({0}). Nothing was updated.', acOlderAsk: 'This file is older than the one you have ({0}). Open it anyway?',
+  acNoStore: 'This browser does not keep your notes when the page is closed. Use “Export my notes” before you close it.', acLine: 'Notes on this line'
+},
+it: {
+  appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
+  pasteNew: 'Inizia incollando il testo', contDraft: 'Riprendi la bozza non salvata ({0})', importBk: 'Importa un file di backup…',
+  startHint: 'Uno spettacolo è un solo file .zip: copione, appunti a penna, impostazioni, schemi e immagini insieme. Per spostarlo basta copiare quel file. Crealo con «Inizia incollando il testo» o con l’esempio, poi «Salva come file spettacolo…».',
+  noFs: 'Questo browser non può salvare i file dello spettacolo. Per farlo apri lo strumento in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
+  menu: 'Menu', mOpen: 'Apri file spettacolo…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
+  mSettings: 'Impostazioni…', mClose: 'Chiudi spettacolo', jump: 'Vai ad atto o scena', jumpTo: 'Vai a…', find: 'Cerca…',
+  eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
+  boards: 'Tavole', boardsTip: 'Mostra la pagina a fronte', cues: 'Cue', cuesTip: 'Mostra o nascondi i cue', ink: 'Tratti', inkTip: 'Mostra o nascondi l’inchiostro',
+  night: 'Modalità notte', fit: 'Adatta', zoomIn: 'Ingrandisci', zoomOut: 'Riduci', cueList: 'Lista cue', print: 'Stampa', review: 'Rivedi',
+  prBook: 'Copione e pagine a fronte', prScript: 'Solo pagine del copione',
+  stSaved: 'Salvato {0}', stSaving: 'Salvataggio…', stPending: 'Da salvare', stMem: 'Non su disco', stErr: 'Salvataggio fallito',
+  cueAfter: 'Cue dopo «{0}»', cueOwn: 'Cue su riga propria, dopo questo blocco', ownLine: 'Su riga propria',
+  boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
+  save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
+  keys: 'Scorciatoie da tastiera', kHint: 'I tasti singoli funzionano quando nessun campo di testo è attivo e nessun riquadro dei cue è aperto.', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
+  kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu; esci da Cerca',
+  editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
+  textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
+  fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
+  contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
+  bClear: 'Cancella inchiostro', bRename: 'Rinomina', bCreate: 'Aggiungi tavola', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
+  checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
+  rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
+  rvParaHint: 'Mostrate senza nome. Modificale per aggiungere NOME: o per unirle alla battuta sopra.',
+  rvAmp: '«&» senza battuta sopra', rvInk: 'Inchiostro da controllare', rvOrph: 'Inchiostro di testo rimosso', rvUnk: 'Reparti sconosciuti', rvChars: 'Personaggi',
+  rvCharsHint: 'Un nome che compare una sola volta può essere un refuso o una riga letta male.',
+  rvNoChar: 'Non nell’elenco dei personaggi', rvNoCharHint: 'Nomi che mancano da «personaggi» in testa al copione. TUTTI, GLI ALTRI, TUTTI TRANNE… non sono controllati.',
+  rvSilent: 'In elenco ma senza battute', titleInScript: 'Impostato da «titolo» in testa al copione',
+  all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Margine', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio',
+  csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
+  setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
+  deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
+  extChanged: 'Questo spettacolo è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
+  reloaded: 'Spettacolo ricaricato, era stato modificato altrove',
+  memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
+  errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
+  pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
+  afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
+  endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
+  moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
+  moveBlock: 'Trascina per spostare il blocco', blockUnpaired: 'Spostato. Un cue e la sua fine non corrispondono più: controlla l’ordine.', kDel: 'Elimina il cue o la tavola del riquadro aperto',
+  makeCue: 'Rendila un cue', plainEnd: 'Rendila una fine semplice', notes: 'Descrizione (solo nella lista cue)', hasNotes: 'Descrizione',
+  thEndPage: 'Pag. fine', thEndLine: 'Battuta di fine', thEndDesc: 'Nota di fine', endsAt: 'finisce a p. {0}', endedBy: 'chiuso da {0}', endsCue: 'chiude {0}',
+  thEndedBy: 'Chiuso da', thEnds: 'Chiude', thNotes: 'Descrizione', csvDept: 'Per reparto (.zip)', printDept: 'Stampa per reparto',
+  rvEnd: 'Fine senza cue da chiudere',
+  nextLabel: 'vuoto = {0}', rvTodo: 'Da fare', deptReview: 'Da fare', deptReviewTip: 'Appunti da rivedere, non cue: elencati in Rivedi e lasciati fuori dalla lista cue',
+  rvNote: 'Commentati', rvNoteHint: 'Nascosti nella pagina e in stampa. Tocca per leggere o ripristinare.', noteOut: 'Commenta', noteBack: 'Ripristina', noteTitle: 'Commentato',
+  templates: 'Modelli', mTemplates: 'Modelli…', tplBack: 'Torna al copione', tplNew: '+ Modello', tplChild: 'Nuovo basato su questo',
+  tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
+  tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
+  tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
+  pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
+  gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga',
+  mHistory: 'Cronologia…', hiTitle: 'Cronologia', hiNeedFile: 'La cronologia sta dentro il file dello spettacolo. Usa prima «Salva come file spettacolo…».',
+  hiVariant: 'Variante', hiNewVar: 'Nuova variante', hiVarName: 'Nome di una nuova variante, es. un teatro',
+  hiVarHint: 'Una variante è lo spettacolo come va in scena in un luogo o in un’occasione, con le sue revisioni. Una modifica fatta in una variante non arriva alle altre.',
+  hiRevName: 'Nome di questa revisione, es. Prova 12 ottobre', hiSave: 'Salva revisione', hiLockToo: 'Blocca qui i numeri di pagina',
+  hiNow: 'Adesso', hiNone: 'Ancora nessuna revisione.', hiChanges: 'Modifiche', hiRestore: 'Ripristina',
+  hiRestored: 'Tornato a «{0}». Quello che avevi è stato tenuto come revisione.', hiSaved: 'Revisione «{0}» salvata', hiSwitched: 'Ora sei nella variante «{0}»',
+  hiBefore: 'Prima di passare a «{0}»', hiTaken: 'Questo nome è già usato.', hiPacked: 'Una parte di questa cronologia è stata compressa da git (gc o clone) e qui non si può leggere.',
+  hiErr: 'Cronologia: {0}',
+  lkOff: 'I numeri di pagina sono liberi: si spostano quando si aggiunge o si taglia testo.', lkOn: 'I numeri di pagina sono bloccati a «{0}».',
+  lkChanged: 'Pagine cambiate: {0}', lkGone: 'Pagine ora vuote: {0}', lkNone: 'Nessuna pagina è cambiata.',
+  lkUnlock: 'Sblocca', lkPrint: 'Stampa le pagine cambiate', lkMark: 'cambiata dopo «{0}»',
+  dfTitle: 'Modifiche', dfFrom: 'Da', dfTo: 'A', dfWho: 'Mostra', dfAll: 'Tutto, anche i cue', dfText: 'Testo', dfNone: 'Nessuna modifica.',
+  dfAdd: 'aggiunta', dfDel: 'tagliata', dfChg: 'cambiata', dfCue: 'cue', dfCueLine: 'la battuta prima della tua', dfCount: '{0} modifiche', dfFor: 'per {0}', dfBack: 'Indietro',
+  mCast: 'Invia agli attori…', caTitle: 'Invia agli attori', deptCast: 'Attori', deptCastTip: 'Note per gli attori: inviate con «Invia agli attori…», elencate in Rivedi e lasciate fuori dalla lista cue',
+  caHint: 'Il file per gli attori contiene il testo senza cue, commenti e appunti «da fare», più le note dei reparti segnati «Attori». Un attore lo apre in un browser, anche sul telefono: mostra il copione, nasconde le sue battute per provare a memoria e tiene le sue note sul suo dispositivo. Invia un nuovo file dopo una prova: le note che ha scritto restano a lui.',
+  caNoDept: 'Nessun reparto è ancora segnato «Attori». Le note messe sotto un reparto così sono quelle che gli attori ricevono; il suo nome dice loro chi scrive, per esempio Regia.',
+  caAddDept: 'Aggiungi un reparto «Note»', caDeptName: 'Note', caCount: 'Note per gli attori: {0}', caNone: 'Ancora nessuna nota per gli attori: il file conterrà solo il testo.',
+  caEveryone: 'Tutti', caSaveHtml: 'Salva il file per gli attori (.html)', caSaveJson: 'Solo testo e note (.cast.json)',
+  caJsonHint: 'Il file .html è il lettore con dentro questo spettacolo: un solo file da inviare. Il file .cast.json è per chi tiene già il lettore e apre lo spettacolo dal suo menu.',
+  caFor: 'Per: vuoto = {0}', caNote: 'Nota per gli attori', rvCast: 'Note per gli attori',
+  acApp: 'Copione per gli attori', acOpen: 'Apri un file per gli attori…', acStart: 'Apri il file ricevuto dalla direzione di scena (…-cast.html o .cast.json). La tua parte e le tue note restano su questo dispositivo.',
+  acPart: 'La mia parte', acPartHint: 'Spunta ogni nome sotto cui parli. Gruppi e cori sono elencati come li scrive il copione: spunta quelli di cui fai parte.',
+  acHide: 'Nascondi le mie battute', acHideTip: 'Copre le mie battute per provare a memoria; tocca una battuta coperta per vederla', acPickFirst: 'Spunta prima il tuo personaggio',
+  acNotes: 'Note', acForMe: 'Per me', acMine: 'Le mie note', acGot: 'Ricevute', acAdd: '+ Nota', acNotePh: 'La tua nota su questa battuta',
+  acLost: 'Mie note la cui battuta è cambiata', acNoNotes: 'Nessuna nota.', acRead: 'Letta', acSize: 'Dimensione del testo', acExport: 'Esporta le mie note', acImport: 'Importa le mie note…',
+  acSent: 'Inviato {0}', acBad: 'Questo non è un file per gli attori.', acNewer: 'Questo file richiede un lettore più recente: chiedi il file .html per gli attori.', acLoaded: 'Spettacolo aggiornato: {0}',
+  acTo: 'per {0}', acImported: 'Note importate: {0}', acNoSpeak: 'Nessun personaggio trovato in questo copione.', acLang: 'English',
+  acNews: 'Novità', acNewsFile: 'File del {0}', acNewsNotes: 'Note da leggere: {0}', acNewsLines: 'Battute cambiate dal file precedente: {0}, mie {1}',
+  acNewsMoved: 'Mie note su una battuta cambiata: {0}', acNewsLost: 'Mie note la cui battuta è stata tagliata: {0}', acNewsNone: 'Per te non è cambiato niente.',
+  acMoved: 'La battuta è cambiata da quando l’hai scritta. Salva per tenere qui la nota.', acAttach: 'Metti su questa battuta', acLostHint: 'Tocca una battuta, poi il suo pulsante delle note, per rimetterne una.',
+  acOlder: 'Questo file è più vecchio dell’ultimo aperto ({0}). Non è stato aggiornato niente.', acOlderAsk: 'Questo file è più vecchio di quello che hai ({0}). Aprirlo lo stesso?',
+  acNoStore: 'Questo browser non conserva le tue note quando la pagina viene chiusa. Usa «Esporta le mie note» prima di chiuderla.', acLine: 'Note su questa battuta'
+}};
+let LANG = 'en';
+function t(k) {
+  let s = STR[LANG] && STR[LANG][k];
+  if (s == null) s = STR.en[k];
+  if (s == null) s = k;
+  for (let i = 1; i < arguments.length; i++) s = s.split('{' + (i - 1) + '}').join(arguments[i]);
+  return s;
+}
+
+/* ---------- helpers ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+function h(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs) { const e = document.createElementNS(SVGNS, tag); if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = n => Math.round(n * 10) / 10;
+const r2 = n => Math.round(n * 100) / 100;
+function hash(s) { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) | 0; return (x >>> 0).toString(36); }
+function rm(arr, x) { const i = arr.indexOf(x); if (i >= 0) arr.splice(i, 1); return i; }
+
+/* ---------- constants ---------- */
+const FS = 15, LH = 22, GAP = 24, SPREAD_GAP = 20;
+const PAPERS = { A4: { w: 793, h: 1122, css: 'A4' }, Letter: { w: 816, h: 1056, css: 'letter' } };
+const GEO = { padL: 38, nameW: 118, gap1: 12, gap2: 14, margW: 166, padR: 46, top: 54, bot: 58 };
+const FIXED_W = GEO.padL + GEO.nameW + GEO.gap1 + GEO.gap2 + GEO.margW + GEO.padR;
+const BLACK = '#1b1a17';
+const INKS = ['#c8102e', '#0b5fbd', '#1f7a3a', BLACK];
+const BOARD_W = 1000;
+const MAX_BOARDS = 8;   // per facing page, through the interface
+const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
+const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
+const FIG_GAP = 12;
+const VERSION = 'r1.10';
+
+function defaultConfig() {
+  const it = LANG === 'it';
+  return { title: '', paper: 'A4', departments: [
+    { code: 'LX', name: it ? 'Luci' : 'Lights', colour: '#c98a00' },
+    { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
+    { code: 'VID', name: 'Video', colour: '#7a3fd1' },
+    { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null, castId: '' };
+}
+function normCfg(c) {
+  const o = Object.assign(defaultConfig(), c || {});
+  if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
+  o.departments = o.departments.map(x => {
+    const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
+    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast };
+  }).filter(x => x.code && x.code !== 'BOARD');
+  if (!PAPERS[o.paper]) o.paper = 'A4';
+  o.title = String(o.title || '');
+  const names = v => Array.isArray(v) ? v.filter(n => typeof n === 'string' && n) : [];
+  o.templates = Array.from(new Set(names(o.templates))); o.recentTemplates = names(o.recentTemplates);
+  o.defaultTemplate = typeof o.defaultTemplate === 'string' && o.defaultTemplate ? o.defaultTemplate : null;
+  o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
+  const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
+  o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
+  o.castId = typeof o.castId === 'string' ? o.castId : '';   // names the show to the actors' files, whatever its title becomes
+  const lk = o.lock;   // locked page numbers, see makeLock
+  o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
+  return o;
+}
+
+/* ---------- state ---------- */
+const S = {
+  cfg: defaultConfig(),
+  blocks: [], byId: new Map(), nextId: 1, groups: [],
+  ink: new Map(),        // block id -> { snap, lines, strokes: [{colour,width,points}] }
+  orphans: [],           // ink whose block disappeared: { text, snap, lines, strokes }
+  boards: new Map(),     // name -> { name, w, h, image, imageData, strokes, base }
+  templates: new Map(),  // name -> same shape with tpl: true; kept in the configuration, never in the script
+  urls: new Map(),       // 'boards/<file>' or 'templates/<file>' -> object URL
+  pairs: [], mode: 'script', meta: null,   // meta: the frontmatter of the script, when it has one
+  pages: [], pageOff: 0, lockInfo: null, els: [], meas: new Map(),
+  view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
+  tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
+  hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
+  store: { mode: 'none', name: '', stamp: {}, dirty: { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }, conflict: false, lastSave: null, err: null }
+};
+const paper = () => PAPERS[S.cfg.paper] || PAPERS.A4;
+const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
+/* a review department holds notes for after the rehearsal: listed in Review, never in the cue list */
+const isReview = code => { const d = deptOf(code); return !!(d && d.review); };
+/* a cast department holds notes for the actors: a review department whose notes are also sent to them */
+const isCast = code => { const d = deptOf(code); return !!(d && d.cast); };
+const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
+/* what is printed for page number n: the number itself, or its locked label such as 12A */
+const pl = n => { const P = n ? S.pages[n - 1 + S.pageOff] : null; return P ? P.label : (n || ''); };
+
+/* =====================================================================
+   PARSE
+   ===================================================================== */
+const TOKEN_SRC = '\\{([^{}|\\s]+)(?:[ \\t]+([^{}|]*?))?[ \\t]*(?:\\|[ \\t]*([^{}]*?))?[ \\t]*\\}';
+const CONNECT = new Set(['e', 'ed', 'and', '&', 'y', 'et']);
+const HEAD1 = /^(ATTO|ACT|PARTE|PART|PROLOGO|EPILOGO|PROLOGUE|EPILOGUE|INTERVALLO|INTERVAL|FINE)(?![\p{L}\p{N}])/u;
+const HEAD2 = /^(SCENA|SCENE|QUADRO)(?![\p{L}\p{N}])/u;
+const HEADT = /^(Atto|Act|Parte|Scena|Scene|Quadro)\s+(\d+|[IVXLC]+)(?![\p{L}\p{N}])/u;
+
+function stripTokens(s) {
+  return s.replace(new RegExp(TOKEN_SRC, 'g'), '').replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').trim();
+}
+function cleanField(s) { return String(s || '').replace(/[{}|]/g, '/').replace(/\s+/g, ' ').trim(); }
+/* {DEPT label / DEPT label | short text | notes}: links are the cues this cue ends, notes are for the cue list only */
+function fmtToken(dept, label, desc, end, links, notes) {
+  label = cleanField(label); desc = cleanField(desc); notes = cleanField(notes);
+  const lk = (links || []).map(l => l.dept + (l.label ? ' ' + l.label : '')).join(' / ');
+  const lab = lk ? (label ? label + ' / ' : '/ ') + lk : label;
+  return '{' + (end ? '/' : '') + dept + (lab ? ' ' + lab : '') + (desc || notes ? ' | ' + desc : '') + (notes ? ' | ' + notes : '') + '}';
+}
+/* "6 / SND 5 / VID 2" -> own label "6" and the cues it ends. Not a link unless every part after
+   a " / " starts with an upper-case department code, so a label such as "5 / 6" stays a label. */
+const cueName = c => c.dept + (c.label ? ' ' + c.label : '');
+function splitLinks(s) {
+  const parts = (' ' + s).split(/\s\/\s+/), label = parts[0].trim(), links = [];
+  for (const p of parts.slice(1)) {
+    const m = /^(\p{Lu}[\p{Lu}\p{N}_-]+)(?:\s+(.*))?$/u.exec(p.trim());
+    if (!m) return { label: s, links: [] };
+    links.push({ dept: m[1], label: (m[2] || '').trim() });
+  }
+  return { label, links };
+}
+function autoHead(s) {
+  if (s.length > 70) return 0;
+  if (HEAD1.test(s)) return 1;
+  if (HEAD2.test(s)) return 2;
+  const m = HEADT.exec(s);
+  if (m) return /^(Atto|Act|Parte)$/.test(m[1]) ? 1 : 2;
+  return 0;
+}
+function speechHead(line) {
+  const m0 = /^\s*(&\s*)?/.exec(line);
+  const i0 = m0[0].length, simul = !!m0[1];
+  const ci = line.indexOf(':', i0);
+  if (ci < 0) return null;
+  const head = line.slice(i0, ci);
+  if (/[{}]/.test(head)) return null;
+  let nameStr = head, paren = null;
+  const pm = /^(.*?)(\s*)(\([^()]*\))\s*$/.exec(head);
+  if (pm) { nameStr = pm[1]; const s = i0 + pm[1].length + pm[2].length; paren = { s, e: s + pm[3].length }; }
+  nameStr = nameStr.trim();
+  if (!nameStr || nameStr.length > 48 || /[()]/.test(nameStr)) return null;
+  const words = nameStr.split(/[\s,\/+]+/).filter(Boolean);
+  if (words.length > 6) return null;
+  let up = false;
+  for (const w of words) {
+    if (CONNECT.has(w.toLowerCase())) continue;
+    if (w !== w.toUpperCase()) return null;
+    if (/\p{Lu}/u.test(w)) up = true;
+  }
+  if (!up) return null;
+  if (/\d\s*$/.test(nameStr) && /^\d/.test(line.slice(ci + 1))) return null;   // 10:30
+  return { simul, name: nameStr.replace(/\s+/g, ' '), paren, restAt: ci + 1 };
+}
+function isActionStart(st) {
+  if (st[0] !== '(') return false;
+  let depth = 0;
+  for (let i = 0; i < st.length; i++) {
+    if (st[i] === '(') depth++;
+    else if (st[i] === ')') { depth--; if (depth === 0) return /^[\s.,;:!?…]*$/.test(st.slice(i + 1)); }
+  }
+  return true;   // not closed on this line: a multi-line action
+}
+/* ---------- frontmatter ----------
+   ---
+   title: Il mare
+   author: Marco Vitali
+   characters:
+     - ANNA
+     - MARCO/M - il pescatore
+   ---
+   Every value is shown on the front page, in this order; the title larger. "characters" gets a page of
+   its own after it: name / alias - description. It is also the list speeches are checked against, and
+   a speech headed by an alias is shown under the full name. */
+const META_TITLE = new Set(['title', 'titolo']);
+const META_CHARS = new Set(['characters', 'personaggi']);
+const META_SKIP = new Set(['tags', 'aliases', 'cssclasses']);   // Obsidian's own properties
+const META_LINE = /^\s*(?:#|-\s|[^\s:][^:]*:)|^\s+\S/;
+const normName = s => String(s).toUpperCase().replace(/\s+/g, ' ').trim();
+function parseMeta(raw) {
+  const unq = v => { v = v.trim(); const m = /^(["'])(.*)\1$/.exec(v); return m ? m[2] : v; };
+  const fields = []; let cur = null;
+  for (const line of raw.split('\n').slice(1, -1)) {
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+    let m = /^\s*-\s+(.*)$/.exec(line);
+    if (m) { if (cur && m[1].trim()) cur.items.push(unq(m[1])); continue; }
+    m = /^([^\s:][^:]*?)\s*:\s*(.*)$/.exec(line);
+    if (m && !/^\s/.test(line)) {
+      cur = { key: m[1].trim().toLowerCase(), items: [] }; fields.push(cur);
+      const v = (m[2] || '').trim(), lm = /^\[(.*)\]$/.exec(v);
+      if (lm) cur.items = lm[1].split(',').map(unq).filter(Boolean);
+      else if (v && v !== '|' && v !== '>') cur.items.push(unq(v));
+    } else if (cur) cur.items.push(line.trim());
+  }
+  const out = { title: '', lines: [], chars: [], set: new Set(), alias: new Map(), charsKey: '' };
+  for (const f of fields) {
+    if (META_SKIP.has(f.key)) continue;
+    if (META_CHARS.has(f.key)) {
+      if (!out.charsKey) out.charsKey = f.key[0].toUpperCase() + f.key.slice(1);
+      for (const it of f.items) {
+        const m = /^(.*?)(?:\s+[-–—]\s+|\s*:\s+)(.*)$/.exec(it), names = (m ? m[1] : it).split('/').map(normName).filter(Boolean), name = names[0];
+        if (!name || out.set.has(name)) continue;
+        out.set.add(name); out.chars.push({ name, aliases: names.slice(1), desc: m ? m[2].trim() : '' });
+      }
+      continue;
+    }
+    const big = META_TITLE.has(f.key);
+    if (big && !out.title && f.items.length) out.title = f.items.join(' ');
+    for (const it of f.items) out.lines.push({ text: it, big });
+  }
+  for (const c of out.chars) {   // a name always wins over an alias spelled the same
+    c.aliases = c.aliases.filter(a => !out.set.has(a) && !out.alias.has(a));
+    for (const a of c.aliases) out.alias.set(a, c.name);
+  }
+  out.aliasSig = Array.from(out.alias).join(';');
+  return out;
+}
+const NAME_SEP = /(\s*[,\/+&]\s*|\s+(?:e|ed|and|y|et)\s+)/i;
+/* a speaker name with every alias replaced by the character's name */
+function fullName(name, meta) {
+  if (!meta || !meta.alias.size || meta.set.has(normName(name))) return name;
+  return name.split(NAME_SEP).map((p, i) => i % 2 ? p : (meta.alias.get(normName(p)) || p)).join('');
+}
+/* Names that stand for several characters without listing them. They are never checked against the list. */
+const GROUP_NAME = /^(?:(?:ALL|EVERYONE|EVERYBODY|TUTTI|TUTTE)(?:\s+(?:THE\s+|GLI\s+|LE\s+)?(?:OTHERS|ALTRI|ALTRE)|\s+(?:BUT|EXCEPT|TRANNE|MENO|ECCETTO|SALVO)\s+.+)?|(?:THE\s+|GLI\s+|LE\s+)?(?:OTHERS|ALTRI|ALTRE))$/u;
+/* which listed characters a speaker name uses, and which of its names are not in the list */
+function castCheck(name, set) {
+  const U = normName(name), used = [], unknown = [];
+  if (set.has(U)) return { used: [U], unknown };
+  if (GROUP_NAME.test(U)) return { used, unknown };
+  for (const p of U.split(/\s*[,\/+&]\s*|\s+(?:E|ED|AND|Y|ET)\s+/)) {
+    if (!p || GROUP_NAME.test(p)) continue;
+    (set.has(p) ? used : unknown).push(p);
+  }
+  return { used, unknown };
+}
+
+function classify(line) {
+  const st = stripTokens(line);
+  if (st === '') return { type: 'mark' };
+  if (/^\s*#{1,6}\s+\S/.test(line)) return { type: 'h' };
+  const al = autoHead(st);
+  if (al) return { type: 'h', auto: al };
+  const hd = speechHead(line);
+  if (hd) return { type: 'speech', head: hd };
+  if (isActionStart(st)) return { type: 'action' };
+  return null;
+}
+/* ---------- comments ----------
+   %%
+   ANNA: A speech set aside.
+   %%
+   Everything between two lines holding %% is kept in the file and left off the page, the cue list and
+   the print. One line can also be closed on itself: %% text %%. A %% that is never closed is not a comment. */
+const FENCE = /^\s*%%\s*$/, NOTE1 = /^\s*%%(?!\s*$).*%%\s*$/;
+const noInk = b => b.type === 'mark' || b.type === 'note';
+function uncomment(v) {
+  return String(v).replace(/\r\n?/g, '\n').split('\n').map(l => NOTE1.test(l) ? l.trim().slice(2, -2).trim() : l).filter(l => !FENCE.test(l)).join('\n').replace(/^\n+|\s+$/g, '');
+}
+function commentOut(v) { v = uncomment(v); return v ? '%%\n' + v + '\n%%' : ''; }
+function parseScript(text) {
+  const lines = String(text || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').replace(/ /g, ' ').split('\n');
+  const blocks = []; let cur = null, gap = 0, at = 0;
+  /* frontmatter: only as the first thing in the file, between two --- lines */
+  let a = 0; while (a < lines.length && !lines[a].trim()) a++;
+  if (a < lines.length && lines[a].trim() === '---') {
+    let z = a + 1; while (z < lines.length && lines[z].trim() !== '---' && (!lines[z].trim() || META_LINE.test(lines[z]))) z++;
+    if (z < lines.length && lines[z].trim() === '---') {
+      blocks.push({ type: 'meta', raw: lines.slice(a, z + 1).map(l => l.replace(/\s+$/, '')).join('\n'), gap: a });
+      at = z + 1;
+    }
+  }
+  const ls = lines.slice(at);
+  for (let i = 0; i < ls.length; i++) {
+    const line = ls[i].replace(/\s+$/, '');
+    if (!line.trim()) { gap++; cur = null; continue; }
+    const fence = FENCE.test(line); let z = NOTE1.test(line) ? i : -1;
+    if (fence) { z = i + 1; while (z < ls.length && !FENCE.test(ls[z])) z++; if (z >= ls.length) z = -1; }
+    if (z >= 0) {
+      blocks.push({ type: 'note', raw: ls.slice(i, z + 1).map(l => l.replace(/\s+$/, '')).join('\n'), gap });
+      cur = null; gap = 0; i = z; continue;
+    }
+    const c = fence ? null : classify(line);
+    if (fence) cur = null;   // never closed: shown as an unrecognised line
+    if (c) { cur = Object.assign({ raw: line, gap }, c); blocks.push(cur); gap = 0; }
+    else if (cur && cur.type !== 'mark' && cur.type !== 'h') cur.raw += '\n' + line;
+    else { cur = { type: 'para', raw: line, gap }; blocks.push(cur); gap = 0; }
+  }
+  return blocks;
+}
+function mkCue(m, wi) {
+  let dept = m[1].toUpperCase();
+  const end = dept.length > 1 && dept[0] === '/';   // {/SND 5} ends cue SND 5
+  if (end) dept = dept.slice(1);
+  const board = !end && dept === 'BOARD', lk = end || board ? { label: (m[2] || '').trim(), links: [] } : splitLinks((m[2] || '').trim());
+  const rest = (m[3] || '').trim(), bar = rest.indexOf('|');   // short text | notes
+  const desc = bar < 0 ? rest : rest.slice(0, bar).trim(), notes = bar < 0 ? '' : rest.slice(bar + 1).replace(/\s*\|\s*/g, ' / ').trim();
+  return { dept, label: lk.label, links: lk.links, desc, notes, s: m.index, e: m.index + m[0].length, wi, end, board };
+}
+function analyze(b) {
+  const raw = b.raw;
+  b.plain = stripTokens(raw); b.sv = hash(raw);
+  b.tokens = []; b.cues = []; b.name = ''; b.simul = false; b.level = 0; b.title = '';
+  if (b.type === 'meta') { b.meta = parseMeta(raw); return b; }
+  if (b.type === 'note') { b.inner = uncomment(raw); b.plain = ''; return b; }
+  if (b.type === 'mark') {
+    const re = new RegExp(TOKEN_SRC, 'g'); let m;
+    while ((m = re.exec(raw))) b.cues.push(mkCue(m, -1));
+    return b;
+  }
+  let from = 0;
+  if (b.type === 'h') {
+    const m = /^\s*(#{1,6})\s+/.exec(raw);
+    if (m) { b.level = Math.min(m[1].length, 2); from = m[0].length; } else b.level = b.auto || 1;
+  }
+  if (b.type === 'speech') {
+    const hd = b.head; b.name = hd.name; b.simul = hd.simul; from = hd.restAt;
+    if (hd.paren) b.tokens.push({ k: 'x', text: raw.slice(hd.paren.s, hd.paren.e) }, { k: 'sp' });
+  }
+  tokenize(b, from, b.type === 'action');
+  if (b.type === 'h') b.title = b.tokens.filter(q => q.k === 'w').map(q => q.text).join(' ');
+  return b;
+}
+function tokenize(b, from, baseIt) {
+  const raw = b.raw, to = raw.length, out = b.tokens;
+  const re = new RegExp(TOKEN_SRC, 'y');
+  let i = from, depth = 0, last = null, pending = [];
+  const isSp = c => c === ' ' || c === '\t';
+  while (i < to) {
+    const ch = raw[i];
+    if (ch === '\n') { if (out.length) out.push({ k: 'br' }); i++; continue; }
+    if (isSp(ch)) {
+      while (i < to && isSp(raw[i])) i++;
+      const p = out[out.length - 1];
+      if (p && p.k !== 'sp' && p.k !== 'br') out.push({ k: 'sp' });
+      continue;
+    }
+    if (ch === '{') {
+      re.lastIndex = i; const m = re.exec(raw);
+      if (m) {
+        const wi = last ? out.indexOf(last) : -2;
+        const c = mkCue(m, wi);
+        if (last) last.cues.push(c); else pending.push(c);
+        b.cues.push(c); i = re.lastIndex; continue;
+      }
+    }
+    let j = i;
+    while (j < to) {
+      const c = raw[j];
+      if (isSp(c) || c === '\n') break;
+      if (c === '{' && j > i) { re.lastIndex = j; if (re.test(raw)) break; }
+      j++;
+    }
+    const text = raw.slice(i, j);
+    const it = baseIt || depth > 0 || text[0] === '(';
+    for (const c of text) { if (c === '(') depth++; else if (c === ')') depth = Math.max(0, depth - 1); }
+    const w = { k: 'w', text, s: i, e: j, it, cues: [] };
+    out.push(w); last = w;
+    if (pending.length) { const wi = out.length - 1; for (const c of pending) { c.wi = wi; c.before = true; w.cues.push(c); } pending = []; }
+    i = j;
+  }
+  for (const c of pending) c.wi = -1;
+}
+
+function similarity(a, b) {
+  const A = new Set(a.toLowerCase().split(/\s+/)), B = new Set(b.toLowerCase().split(/\s+/));
+  let n = 0; for (const w of A) if (B.has(w)) n++;
+  return (2 * n) / ((A.size + B.size) || 1);
+}
+
+/* Replace the document text. Blocks that did not change keep their identity
+   (and so their ink); changed blocks are re-matched, the rest becomes orphaned ink. */
+function reparse(text) {
+  const old = S.blocks, nb = parseScript(text);
+  const same = (a, b) => a.raw === b.raw && a.type === b.type;
+  let p = 0;
+  while (p < old.length && p < nb.length && same(old[p], nb[p])) p++;
+  let s = 0;
+  while (s < old.length - p && s < nb.length - p && same(old[old.length - 1 - s], nb[nb.length - 1 - s])) s++;
+  for (let i = 0; i < p; i++) { old[i].gap = nb[i].gap; nb[i] = old[i]; }
+  for (let i = 0; i < s; i++) { const o = old[old.length - 1 - i], j = nb.length - 1 - i; o.gap = nb[j].gap; nb[j] = o; }
+  const oldMid = old.slice(p, old.length - s), newMid = nb.slice(p, nb.length - s);
+  for (const b of newMid) analyze(b);
+  if (oldMid.length === 1 && newMid.length === 1) {
+    newMid[0].id = oldMid[0].id;
+    const e = S.ink.get(oldMid[0].id);
+    if (e && noInk(newMid[0])) { S.ink.delete(oldMid[0].id); S.orphans.push({ text: oldMid[0].plain, snap: e.snap, lines: e.lines, strokes: e.strokes }); }
+  } else {
+    const byPlain = new Map();
+    for (const b of newMid) { if (noInk(b)) continue; const q = byPlain.get(b.plain); if (q) q.push(b); else byPlain.set(b.plain, [b]); }
+    const rest = [];
+    for (const ob of oldMid) {
+      if (noInk(ob)) continue;
+      const q = byPlain.get(ob.plain);
+      if (q && q.length) q.shift().id = ob.id; else if (S.ink.has(ob.id)) rest.push(ob);
+    }
+    for (const ob of rest) {
+      let best = null, bs = 0;
+      for (const b of newMid) { if (b.id || noInk(b)) continue; const sc = similarity(b.plain, ob.plain); if (sc > bs) { bs = sc; best = b; } }
+      if (best && bs >= 0.34) best.id = ob.id;
+    }
+  }
+  const kept = new Set();
+  for (const b of newMid) { if (b.id) kept.add(b.id); else b.id = S.nextId++; }
+  for (const ob of oldMid) {
+    if (kept.has(ob.id)) continue;
+    const e = S.ink.get(ob.id);
+    if (e) { S.ink.delete(ob.id); S.orphans.push({ text: ob.plain, snap: e.snap, lines: e.lines, strokes: e.strokes }); }
+  }
+  if (S.orphans.length) for (const b of newMid) {
+    if (noInk(b) || S.ink.has(b.id)) continue;
+    const k = S.orphans.findIndex(o => o.text === b.plain);
+    if (k >= 0) { const o = S.orphans.splice(k, 1)[0]; S.ink.set(b.id, { snap: o.snap == null ? o.text : o.snap, lines: o.lines, strokes: o.strokes }); }
+  }
+  S.blocks = nb;
+  S.byId = new Map(nb.map(b => [b.id, b]));
+  const sig0 = S.meta ? S.meta.aliasSig : '';
+  S.meta = nb.length && nb[0].type === 'meta' ? nb[0].meta : null;
+  if ((S.meta ? S.meta.aliasSig : '') !== sig0) S.meas = new Map();   // names in the name column change
+  let act = '', scene = '';
+  for (const b of nb) {
+    if (b.type === 'speech') b.name = fullName(b.head.name, S.meta);
+    if (b.type === 'h') { if (b.level === 1) { act = b.title; scene = ''; } else scene = b.title; }
+    b.act = act; b.scene = scene;
+  }
+  groupBlocks(); pairCues();
+}
+/* Pair every end with the cue it closes: the nearest earlier cue that is still open and has the same
+   department and label. An end without a label closes the nearest open cue of its department. An end
+   is either a {/DEPT label} token or a cue that links to what it ends, {DEPT 6 / DEPT 5}; a linking
+   cue closes its targets first and then stays open itself. Paired cues also get a lane for the
+   running rail in the margin. */
+function pairCues() {
+  const open = new Map(), pairs = []; let ord = 0;
+  const close = (c, dept, label) => {
+    const q = open.get(dept); if (!q) return null;
+    let k = -1;
+    for (let i = q.length - 1; i >= 0; i--) if (!label || q[i].label === label) { k = i; break; }
+    if (k < 0) return null;
+    const s = q.splice(k, 1)[0]; s.endRef = c; c.closes.push(s); pairs.push(s); return s;
+  };
+  for (const b of S.blocks) for (const c of b.cues) {
+    c.b = b; c.ord = ord++; c.endRef = null; c.startRef = null; c.closes = []; c.unresolved = []; c.lane = 0;
+    for (const l of c.links) l.ref = null;
+    if (c.board) continue;
+    if (c.end) { close(c, c.dept, c.label); c.startRef = c.closes[0] || null; continue; }
+    for (const l of c.links) { l.ref = close(c, l.dept, l.label); if (!l.ref) c.unresolved.push(l); }
+    let q = open.get(c.dept); if (!q) open.set(c.dept, q = []); q.push(c);
+  }
+  pairs.sort((a, b) => a.ord - b.ord);
+  const lanes = [];
+  for (const s of pairs) {   // a lane is free again once its rail has ended; a linking cue's tag can hand its lane on
+    let k = lanes.findIndex(endOrd => endOrd <= s.ord);
+    if (k < 0) k = lanes.length;
+    lanes[k] = s.endRef.ord; s.lane = Math.min(k, 5);
+  }
+  S.pairs = pairs;
+}
+function groupBlocks() {
+  const gs = []; let last = null;
+  for (const b of S.blocks) {
+    if (b.type === 'speech' && b.simul && last && last.speechy) {
+      if (last.kind === 'single') { last.kind = 'simul'; last.blocks = [last.b]; last.b = null; }
+      last.blocks.push(b); b.g = last; continue;
+    }
+    last = { kind: 'single', b, blocks: null, speechy: b.type === 'speech', m: null };
+    b.g = last; gs.push(last);
+  }
+  S.groups = gs;
+}
+const gBlocks = g => g.kind === 'single' ? [g.b] : g.blocks;
+
+function serialize() {
+  const out = [];
+  for (const b of S.blocks) { for (let k = 0; k < b.gap; k++) out.push(''); out.push(b.raw); }
+  return out.join('\n') + '\n';
+}
+/* text with blocks [i0, i0+n) replaced by newRaw (empty removes them) */
+function textWith(i0, n, newRaw) {
+  const out = [], bl = S.blocks;
+  for (let i = 0; i < bl.length; i++) {
+    const b = bl[i];
+    for (let k = 0; k < b.gap; k++) out.push('');
+    if (i === i0) {
+      const v = String(newRaw == null ? '' : newRaw).replace(/\r\n?/g, '\n').replace(/^\n+|\s+$/g, '');
+      if (v.trim() !== '') out.push(v);
+      i += n - 1; continue;
+    }
+    out.push(b.raw);
+  }
+  return out.join('\n') + '\n';
+}
+/* text with a new line placed right after block j (j = -1 puts it first) */
+function textInsertAfter(j, line) {
+  const out = [], bl = S.blocks;
+  if (j < 0) out.push(line);
+  for (let i = 0; i < bl.length; i++) {
+    const b = bl[i];
+    for (let k = 0; k < b.gap; k++) out.push('');
+    out.push(b.raw);
+    if (i === j) out.push(line);
+  }
+  return out.join('\n') + '\n';
+}
+/* text with a new line placed just before block i, taking over its spacing */
+function textInsertBefore(i0, line) {
+  const out = [], bl = S.blocks;
+  for (let i = 0; i < bl.length; i++) {
+    const b = bl[i];
+    for (let k = 0; k < b.gap; k++) out.push('');
+    if (i === i0) out.push(line);
+    out.push(b.raw);
+  }
+  return out.join('\n') + '\n';
+}
+
+function cutToken(raw, s, e) {
+  let a = raw.slice(0, s); const z = raw.slice(e);
+  if (/[ \t]$/.test(a) && (z === '' || /^[ \t\n]/.test(z))) a = a.replace(/[ \t]+$/, '');
+  return a + z;
+}
+/* text after several token edits at once: [{ b, s, e, text }], text null removes the token */
+function textEdits(edits) {
+  const by = new Map();
+  for (const ed of edits) { let q = by.get(ed.b); if (!q) by.set(ed.b, q = []); q.push(ed); }
+  const out = []; let carry = 0;   // blank lines above a line that is removed: they merge with those below it
+  for (const b of S.blocks) {
+    let raw = b.raw; const q = by.get(b);
+    if (q) {
+      q.sort((x, y) => y.s - x.s);
+      for (const ed of q) raw = ed.text === null ? cutToken(raw, ed.s, ed.e) : raw.slice(0, ed.s) + ed.text + raw.slice(ed.e);
+      raw = raw.replace(/^\n+|\s+$/g, '');
+    }
+    const gap = Math.max(b.gap, carry);
+    if (raw.trim() === '') { carry = gap; continue; }
+    for (let k = 0; k < gap; k++) out.push('');
+    out.push(raw); carry = 0;
+  }
+  return out.join('\n') + '\n';
+}
+/* text with cue c moved to just after word wi of block tb (after the cues already there); null when that is where it is */
+function textMoveCue(c, tb, wi) {
+  const w = tb && tb.tokens[wi]; if (!w || w.k !== 'w' || !c || !c.b) return null;
+  const after = w.cues.filter(q => !q.before);
+  if (after[after.length - 1] === c) return null;
+  let pos = w.e; for (const q of after) if (q !== c) pos = Math.max(pos, q.e);
+  const raw = c.b.raw, sp = x => x === undefined || /\s/.test(x);
+  /* a token with text glued on both sides leaves a space, or its neighbours would become one word */
+  const cut = c.s > 0 && !sp(raw[c.s - 1]) && !sp(raw[c.e]) ? ' ' : null;
+  /* a token glued to the next word (uno{LX 1}due) is followed by text: keep the moved token apart from it */
+  const tail = sp(tb.raw[pos]) ? '' : ' ';
+  return textEdits([{ b: c.b, s: c.s, e: c.e, text: cut }, { b: tb, s: pos, e: pos, text: ' ' + raw.slice(c.s, c.e) + tail }]);
+}
+
+/* text with blocks [i0, i0+n) moved to stand before block j (j = S.blocks.length puts them last); null when that is
+   where they are. The moved blocks keep the blank lines above them and the block that followed them keeps at least as
+   many. An unrecognised line that would touch the line above it gets a blank line, or it would be read as part of it. */
+function textMoveBlocks(i0, n, j) {
+  const bl = S.blocks;
+  if (i0 < 0 || n < 1 || i0 + n > bl.length || j < 0 || j > bl.length || (j >= i0 && j <= i0 + n)) return null;
+  const mv = bl.slice(i0, i0 + n), seq = [];
+  const put = () => { for (const m of mv) seq.push([m, m.gap]); };
+  bl.forEach((b, i) => {
+    if (i === j) put();
+    if (i < i0 || i >= i0 + n) seq.push([b, i === i0 + n ? Math.max(b.gap, mv[0].gap) : b.gap]);
+  });
+  if (j === bl.length) put();
+  const out = [];
+  seq.forEach(([b, gap], k) => {
+    const up = k ? seq[k - 1][0] : null;
+    if (!up && b !== bl[0]) gap = 0;   // a new first line brings no blank line to the top
+    if (up && !gap && b.type === 'para' && up.type !== 'mark' && up.type !== 'h') gap = 1;
+    for (let q = 0; q < gap; q++) out.push('');
+    out.push(b.raw);
+  });
+  return out.join('\n') + '\n';
+}
+
+/* ---------- ink bookkeeping ---------- */
+function lineCount(b) {
+  const g = b.g;
+  if (!g || !g.m) return 0;
+  return g.kind === 'single' ? (g.m.lines[0] || 0) : (g.m.lines[g.blocks.indexOf(b)] || 0);
+}
+function inkFlag(b) {
+  const e = S.ink.get(b.id);
+  if (!e || !e.strokes.length) return false;
+  if (e.snap !== b.plain) return true;
+  const n = lineCount(b);
+  return !!(e.lines && n && e.lines !== n);
+}
+function inkEntry(b) {
+  let e = S.ink.get(b.id);
+  if (!e) { e = { snap: b.plain, lines: lineCount(b), strokes: [] }; S.ink.set(b.id, e); }
+  return e;
+}
+/* attach ink loaded from disk: exact text in order first, then order and similarity */
+function attachInk(file) {
+  S.ink = new Map(); S.orphans = [];
+  if (!file) return;
+  for (const o of (file.orphans || [])) if (o && Array.isArray(o.strokes)) S.orphans.push({ text: String(o.text || ''), snap: o.inked, lines: o.lines, strokes: o.strokes });
+  const entries = (file.blocks || []).filter(e => e && Array.isArray(e.strokes) && e.strokes.length);
+  const bl = S.blocks, used = new Set(), res = new Array(entries.length).fill(-1);
+  const index = new Map();
+  bl.forEach((b, i) => { if (noInk(b)) return; const q = index.get(b.plain); if (q) q.push(i); else index.set(b.plain, [i]); });
+  let ptr = 0;
+  entries.forEach((e, k) => {
+    const q = index.get(String(e.text || '')); if (!q) return;
+    let j = q.find(i => i >= ptr && !used.has(i));
+    if (j === undefined) j = q.find(i => !used.has(i));
+    if (j === undefined) return;
+    res[k] = j; used.add(j); ptr = j + 1;
+  });
+  entries.forEach((e, k) => {
+    if (res[k] >= 0) return;
+    let lo = 0, hi = bl.length;
+    for (let q = k - 1; q >= 0; q--) if (res[q] >= 0) { lo = res[q] + 1; break; }
+    for (let q = k + 1; q < entries.length; q++) if (res[q] >= 0) { hi = res[q]; break; }
+    if (lo > hi) { lo = 0; hi = bl.length; }
+    let best = -1, bs = 0;
+    for (let i = lo; i < hi; i++) {
+      if (used.has(i) || noInk(bl[i])) continue;
+      const sc = similarity(bl[i].plain, String(e.text || ''));
+      if (sc > bs) { bs = sc; best = i; }
+    }
+    if (best >= 0 && bs >= 0.34) { res[k] = best; used.add(best); }
+  });
+  entries.forEach((e, k) => {
+    const snap = e.inked == null ? String(e.text || '') : String(e.inked);
+    if (res[k] >= 0) S.ink.set(bl[res[k]].id, { snap, lines: e.lines || 0, strokes: e.strokes });
+    else S.orphans.push({ text: String(e.text || ''), snap, lines: e.lines || 0, strokes: e.strokes });
+  });
+}
+function inkFile() {
+  const blocks = [];
+  for (const b of S.blocks) {
+    const e = S.ink.get(b.id);
+    if (!e || !e.strokes.length) continue;
+    const o = { text: b.plain, lines: e.lines || lineCount(b), strokes: e.strokes };
+    if (e.snap !== b.plain) o.inked = e.snap;
+    blocks.push(o);
+  }
+  const out = { version: 1, blocks };
+  if (S.orphans.length) out.orphans = S.orphans.map(o => ({ text: o.text, inked: o.snap, lines: o.lines, strokes: o.strokes }));
+  return out;
+}
+
+/* ---------- history ---------- */
+function pushHist(op) { S.hist.push(op); if (S.hist.length > 200) S.hist.shift(); S.redo.length = 0; updUndo(); }
+function undo() { const op = S.hist.pop(); if (!op) return; closePop(); op.undo(); S.redo.push(op); updUndo(); }
+function redo() { const op = S.redo.pop(); if (!op) return; closePop(); op.redo(); S.hist.push(op); updUndo(); }
+
+function applyText(tx) { reparse(tx); relayout(); markDirty('script'); }
+/* Change the script text as one undoable step. Only the changed span is kept in history. */
+function commitText(nt) {
+  const old = serialize();
+  if (nt === old) return false;
+  applyText(nt);
+  const cur = serialize();
+  if (cur === old) return false;
+  const n = Math.min(old.length, cur.length);
+  let p = 0; while (p < n && old.charCodeAt(p) === cur.charCodeAt(p)) p++;
+  let s = 0; while (s < n - p && old.charCodeAt(old.length - 1 - s) === cur.charCodeAt(cur.length - 1 - s)) s++;
+  const flat = x => x.split('').join('');   // detach from the full text so it can be freed
+  const a = flat(old.slice(p, old.length - s)), b = flat(cur.slice(p, cur.length - s));
+  const swap = mid => { const c = serialize(); applyText(c.slice(0, p) + mid + c.slice(c.length - s)); };
+  pushHist({ undo: () => swap(a), redo: () => swap(b) });
+  return true;
+}
+
+/* ---------- compare ----------
+   Two versions of a script set side by side, block by block: what was added, cut or changed.
+   History uses it to show changes; locked pages use lcs() to find where the old pages are now. */
+/* longest common subsequence of two lists of strings, as pairs [i, j] in order */
+function lcs(a, b) {
+  const out = [], tail = []; let p = 0, n = a.length, m = b.length;
+  while (p < n && p < m && a[p] === b[p]) { out.push([p, p]); p++; }
+  while (n > p && m > p && a[n - 1] === b[m - 1]) { n--; m--; tail.push([n, m]); }
+  const N = n - p, M = m - p, W = M + 1;
+  if (N && M && N * M <= 4e6) {   // past that the middle counts as all different
+    const T = new Uint16Array((N + 1) * W);
+    for (let i = N - 1; i >= 0; i--) for (let j = M - 1; j >= 0; j--)
+      T[i * W + j] = a[p + i] === b[p + j] ? T[(i + 1) * W + j + 1] + 1 : Math.max(T[(i + 1) * W + j], T[i * W + j + 1]);
+    let i = 0, j = 0;
+    while (i < N && j < M) {
+      if (a[p + i] === b[p + j]) { out.push([p + i, p + j]); i++; j++; }
+      else if (T[(i + 1) * W + j] >= T[i * W + j + 1]) i++; else j++;
+    }
+  }
+  for (let k = tail.length - 1; k >= 0; k--) out.push(tail[k]);
+  return out;
+}
+/* a script text as blocks ready to compare, without touching the open show */
+function parseBlocks(text) {
+  const bl = parseScript(text).map(analyze), meta = bl.length && bl[0].type === 'meta' ? bl[0].meta : null;
+  let act = '', scene = '';
+  for (const b of bl) {
+    if (b.type === 'speech') b.name = fullName(b.head.name, meta);
+    if (b.type === 'h') { if (b.level === 1) { act = b.title; scene = ''; } else scene = b.title; }
+    b.act = act; b.scene = scene;
+  }
+  return bl;
+}
+/* [{ k, a, b }] in reading order: a is the old block, b the new one. k is 'same', 'add', 'del', 'chg',
+   or 'cue' for a block whose words are the same and whose cues are not. */
+function diffBlocks(A, B) {
+  const key = b => b.type + '\u0001' + b.raw, out = [];
+  const gap = (i0, i1, j0, j1) => {
+    /* between two unchanged blocks, an old and a new block that share half their words are one changed block */
+    const pair = new Map(); let from = j0;
+    if (i1 - i0 === 1 && j1 - j0 === 1 && A[i0].type === B[j0].type && A[i0].name === B[j0].name) pair.set(i0, j0);
+    else for (let i = i0; i < i1; i++) {
+      let best = -1, bs = 0.499;
+      for (let j = from; j < j1; j++) {
+        if (A[i].type !== B[j].type) continue;
+        const sc = A[i].plain === B[j].plain ? 2 : similarity(A[i].plain, B[j].plain);
+        if (sc > bs) { bs = sc; best = j; }
+      }
+      if (best >= 0) { pair.set(i, best); from = best + 1; }
+    }
+    let j = j0;
+    for (let i = i0; i < i1; i++) {
+      const pj = pair.get(i);
+      if (pj === undefined) { out.push({ k: 'del', a: A[i], b: null }); continue; }
+      while (j < pj) out.push({ k: 'add', a: null, b: B[j++] });
+      out.push({ k: A[i].plain === B[pj].plain && A[i].name === B[pj].name ? 'cue' : 'chg', a: A[i], b: B[pj] }); j = pj + 1;
+    }
+    while (j < j1) out.push({ k: 'add', a: null, b: B[j++] });
+  };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A.map(key), B.map(key)).concat([[A.length, B.length]])) {
+    gap(i, x, j, y);
+    if (x < A.length) out.push({ k: 'same', a: A[x], b: B[y] });
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* word by word: [[kind, words]], kind -1 cut, 0 kept, 1 added */
+function diffWords(a, b) {
+  const A = a.split(/\s+/).filter(Boolean), B = b.split(/\s+/).filter(Boolean), out = [];
+  const put = (k, w) => { const l = out[out.length - 1]; if (l && l[0] === k) l[1] += ' ' + w; else out.push([k, w]); };
+  let i = 0, j = 0;
+  for (const [x, y] of lcs(A, B).concat([[A.length, B.length]])) {
+    while (i < x) put(-1, A[i++]);
+    while (j < y) put(1, B[j++]);
+    if (x < A.length) put(0, A[x]);
+    i = x + 1; j = y + 1;
+  }
+  return out;
+}
+/* a block concerns a character who speaks it, or whose name an action spells in capitals */
+function concerns(b, name) {
+  if (!b || (b.type !== 'speech' && b.type !== 'action')) return false;
+  const re = new RegExp('(^|[^\\p{L}\\p{N}])' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^\\p{L}\\p{N}])', 'u');
+  return re.test(b.type === 'speech' ? b.name : b.plain);
+}
+/* The changes of a comparison that one reader needs: [{ e, cueLine }].
+   who '*': everything. who '': changes to the text, not to cues or comments. who a character: the text
+   changes in their own lines, in actions that name them, and in the line spoken just before one of theirs
+   in the same scene. */
+function diffFor(D, who) {
+  const out = [];
+  D.forEach((e, i) => {
+    if (e.k === 'same') return;
+    const bl = e.b || e.a, text = e.k !== 'cue' && bl.type !== 'mark' && bl.type !== 'note';
+    if (who === '*' || (text && !who)) { out.push({ e, cueLine: false }); return; }
+    if (!text) return;
+    if (concerns(e.a, who) || concerns(e.b, who)) { out.push({ e, cueLine: false }); return; }
+    if (bl.type !== 'speech') return;
+    for (let j = i + 1; j < D.length; j++) {
+      const n = D[j].b;
+      if (n && n.type === 'h') break;   // a new scene: nobody answers the line before it
+      if (n && n.type === 'speech') { if (concerns(n, who)) out.push({ e, cueLine: true }); break; }
+    }
+  });
+  return out;
+}
+/* the characters a comparison can be read for: the character list, or without one every single speaker */
+function diffNames(D) {
+  let meta = null; const seen = new Set();
+  for (const e of D) for (const b of [e.a, e.b]) {
+    if (!b) continue;
+    if (b.type === 'meta' && b.meta.chars.length) meta = b.meta;
+    if (b.type === 'speech' && !GROUP_NAME.test(normName(b.name))) for (const p of normName(b.name).split(NAME_SEP).filter((x, k) => k % 2 === 0 && x)) seen.add(p);
+  }
+  return meta ? meta.chars.map(c => c.name) : Array.from(seen).sort();
+}
+
+/* ---------- cast ----------
+   What the actors receive: the text with every token, comment and cue line taken out, and the notes of
+   the cast departments laid over it. A note belongs to a whole block, named by its place in that text.
+   Who it is for is its label, names divided by commas; with no label it is for whoever speaks the
+   block, and for everyone on a block nobody speaks. ALL or TUTTI as the label means everyone. */
+const CAST_ALL = /^(?:ALL|EVERYONE|EVERYBODY|TUTTI|TUTTE)$/;
+/* the block a note belongs to: its own, or for a note on its own line the block above it, else the one below */
+function castBlock(b) {
+  if (b.type !== 'mark') return b;
+  const i = S.blocks.indexOf(b), ok = x => x.type !== 'mark' && x.type !== 'note' && x.type !== 'meta';
+  for (let k = i - 1; k >= 0; k--) if (ok(S.blocks[k])) return S.blocks[k];
+  for (let k = i + 1; k < S.blocks.length; k++) if (ok(S.blocks[k])) return S.blocks[k];
+  return null;
+}
+/* who speaks the block of a note: the addressee when the label is blank; '' = nobody, so everyone */
+function castSpeaker(b) { const o = b && castBlock(b); return o && o.type === 'speech' ? normName(o.name) : ''; }
+function castTo(c, meta, b) {
+  const out = [];
+  for (const p of c.label.split(/\s*[,;]\s*/).concat(c.links.map(cueName))) {
+    let n = normName(p); if (!n) continue;
+    if (CAST_ALL.test(n)) return [];
+    if (meta && meta.alias.has(n)) n = meta.alias.get(n);
+    if (!out.includes(n)) out.push(n);
+  }
+  if (!out.length) { const sp = castSpeaker(b); if (sp) out.push(sp); }
+  return out;
+}
+const castNote = c => !c.board && !c.end && isCast(c.dept) && !!(c.desc || c.notes);
+function castPack() {
+  const out = [], notes = [], ids = new Map(), at = new Map(), re = new RegExp(TOKEN_SRC, 'g');
+  let skipped = 0;
+  for (const b of S.blocks) {
+    if (b.type === 'note' || b.type === 'mark') { skipped += b.gap; continue; }
+    /* tokens out; the space before one goes with it, and a line that held only tokens is not left blank */
+    const raw = b.type === 'meta' ? b.raw : b.raw.replace(re, '\uE001').replace(/[ \t]+(?=\uE001)/g, '').replace(/\uE001[ \t]+(?=[ \t\n]|$)/g, '\uE001')
+      .replace(/\n[ \t]*\uE001+[ \t]*(?=\n|$)/g, '').replace(/\uE001/g, '').replace(/[ \t]+$/gm, '');
+    at.set(b, out.length);
+    out.push('\n'.repeat(out.length ? Math.max(b.gap, skipped ? 1 : 0) : 0) + raw); skipped = 0;
+  }
+  for (const b of S.blocks) for (const c of b.cues) {
+    const o = castNote(c) ? castBlock(b) : null; if (!o || !at.has(o)) continue;
+    const d = deptOf(c.dept), to = castTo(c, S.meta, b), text = [c.desc, c.notes].filter(Boolean).join(' — ');
+    const k = hash([c.dept, to.join(','), text, out[at.get(o)]].join('\u0001')), n = ids.get(k) || 0; ids.set(k, n + 1);
+    notes.push({ id: n ? k + '.' + n : k, dept: c.dept, from: d.name || c.dept, colour: d.colour, to, text, block: at.get(o) });
+  }
+  return { format: 'promptbook-cast', version: 1, made: VERSION, show: S.cfg.castId, title: titleOf(), when: new Date().toISOString(), lang: LANG, script: out.join('\n') + '\n', notes };
+}
+
+/* ---------- locked page numbers ----------
+   Once a script is printed and handed out, its page numbers must hold. A lock records where every
+   block was: S.cfg.lock = { name, rev, pages, n, cont, sig, keys }, each a list joined by spaces.
+   pages: the labels in order. n: how many blocks start on each page. cont: 1 when the page opens in the
+   middle of a block. sig: what each page held. keys: every block, in order.
+   With a lock, paginate() starts each old page where its first surviving block is; text that no longer
+   fits goes to inserted pages 12A, 12B; a page left empty disappears and its number is not reused. */
+const flows = g => !(g.kind === 'single' && (g.b.type === 'meta' || g.b.type === 'note'));
+const itemStarts = it => it.whole || it.first;
+const pageKey = P => hash(P.items.filter(it => flows(it.g)).map(it => it.g.m.kh + (it.whole ? '' : ':' + it.off + '+' + it.h)).join(' '));
+function makeLock(name, rev) {
+  const P = S.pages.filter(p => !p.front);
+  return { name: String(name || ''), rev: rev || '', pages: P.map(p => p.label).join(' '),
+    n: P.map(p => p.items.filter(it => flows(it.g) && itemStarts(it)).length).join(' '),
+    cont: P.map(p => { const it = p.items.find(q => flows(q.g)); return it && !itemStarts(it) ? 1 : 0; }).join(' '),
+    sig: P.map(pageKey).join(' '), keys: S.groups.filter(flows).map(g => g.m.kh).join(' ') };
+}
+function lockPlan() {
+  const L = S.cfg.lock; if (!L) return null;
+  const pages = L.pages.split(' '), at = [];
+  L.n.split(' ').forEach((c, i) => { for (let k = 0; k < +c; k++) at.push(i); });
+  const gs = S.groups.filter(flows), want = new Map(), sig = new Map(), sigs = L.sig.split(' ');
+  for (const [i, j] of lcs(L.keys ? L.keys.split(' ') : [], gs.map(g => g.m.kh))) want.set(gs[j], at[i]);
+  pages.forEach((lab, i) => sig.set(lab, sigs[i]));
+  return { pages, cont: L.cont.split(' ').map(x => x === '1'), want, sig, taken: new Set(pages) };
+}
+const alpha = k => k > 26 ? alpha(Math.floor((k - 1) / 26)) + alpha((k - 1) % 26 + 1) : String.fromCharCode(64 + k);
+/* the k-th page inserted after a locked page: 12 gives 12A, 12B; 12A gives 12A1, 12A2 */
+function insLabel(base, k, taken) {
+  const mk = n => base + (/\d$/.test(base) ? alpha(n) : n);
+  let s = mk(k);
+  for (let n = k; taken.has(s); n++) s = base + '+' + n;   // 12A already stands after 12: 12+1 goes between them
+  taken.add(s);
+  return s;
+}
+
+/* =====================================================================
+   LAYOUT
+   ===================================================================== */
+function elTx(b, from, to) {
+  const tx = h('div', 'tx'); tx.dataset.b = b.id;
+  const sel = S.sel && S.sel.id === b.id ? S.sel.wi : -9;
+  for (let i = from; i < to; i++) {
+    const tk = b.tokens[i];
+    if (tk.k === 'w') {
+      const sp = document.createElement('span');
+      sp.className = 'w' + (tk.it ? ' it' : '') + (tk.cues.length ? ' cued' : '') + (i === sel ? ' sel' : '');
+      sp.dataset.i = i; sp.textContent = tk.text;
+      if (tk.cues.length) {
+        const cols = [];
+        for (const c of tk.cues) { const col = cueColour(c); if (!cols.includes(col) && cols.length < 3) cols.push(col); }
+        sp.style.setProperty('--c', cols[0]);
+        if (cols.length > 1) sp.style.setProperty('--ring', cols.map((col, k) => '0 0 0 ' + (1.5 * (k + 1)) + 'px ' + col).join(','));   // one ring per department
+      }
+      tx.appendChild(sp);
+    } else if (tk.k === 'sp') tx.appendChild(document.createTextNode(' '));
+    else if (tk.k === 'br') tx.appendChild(document.createElement('br'));
+    else if (tk.k === 'x') { const sp = h('span', 'x', tk.text); sp.dataset.i = i; tx.appendChild(sp); }
+  }
+  return tx;
+}
+function cueColour(c) { if (c.board) return 'var(--muted)'; const d = deptOf(c.dept); return d ? d.colour : '#888888'; }
+/* dark or white text, whichever reads better on a department colour */
+function inkOn(col) {
+  const m = /^#([0-9a-f]{6})$/i.exec(col); if (!m) return 'var(--paper)';
+  const n = parseInt(m[1], 16), lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * lin(n >> 16) + 0.7152 * lin(n >> 8 & 255) + 0.0722 * lin(n & 255) > 0.179 ? '#16150f' : '#fff';
+}
+
+/* the handle in the gutter by which a block is dragged to another place; never printed */
+function grip(row, b) {
+  const k = h('button', 'grip pbtn noprint'); k.type = 'button'; k.tabIndex = -1; k.dataset.b = b.id; k.title = t('moveBlock');
+  row.appendChild(k);
+}
+/* fr: null for the whole block, or { from, to, off, cont, first, last } for a page fragment */
+function buildRow(g, fr) {
+  if (g.kind === 'simul') {
+    const row = h('div', 'row simul'); grip(row, g.blocks[0]);
+    row.appendChild(h('div', 'nm simnm', t('together')));
+    const cols = h('div', 'simcols'); cols.style.setProperty('--n', g.blocks.length);
+    for (const b of g.blocks) {
+      const c = h('div', 'simcell');
+      c.appendChild(h('div', 'nm', b.name));
+      c.appendChild(elTx(b, 0, b.tokens.length));
+      cols.appendChild(c);
+    }
+    row.appendChild(cols);
+    return row;
+  }
+  const b = g.b;
+  if (b.type === 'mark') {
+    const row = h('div', 'row mark'); row.dataset.b = b.id;
+    row.appendChild(h('div', 'nm')); row.appendChild(h('div', 'rule')); grip(row, b);
+    return row;
+  }
+  if (b.type === 'note') {   // takes no room: only a marker in the gutter, never printed
+    const row = h('div', 'row note'); row.dataset.b = b.id;
+    const k = h('button', 'cmk pbtn noprint', '%%'); k.type = 'button'; k.dataset.b = b.id; k.title = t('noteTitle');
+    row.appendChild(k);
+    return row;
+  }
+  if (b.type === 'meta') {   // front page and character page; outside those it takes no room
+    const row = h('div', 'row front'); row.dataset.b = b.id;
+    if (!fr) { row.classList.add('none'); return row; }
+    row.style.height = fr.h + 'px';
+    const tx = h('div', 'tx'); tx.dataset.b = b.id; tx.dataset.off = fr.off; tx.dataset.fl = (fr.first ? 'f' : '') + (fr.last ? 'l' : '');
+    if (fr.part === 'front') for (const l of b.meta.lines) tx.appendChild(h('div', l.big ? 'ft' : 'fl', l.text));
+    else {
+      tx.classList.add('cast'); if (b.meta.chars.length > 30) tx.classList.add('two');
+      tx.appendChild(h('div', 'ch', b.meta.charsKey));
+      const list = h('div', 'cl2');
+      for (const c of b.meta.chars) {
+        const e = h('div', 'ce'); e.appendChild(h('b', null, c.name));
+        if (c.aliases.length) e.appendChild(h('span', 'ca', ' / ' + c.aliases.join(' / ')));
+        if (c.desc) e.appendChild(h('span', 'cd', ' — ' + c.desc));
+        list.appendChild(e);
+      }
+      tx.appendChild(list);
+    }
+    row.appendChild(tx);
+    return row;
+  }
+  const row = h('div', 'row ' + (b.type === 'h' ? 'h' + b.level : b.type)); row.dataset.b = b.id;
+  if (!fr || fr.first) grip(row, b);
+  if (b.type === 'h') { row.appendChild(elTx(b, 0, b.tokens.length)); return row; }
+  const nm = h('div', 'nm');
+  if (b.type === 'speech') {
+    if (fr && fr.cont) { nm.classList.add('cont'); nm.textContent = b.name + ' ' + t('contd'); } else nm.textContent = b.name;
+  }
+  row.appendChild(nm);
+  const tx = elTx(b, fr ? fr.from : 0, fr ? fr.to : b.tokens.length);
+  if (fr) { tx.dataset.off = fr.off; tx.dataset.fl = (fr.first ? 'f' : '') + (fr.last ? 'l' : ''); }
+  row.appendChild(tx);
+  return row;
+}
+function gkey(g) {
+  if (g.kind === 'simul') return 'S\u0001' + g.blocks.map(b => b.plain).join('\u0001');
+  const b = g.b;
+  return b.type + b.level + '\u0001' + (b.type === 'mark' ? '' : b.plain);
+}
+function measure() {
+  const M = $('#measure'), todo = [];
+  if (S.meas.size > S.groups.length * 3 + 200) S.meas = new Map();
+  for (const g of S.groups) {
+    const k = gkey(g); let m = S.meas.get(k);
+    if (!m) {
+      m = { h: 0, lines: [], nameLines: 1, ls: null, kh: hash(k) };
+      S.meas.set(k, m);
+      const el = buildRow(g, null); M.appendChild(el); todo.push([m, el]);
+    }
+    g.m = m;
+  }
+  for (const [m, el] of todo) {
+    m.h = el.getBoundingClientRect().height;
+    m.lines = $$('.tx', el).map(x => Math.max(1, Math.round(x.getBoundingClientRect().height / LH)));
+    const nm = el.querySelector(':scope > .nm');
+    m.nameLines = nm ? Math.max(1, Math.round(nm.getBoundingClientRect().height / LH)) : 1;
+  }
+  M.textContent = '';
+}
+/* token index at which each rendered line of a block starts */
+function lineStarts(b) {
+  const m = b.g.m;
+  if (m.ls) return m.ls;
+  const M = $('#measure'), row = buildRow(b.g, null);
+  M.appendChild(row);
+  const starts = []; let lastTop = -1e9;
+  for (const el of row.querySelector('.tx').children) {
+    if (el.tagName === 'BR') continue;
+    const top = el.offsetTop;
+    if (top > lastTop + LH / 2) { starts.push(+el.dataset.i); lastTop = top; }
+  }
+  M.textContent = '';
+  return (m.ls = starts);
+}
+/* boards on a facing page: one column up to two boards, then two columns filled row by row.
+   hs: height of each board for a width of 1. Returns the columns and the one width all boards get. */
+function facingLayout(hs, availW, availH) {
+  const n = hs.length, cols = n > 2 ? 2 : 1, cw = (availW - (cols - 1) * FIG_GAP) / cols;
+  let sum = 0, rows = 0;
+  for (let k = 0; k < n; k += cols) { sum += cw * Math.max(...hs.slice(k, k + cols)); rows++; }
+  const f = sum ? Math.min(1, (availH - rows * (FIG_EXTRA + FIG_GAP)) / sum) : 1;
+  return { cols, w: Math.floor(cw * f) };
+}
+function paginate() {
+  const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
+  let cur = null, y = 0, act = '', scene = '';
+  const isHead = g => g.kind === 'single' && g.b.type === 'h';
+  const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
+  const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
+  const lk = lockPlan();   // null while page numbers are free
+  let li = -1, sub = 0, tail = 0;   // the locked page being filled, pages inserted after it, pages past the last locked one
+  const label = to => {
+    const L = lk.pages;
+    if (to != null) { li = to; sub = 0; }
+    else if (li < 0) li = 0;
+    else if (li >= L.length - 1) return String((parseInt(L[L.length - 1], 10) || L.length) + (++tail));
+    else if (!sub && lk.cont[li + 1]) li++;   // the next page opened mid-block before: what runs over goes on it
+    else return insLabel(L[li], ++sub, lk.taken);
+    return L[li];
+  };
+  const newPage = to => {
+    const no = pages.length + 1 - off;
+    cur = { items: [], boards: [], head: null, no, front: no < 1, label: no < 1 ? '' : String(no), chg: false }; pages.push(cur); y = 0;
+    if (lk && no >= 1) cur.label = label(to);
+  };
+  const push = it => {
+    it.y = y; cur.items.push(it); y += it.h;
+    const g = it.g;
+    if (isHead(g)) { if (g.b.level === 1) { act = g.b.title; scene = ''; } else scene = g.b.title; }
+    else if (cur.head === null) cur.head = [act, scene].filter(Boolean).join(' · ');
+  };
+  const carry = () => {
+    const moved = [];
+    while (cur.items.length > 1 && isHead(cur.items[cur.items.length - 1].g)) moved.unshift(cur.items.pop());
+    newPage();
+    for (const it of moved) { it.y = y; cur.items.push(it); y += it.h; }
+  };
+  newPage();
+  for (const g of S.groups) {
+    const m = g.m, b = g.kind === 'single' ? g.b : null;
+    if (b && b.type === 'meta') {
+      parts0.forEach((part, k) => {
+        if (cur.items.length) newPage();
+        push({ g, h: H, whole: false, part, from: 0, to: 0, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
+      });
+      if (!off) push({ g, h: 0, whole: true });
+      continue;
+    }
+    if (cur.front && cur.items.length) newPage();
+    const to = lk ? lk.want.get(g) : undefined;
+    if (to !== undefined && to > li) { if (cur.items.length) newPage(to); else cur.label = label(to); }
+    if (b && b.type === 'h' && b.level === 1 && cur.items.length) newPage();
+    if (y + m.h <= H + 0.5) { push({ g, h: m.h, whole: true }); continue; }
+    const total = b ? (m.lines[0] || 0) : 0;
+    let ls = null;
+    if (b && (b.type === 'speech' || b.type === 'action' || b.type === 'para') && total >= 4) {
+      ls = lineStarts(b);
+      if (ls.length !== total) ls = null;
+    }
+    if (!ls) { if (cur.items.length) carry(); push({ g, h: m.h, whole: true }); continue; }
+    let lf = 0, guard = 0;
+    while (guard++ < 500) {
+      const rem = total - lf, room = Math.floor((H - y - 8) / LH);
+      if (rem <= room) {
+        push({ g, h: Math.max(lf === 0 ? m.nameLines : 1, rem) * LH + 8, whole: false, from: ls[lf], to: b.tokens.length, off: lf * LH, cont: lf > 0, first: lf === 0, last: true });
+        break;
+      }
+      let take = room;
+      if (rem - take < 2) take = rem - 2;
+      if (take < 2 || (lf === 0 && take < m.nameLines)) {
+        if (cur.items.length) { carry(); continue; }
+        take = Math.max(1, Math.min(room, rem - 1));
+      }
+      push({ g, h: Math.max(lf === 0 ? m.nameLines : 1, take) * LH + 8, whole: false, from: ls[lf], to: ls[lf + take], off: lf * LH, cont: lf > 0, first: lf === 0, last: false });
+      lf += take; newPage();
+    }
+  }
+  for (const P of pages) {
+    if (P.head === null) P.head = '';
+    const parts = [];
+    for (const it of P.items) {
+      const bs = gBlocks(it.g);
+      for (const b of bs) {
+        if (it.whole || it.first) b.page = P.no;
+        for (const c of b.cues) {
+          if (c.wi >= 0 && !it.whole && (c.wi < it.from || c.wi >= it.to)) continue;
+          c.page = P.no;
+          if (c.board && c.label && !P.boards.includes(c.label)) P.boards.push(c.label);
+        }
+      }
+      parts.push(bs.map(b => b.id + '~' + b.sv + '~' + b.name).join('+') + (it.whole ? '' : ':' + it.from + '-' + it.to + (it.part || '')));
+    }
+    P.chg = !!lk && !P.front && lk.sig.get(P.label) !== pageKey(P);
+    P.sig = P.no + '|' + P.label + (P.chg ? '*' + S.cfg.lock.name : '') + '|' + P.head + '|' + titleOf() + '|' + parts.join(',');
+    P.fsig = facingSig(P);
+    P.rails = [];
+  }
+  for (const s of S.pairs) {   // a paired cue runs from its page to the page of its end
+    const e = s.endRef; if (!s.page || !e.page) continue;
+    for (let n = s.page; n <= e.page && n + off <= pages.length; n++) pages[n - 1 + off].rails.push(s);
+  }
+  for (const P of pages) if (P.rails.length) P.sig += '|' + P.rails.map(s => s.b.id + ':' + s.s + '>' + s.endRef.b.id + ':' + s.endRef.s + '@' + s.lane).join(',');
+  S.pages = pages; S.pageOff = off;
+  const now = new Set(pages.map(P => P.label));
+  S.lockInfo = lk ? { changed: pages.filter(P => P.chg).map(P => P.label), gone: lk.pages.filter(x => !now.has(x)) } : null;
+}
+
+/* =====================================================================
+   Promptbook Cast: the script for the actors
+   Joined after core.js, which gives the strings, the helpers and the parser. Three layers:
+   text   : the script as sent, never changed here
+   notes  : what the stage manager or the director sent with it, replaced by every new file
+   own    : the actor's part, read marks and notes, kept on this device and laid over whatever text arrives
+   Notes of both kinds sit in the margin beside their block, so the text is as long with them as without.
+   ===================================================================== */
+const C = { pack: null, blocks: [], els: [], meta: null, names: new Map(), notes: [], key: '',
+  st: { chars: [], hide: false, own: [], read: [], when: '', seen: [], changed: [] },
+  sel: -1, open: new Set(), all: false, older: false, news: false, noStore: false, view: { size: 17, night: false } };
+const LS = 'promptbook-cast:';
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(LS + k) || 'null'); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(LS + k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+const saveState = () => { if (C.pack && !lsSet(C.key, C.st)) C.noStore = true; };
+const saveView = () => lsSet('view', { size: C.view.size, night: C.view.night, lang: LANG });
+/* the actor's layer is found by the id the prompt book gave the show; a file without one, by its title */
+const keyOf = p => 'show:' + (p && typeof p.show === 'string' && p.show ? p.show : hash(normName((p && p.title) || '')));
+/* what an own note holds on to, and what tells a line from the one of the file before: the speaker and the words */
+const blockKey = b => (b.name || '') + '\u0001' + b.plain;
+const isMine = b => b.type === 'speech' && C.st.chars.includes(b.name);
+/* a note with nobody named is for everyone; until a part is ticked, every note is shown */
+const forMe = n => !n.to.length || !C.st.chars.length || n.to.some(w => C.st.chars.includes(w));
+const shown = n => C.all || forMe(n);
+const isRead = n => C.st.read.includes(n.id);
+const unread = () => C.notes.filter(n => forMe(n) && !isRead(n)).length;
+const ownAt = i => C.st.own.filter(n => n.idx === i);
+const snip = s => s && s.length > 60 ? s.slice(0, 60) + '…' : s || '';
+const day = s => new Date(s).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+let toastT = 0;
+function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3200); }
+
+/* ---------- show ---------- */
+function usePack(p) {
+  if (!p || p.format !== 'promptbook-cast' || typeof p.script !== 'string') throw new Error(t('acBad'));
+  if (p.version > 1) throw new Error(t('acNewer'));
+  C.pack = p; C.blocks = parseScript(p.script).map(analyze);
+  C.meta = C.blocks.length && C.blocks[0].type === 'meta' ? C.blocks[0].meta : null;
+  C.names = new Map();
+  for (const b of C.blocks) if (b.type === 'speech') { b.name = fullName(b.head.name, C.meta); C.names.set(b.name, (C.names.get(b.name) || 0) + 1); }
+  const last = Math.max(0, C.blocks.length - 1);
+  C.notes = (Array.isArray(p.notes) ? p.notes : []).filter(n => n && typeof n.text === 'string').map(n => ({
+    id: String(n.id), from: String(n.from || ''), colour: /^#[0-9a-f]{6}$/i.test(n.colour) ? n.colour : '',
+    to: Array.isArray(n.to) ? n.to.map(normName) : [], text: n.text, block: clamp(n.block | 0, 0, last) }));
+  C.key = keyOf(p);
+  const st = lsGet(C.key) || {}, arr = v => Array.isArray(v) ? v : [];
+  C.st = { chars: arr(st.chars).filter(n => C.names.has(n)), hide: !!st.hide, read: arr(st.read).map(String),
+    own: arr(st.own).filter(n => n && typeof n.text === 'string' && typeof n.key === 'string'),
+    when: typeof st.when === 'string' ? st.when : '', seen: arr(st.seen), changed: arr(st.changed) };
+  C.sel = -1; C.open = new Set();
+  takeOver();
+}
+/* A new file meets what the actor has. Own notes follow their lines (anchorOwn); the lines that are not
+   those of the file before are marked until the next one. An older file is shown, and nothing kept changes. */
+function takeOver() {
+  const st = C.st, when = String(C.pack.when || '');
+  C.older = !!st.when && when < st.when; C.news = false;
+  anchorOwn(!C.older);
+  if (C.older || when === st.when) return;
+  const keys = C.blocks.filter(b => b.type !== 'meta' && b.plain).map(b => hash(blockKey(b)));
+  if (st.when) { const was = new Set(st.seen); st.changed = keys.filter(k => !was.has(k)); C.news = true; } else st.changed = [];
+  st.seen = keys; st.when = when;
+  saveState();
+}
+/* Own notes follow their line into a new text: the same line nearest to where it was, else the most
+   similar line of the same speaker, flagged for a look; else the note is kept aside with the words it was on. */
+function anchorOwn(keep) {
+  const where = new Map();
+  C.blocks.forEach((b, i) => { const k = blockKey(b), q = where.get(k); if (q) q.push(i); else where.set(k, [i]); });
+  for (const n of C.st.own) {
+    const q = where.get(n.key);
+    if (q) { n.idx = q.reduce((a, i) => Math.abs(i - n.idx) < Math.abs(a - n.idx) ? i : a, q[0]); continue; }
+    const [name, plain] = n.key.split('\u0001'); let best = -1, bs = 0;
+    C.blocks.forEach((b, i) => { if ((b.name || '') !== name || !b.plain) return; const sc = similarity(b.plain, plain || ''); if (sc > bs) { bs = sc; best = i; } });
+    if (best >= 0 && bs >= 0.5) { n.idx = best; if (keep) { n.key = blockKey(C.blocks[best]); n.moved = true; } } else n.idx = -1;
+  }
+}
+function addOwn(i, text) {
+  C.st.own.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, key: blockKey(C.blocks[i]), idx: i, when: new Date().toISOString() });
+}
+
+/* ---------- text ---------- */
+function lineEl(b) {
+  const ln = h('span', 'ln');
+  b.tokens.forEach(q => {
+    if (q.k === 'sp') ln.append(' ');
+    else if (q.k === 'br') ln.appendChild(h('br'));
+    else if (q.k === 'x') ln.appendChild(h('span', 'it', q.text));
+    else if (q.k === 'w') { if (q.it) ln.appendChild(h('span', 'it', q.text)); else ln.append(q.text); }
+  });
+  return ln;
+}
+function metaEl(b) {
+  const el = h('div', 'meta');
+  for (const l of b.meta.lines) el.appendChild(h('div', l.big ? 'big' : '', l.text));
+  if (b.meta.chars.length) {
+    const cw = h('div', 'chars');
+    for (const c of b.meta.chars) { const r = h('div', null, c.name); if (c.desc) r.appendChild(h('i', null, ' — ' + c.desc)); cw.appendChild(r); }
+    el.appendChild(cw);
+  }
+  return el;
+}
+function noteEl(n) {
+  const el = h('div', 'note in' + (isRead(n) ? ' read' : '')), tx = h('div', 'nt');
+  if (n.colour) el.style.setProperty('--c', n.colour);
+  tx.appendChild(h('span', 'nh', n.from + (n.to.length ? ' · ' + t('acTo', n.to.join(', ')) : '')));
+  tx.append(n.text); el.appendChild(tx);
+  return el;
+}
+/* The margin of a block: on a wide screen its notes as cards, on a phone one round button with their
+   number. It is laid over the page (layoutSide), so it never adds to the height of the text. */
+function sideEl(i) {
+  const got = C.notes.filter(n => n.block === i && shown(n)), own = ownAt(i), n = got.length + own.length;
+  if (!n && C.sel !== i) return null;
+  const sd = h('div', 'side'), fresh = got.find(q => !isRead(q)), dot = h('button', 'dot' + (fresh ? ' new' : '') + (n ? '' : ' plus'), n ? String(n) : '+');
+  dot.type = 'button'; dot.title = t('acLine'); dot.style.setProperty('--c', (fresh || got[0] || {}).colour || 'var(--mine)');
+  sd.appendChild(dot);
+  for (const q of got) sd.appendChild(noteEl(q));
+  for (const q of own) sd.appendChild(h('div', 'note own' + (q.moved ? ' moved' : ''), q.text));
+  if (C.sel === i) sd.appendChild(h('button', 'add', t('acAdd'))).type = 'button';
+  return sd;
+}
+function blockEl(i) {
+  const b = C.blocks[i];
+  if (b.type === 'meta') return metaEl(b);
+  if (b.type === 'note' || b.type === 'mark') return null;
+  const el = h('div', 'b ' + (b.type === 'h' ? 'h' + b.level : b.type) + (isMine(b) ? ' mine' : '') + (C.open.has(i) ? ' open' : '') + (C.sel === i ? ' sel' : '')
+    + (C.st.changed.length && b.plain && C.st.changed.includes(hash(blockKey(b))) ? ' chg' : ''));
+  el.dataset.i = i;
+  if (b.type === 'speech') { const nm = h('div', 'nm', b.name); if (b.simul) nm.appendChild(h('small', null, t('together'))); el.appendChild(nm); }
+  const tx = h('div', 'tx'); tx.appendChild(lineEl(b)); el.appendChild(tx);
+  const sd = sideEl(i); if (sd) el.appendChild(sd);
+  return el;
+}
+/* margins one under the other: a block's notes start beside it, or under the notes of the block before */
+function layoutSide() {
+  let bottom = -1e9;
+  for (const el of C.els) {
+    const sd = el && el.lastElementChild; if (!sd || !sd.classList.contains('side')) continue;
+    const top = el.offsetTop, d = Math.max(0, bottom + 6 - top);
+    sd.style.top = d + 'px'; bottom = top + d + sd.offsetHeight;
+  }
+}
+function refresh() {
+  for (const i of new Set(arguments)) {
+    const old = C.els[i]; if (i < 0 || !old) continue;
+    const el = blockEl(i); old.replaceWith(el); C.els[i] = el;
+  }
+  layoutSide();
+}
+function render() {
+  const tx = $('#text'); tx.textContent = ''; C.els = [];
+  tx.classList.toggle('hide', !!(C.pack && C.st.hide));
+  if (!C.pack) {
+    const card = h('div', 'card'); card.append(h('h1', null, 'Promptbook'), h('div', 'hint', t('acApp') + ' · ' + VERSION), h('p', 'hint', t('acStart')));
+    const ob = h('button', 'btn pri', t('acOpen')); ob.type = 'button'; ob.onclick = pickFile;
+    const lb = h('button', 'btn', t('acLang')); lb.type = 'button'; lb.onclick = switchLang;
+    card.append(ob, lb); tx.appendChild(card);
+  } else C.blocks.forEach((b, i) => { const el = blockEl(i); C.els[i] = el; if (el) tx.appendChild(el); });
+  updBar(); layoutSide();
+}
+function updBar() {
+  const on = !!C.pack, title = on ? C.pack.title || t('untitled') : 'Promptbook';
+  document.title = title; $('#ttl').textContent = title; document.documentElement.lang = LANG;
+  document.body.classList.toggle('night', C.view.night);
+  document.documentElement.style.setProperty('--fs', C.view.size + 'px');
+  const ol = $('#outline'); ol.textContent = ''; ol.hidden = !on;
+  const o0 = h('option', null, t('jumpTo')); o0.value = ''; ol.appendChild(o0);
+  C.blocks.forEach((b, i) => { if (b.type !== 'h') return; const o = h('option', null, (b.level > 1 ? ' ' : '') + b.title); o.value = i; ol.appendChild(o); });
+  for (const id of ['#bPart', '#bHide', '#bNotes']) $(id).hidden = !on;
+  $('#bPart').textContent = t('acPart') + (C.st.chars.length ? ': ' + C.st.chars[0] + (C.st.chars.length > 1 ? ' +' + (C.st.chars.length - 1) : '') : '');
+  const hb = $('#bHide'); hb.textContent = t('acHide'); hb.title = t('acHideTip'); hb.classList.toggle('on', on && C.st.hide);
+  const nb = $('#bNotes'), n = on ? unread() : 0; nb.textContent = t('acNotes');
+  if (n) nb.appendChild(h('b', null, String(n)));
+  $('#bMore').title = t('menu');
+}
+function jump(i) { const el = C.els[i]; if (el) el.scrollIntoView({ block: 'start' }); }
+function select(i) { const was = C.sel; C.sel = i; refresh(was, i); }
+function setHide(v) {
+  if (v && !C.st.chars.length) { toast(t('acPickFirst')); openPart(); return; }
+  C.st.hide = !!v; C.open = new Set(); saveState(); render();
+}
+
+/* ---------- sheets ---------- */
+function closeSheet() { const s = $('#sheet'); s.hidden = true; s.textContent = ''; }
+function openSheet(title, build) {
+  const s = $('#sheet'); s.textContent = ''; s.hidden = false;
+  const box = h('div', 'box'), hd = h('header'), body = h('div', 'body'), x = h('button', 'btn', '✕');
+  x.type = 'button'; x.title = t('close'); x.onclick = closeSheet;
+  hd.append(h('span', 'grow', title), x); box.append(hd, body); s.appendChild(box);
+  s.onclick = e => { if (e.target === s) closeSheet(); };
+  build(body);
+}
+function sheetBtn(parent, label, cls, fn) { const bt = h('button', 'btn' + (cls ? ' ' + cls : ''), label); bt.type = 'button'; bt.onclick = fn; parent.appendChild(bt); return bt; }
+/* one box per speaker name as the script writes it, so a chorus or "ANNA e MARCO" is ticked like a character */
+function openPart() {
+  openSheet(t('acPart'), body => {
+    body.appendChild(h('p', 'hint', C.names.size ? t('acPartHint') : t('acNoSpeak')));
+    for (const [name, n] of C.names) {
+      const lb = h('label', 'pick'), cb = h('input'); cb.type = 'checkbox'; cb.checked = C.st.chars.includes(name);
+      cb.onchange = () => {
+        const set = new Set(C.st.chars); if (cb.checked) set.add(name); else set.delete(name);
+        C.st.chars = Array.from(C.names.keys()).filter(k => set.has(k));
+        if (!C.st.chars.length) C.st.hide = false;
+        saveState(); render();
+      };
+      lb.append(cb, h('span', null, name), h('small', null, '×' + n)); body.appendChild(lb);
+    }
+  });
+}
+/* everything on one line: what was sent (tick = read), my notes, a new one, and my notes that lost their line */
+function openLine(i) {
+  const b = C.blocks[i]; if (!b) return;
+  openSheet(snip(b.plain), body => {
+    const done = () => { saveState(); refresh(i); updBar(); fill(); };
+    const editor = (n, focus) => {
+      const ed = h('div', 'ed'), ta = h('textarea'), row = h('div', 'acts');
+      ta.placeholder = t('acNotePh'); ta.value = n ? n.text : '';
+      if (n && n.moved) ed.appendChild(h('p', 'hint warn', t('acMoved')));
+      sheetBtn(row, t('save'), 'pri', () => {
+        const text = ta.value.trim();
+        if (n) { if (text) { n.text = text; delete n.moved; } else rm(C.st.own, n); } else if (text) addOwn(i, text); else return;
+        done(); if (C.noStore) toast(t('acNoStore'));
+      });
+      if (n) sheetBtn(row, t('del'), '', () => { rm(C.st.own, n); done(); });
+      ed.append(ta, row); body.appendChild(ed);
+      if (focus) setTimeout(() => ta.focus({ preventScroll: true }), 0);
+    };
+    const fill = () => {
+      body.textContent = '';
+      for (const n of C.notes.filter(q => q.block === i && shown(q))) {
+        const el = noteEl(n), ok = h('button', null, '✓'); ok.type = 'button'; ok.title = t('acRead');
+        ok.onclick = () => { if (rm(C.st.read, n.id) < 0) C.st.read.push(n.id); done(); };
+        el.appendChild(ok); body.appendChild(el);
+      }
+      const own = ownAt(i);
+      body.appendChild(h('h3', null, t('acMine')));
+      for (const n of own) editor(n, false);
+      editor(null, !own.length);
+      const lost = C.st.own.filter(n => n.idx < 0);
+      if (lost.length) body.appendChild(h('h3', null, t('acLost') + ' (' + lost.length + ')'));
+      for (const n of lost) {
+        const el = h('div', 'item'), row = h('div', 'acts'); el.style.setProperty('--c', 'var(--mine)');
+        sheetBtn(row, t('acAttach'), '', () => { n.idx = i; n.key = blockKey(b); delete n.moved; done(); });
+        sheetBtn(row, t('del'), '', () => { rm(C.st.own, n); done(); });
+        el.append(h('small', null, snip(n.key.split('\u0001')[1])), n.text, row); body.appendChild(el);
+      }
+    };
+    fill();
+  });
+}
+function openNotes() {
+  openSheet(t('acNotes'), body => {
+    const fill = () => {
+      body.textContent = '';
+      const chips = h('div', 'chips');
+      for (const [all, label] of [[false, t('acForMe')], [true, t('all')]]) {
+        const ch = h('button', 'chip' + (C.all === all ? ' on' : ''), label); ch.type = 'button';
+        ch.onclick = () => { C.all = all; render(); fill(); };
+        chips.appendChild(ch);
+      }
+      body.appendChild(chips);
+      const line = i => C.blocks[i] ? snip(C.blocks[i].plain) : '';
+      const item = (cls, colour, head, text, i) => {
+        const bt = h('button', 'item' + cls); bt.type = 'button'; if (colour) bt.style.setProperty('--c', colour);
+        bt.append(h('small', null, head), text); bt.onclick = () => { closeSheet(); jump(i); };
+        body.appendChild(bt);
+      };
+      const got = C.notes.filter(shown).sort((a, b) => a.block - b.block), mine = C.st.own.filter(n => n.idx >= 0).sort((a, b) => a.idx - b.idx), lost = C.st.own.filter(n => n.idx < 0);
+      if (!got.length && !mine.length && !lost.length) body.appendChild(h('p', 'hint', t('acNoNotes')));
+      if (got.length) body.appendChild(h('h3', null, t('acGot') + ' (' + got.length + ')'));
+      for (const n of got) item(isRead(n) ? ' read' : '', n.colour, n.from + (n.to.length ? ' · ' + t('acTo', n.to.join(', ')) : '') + ' · ' + line(n.block), n.text, n.block);
+      if (mine.length) body.appendChild(h('h3', null, t('acMine') + ' (' + mine.length + ')'));
+      for (const n of mine) item('', 'var(--mine)', line(n.idx), n.text, n.idx);
+      if (lost.length) { body.appendChild(h('h3', null, t('acLost') + ' (' + lost.length + ')')); body.appendChild(h('p', 'hint', t('acLostHint'))); }
+      for (const n of lost) {
+        const el = h('div', 'item'), row = h('div', 'acts'); el.style.setProperty('--c', 'var(--mine)');
+        sheetBtn(row, t('del'), '', () => { rm(C.st.own, n); saveState(); fill(); });
+        el.append(h('small', null, snip(n.key.split('\u0001')[1])), n.text, row); body.appendChild(el);
+      }
+    };
+    fill();
+  });
+}
+/* shown when a newer file of a show already on this device is opened: what the actor should look at */
+function openNews() {
+  openSheet(t('acNews'), body => {
+    body.appendChild(h('p', 'hint', t('acNewsFile', day(C.pack.when))));
+    const mineChg = [], n = unread(), moved = C.st.own.filter(q => q.moved && q.idx >= 0), lost = C.st.own.filter(q => q.idx < 0).length;
+    const chg = new Set(C.st.changed); let all = 0;
+    C.blocks.forEach((b, i) => { if (!b.plain || !chg.has(hash(blockKey(b)))) return; all++; if (isMine(b)) mineChg.push(i); });
+    const jumpBtn = (label, i) => sheetBtn(body, label, 'wide', () => { closeSheet(); jump(i); });
+    if (n) sheetBtn(body, t('acNewsNotes', n), 'wide pri', openNotes);
+    if (all) body.appendChild(h('h3', null, t('acNewsLines', all, mineChg.length)));
+    for (const i of mineChg.slice(0, 40)) jumpBtn(snip(C.blocks[i].plain), i);
+    if (moved.length) body.appendChild(h('h3', null, t('acNewsMoved', moved.length)));
+    for (const q of moved) jumpBtn(q.text, q.idx);
+    if (lost) sheetBtn(body, t('acNewsLost', lost), 'wide', openNotes);
+    if (!n && !all && !moved.length && !lost) body.appendChild(h('p', null, t('acNewsNone')));
+  });
+}
+function openMore() {
+  openSheet(C.pack ? C.pack.title || t('untitled') : 'Promptbook', body => {
+    const row = () => { const r = h('div', 'mrow'); body.appendChild(r); return r; };
+    if (C.noStore) body.appendChild(h('p', 'hint warn', t('acNoStore')));
+    sheetBtn(row(), t('acOpen'), '', () => { closeSheet(); pickFile(); });
+    const sz = row(); sz.appendChild(h('span', 'grow', t('acSize')));
+    const size = d => { C.view.size = clamp(C.view.size + d, 13, 26); saveView(); updBar(); layoutSide(); };
+    sheetBtn(sz, 'A−', 'sq', () => size(-1)); sheetBtn(sz, 'A+', 'sq', () => size(1));
+    sheetBtn(row(), t('night'), '', () => { C.view.night = !C.view.night; saveView(); updBar(); });
+    if (C.pack) { const r = row(); sheetBtn(r, t('acExport'), '', exportNotes); sheetBtn(r, t('acImport'), '', () => { closeSheet(); pickFile(); }); }
+    if (C.pack) sheetBtn(row(), t('acNews'), '', openNews);
+    sheetBtn(row(), t('acLang'), '', () => { closeSheet(); switchLang(); });
+    if (C.pack) body.appendChild(h('p', 'hint', t('acSent', day(C.pack.when)) + ' · ' + t('acApp') + ' ' + VERSION));
+  });
+}
+function switchLang() { LANG = LANG === 'it' ? 'en' : 'it'; saveView(); render(); }
+
+/* ---------- files ---------- */
+function download(name, blob) {
+  const a = document.createElement('a'), url = URL.createObjectURL(blob);
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function exportNotes() {
+  const o = { format: 'promptbook-cast-notes', version: 1, show: C.pack.show || '', title: C.pack.title, when: new Date().toISOString(), chars: C.st.chars, read: C.st.read, own: C.st.own };
+  download((C.pack.title || 'show').replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase() + '.my-notes.json', new Blob([JSON.stringify(o)], { type: 'application/json' }));
+  closeSheet();
+}
+/* A .cast.json file, a cast .html file with the show inside, or the notes exported from another device.
+   A file older than the one this device already took over is opened only after a yes; sure skips the question. */
+function readCastFile(text, sure) {
+  let s = String(text).trim();
+  if (s[0] !== '{') {
+    const a = s.indexOf('id="pack">'), z = a < 0 ? -1 : s.indexOf('<' + '/script', a);
+    if (z < 0) throw new Error(t('acBad'));
+    s = s.slice(a + 10, z).trim();
+  }
+  let o; try { o = JSON.parse(s); } catch (e) { throw new Error(t('acBad')); }
+  if (o && o.format === 'promptbook-cast-notes' && C.pack) {
+    const have = new Set(C.st.own.map(n => n.id)), add = (Array.isArray(o.own) ? o.own : []).filter(n => n && typeof n.text === 'string' && typeof n.key === 'string' && !have.has(n.id));
+    C.st.own.push(...add);
+    for (const n of Array.isArray(o.chars) ? o.chars : []) if (C.names.has(n) && !C.st.chars.includes(n)) C.st.chars.push(n);
+    for (const id of Array.isArray(o.read) ? o.read : []) if (!C.st.read.includes(String(id))) C.st.read.push(String(id));
+    anchorOwn(true); saveState(); render(); toast(t('acImported', add.length));
+    return;
+  }
+  const had = o && o.format === 'promptbook-cast' ? lsGet(keyOf(o)) : null;
+  if (!sure && had && typeof had.when === 'string' && String(o.when || '') < had.when && !confirm(t('acOlderAsk', day(had.when)))) return;
+  usePack(o); lsSet('pack', o); render(); $('#text').scrollTop = 0;
+  if (C.news) openNews(); else toast(C.older ? t('acOlder', day(C.st.when)) : t('acLoaded', day(o.when)));
+}
+function pickFile() {
+  const fp = $('#filePick'); fp.accept = '.json,.html,.htm,application/json,text/html'; fp.value = '';
+  fp.onchange = async () => { const f = fp.files[0]; if (!f) return; try { readCastFile(await f.text()); } catch (e) { toast(e.message); } };
+  fp.click();
+}
+
+/* ---------- start ---------- */
+function bindCast() {
+  $('#bPart').onclick = openPart;
+  $('#bHide').onclick = () => setHide(!C.st.hide);
+  $('#bNotes').onclick = openNotes;
+  $('#bMore').onclick = openMore;
+  $('#outline').onchange = e => { const v = e.target.value; e.target.value = ''; if (v !== '') jump(+v); };
+  window.addEventListener('resize', layoutSide);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#sheet').hidden) closeSheet(); else if (C.sel >= 0) select(-1); } });
+  $('#text').addEventListener('click', e => {
+    const tg = e.target, el = tg.closest('.b');
+    if (!el) { if (C.sel >= 0) select(-1); return; }
+    const i = +el.dataset.i;
+    if (tg.closest('.side')) { openLine(i); return; }
+    /* practising: a tap on a covered line shows it, a tap on a shown one covers it again */
+    if (C.st.hide && el.classList.contains('mine') && tg.closest('.ln')) { if (!C.open.delete(i)) C.open.add(i); el.classList.toggle('open', C.open.has(i)); return; }
+    select(i === C.sel ? -1 : i);
+  });
+}
+function initCast() {
+  const pv = lsGet('view') || {};
+  if (pv.size) C.view.size = clamp(+pv.size || 17, 13, 26);
+  C.view.night = pv.night === true;
+  C.noStore = !lsSet('probe', 1) || lsGet('probe') !== 1;
+  let p = null; const raw = $('#pack').textContent.trim();
+  if (raw[0] === '{') { try { p = JSON.parse(raw); } catch (e) { p = null; } }
+  if (!p) p = lsGet('pack');
+  LANG = pv.lang === 'it' || pv.lang === 'en' ? pv.lang : p && (p.lang === 'it' || p.lang === 'en') ? p.lang : /^it/i.test(navigator.language || '') ? 'it' : 'en';
+  bindCast();
+  if (p) { try { usePack(p); } catch (e) { C.pack = null; toast(e.message); } }
+  render();
+  if (C.pack && C.news) openNews(); else if (C.pack && C.older) toast(t('acOlder', day(C.st.when)));
+}
+window.PBC = { C, usePack, render, readCastFile, forMe, unread, openLine, openNews, layoutSide };
+initCast();
+
+</script>
+</body>
+</html>

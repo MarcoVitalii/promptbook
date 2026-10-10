@@ -1,5 +1,22 @@
 # Changelog
 
+## r1.10 — 2026-10-10
+
+The script for the actors, and notes sent to them from the prompt book. Checked in a simulated browser only, at the width of a phone: never tried on a real phone, and never opened from a chat or mail attachment.
+
+- A second file, `promptbook-cast.html`: the script for the actors. It shows the text on a phone or a computer, with text size, night mode and the list of acts and scenes. Nothing in it can change the script.
+- "My part": one box per speaker name as the script writes it, so a chorus, TUTTI or "ANNA e MARCO" is ticked like a character. The lines under the ticked names are marked.
+- "Hide my lines" covers them for practice. A tap shows a line, another tap covers it again.
+- Notes are beside the text, never inside it, so the script is as long with notes as without. On a computer or a tablet they are written out in a margin on the right; on a phone a line with notes has a round button with their number, filled while one is unread.
+- An actor taps a line, then the note button in its margin, and writes a note. Part, notes and read marks stay on their device.
+- In the prompt book, a department can be marked "Cast" (Settings). A note pinned under it is for the actors: it belongs to the whole block it is pinned in and is for whoever speaks that block; the label says otherwise (buttons: "Everyone" and the characters). On an action or a heading it is for everyone. The department name says who is writing. Add a second such department, for example "Regia", to tell the director's notes from the stage manager's. These notes are listed in Review under "Notes for the cast" and are never cues.
+- Menu → "Send to cast…" saves one `.html` file to send to everybody: the reader with the show inside, text without cues, comments and to-do notes, and the notes for the cast beside their blocks. Each actor sees the notes for the names they ticked and those for everyone, and can tick a note as read.
+- Send a new file after each rehearsal. When an actor opens it, "What is new" lists the notes to read, the lines that changed (their own by name) and their own notes that need a look. The notes they wrote follow their lines into the new text; one whose line changed is flagged until they confirm it; one whose line was cut is kept aside and can be put on another line. Changed lines keep a dotted edge until the next file.
+- Show folders are no longer opened: a show is its `.zip` file and nothing else. "Open older show folder…" is gone from the start screen and the menu.
+- A file older than the one already opened asks before it opens and changes nothing the actor has. A show keeps its identity when its title changes.
+
+**Compatibility.** Show files written by r1.9 open unchanged. Exception: a show still kept as a folder (the form before r1.2) does not open any more. Zip the folder (in Explorer: right-click → Send to → Compressed folder) and open the zip, or open it once in r1.9 and use "Save as show file…"; the history comes along only if the hidden `.git` folder is in the zip. A script edited in another program while the tool is open is no longer picked up; that worked only for folders. Shows from r1.9 have no cast department until one is added ("Send to cast…" offers it). r1.9 opens a show saved by r1.10: notes for the cast are ordinary to-do notes there, and if r1.9 saves the settings the "Cast" mark is lost and must be ticked again. `promptbook.html` is 108 KB larger, because it carries the actors' file.
+
 ## r1.9 — 2026-10-10
 
 Blocks that can be dragged to another place, a name for a board before it is made, one word and one key for deleting, and two smaller helps at the keyboard. Tried by the client on a real show, who reported that all of it works as expected. Shows written by r1.8 open unchanged, and r1.8 opens a show saved by r1.9.

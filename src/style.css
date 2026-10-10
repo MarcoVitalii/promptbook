@@ -190,6 +190,8 @@ body.tplmode #tpl{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{border:1px solid var(--ui-b);background:var(--ui2);border-radius:999px;min-height:30px;padding:0 12px;cursor:pointer;border-left:5px solid var(--c,var(--ui-b))}
 .chip.on{background:var(--ui-ink);color:var(--ui)}
+.who{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 6px}
+.who .chip{min-height:26px;padding:0 9px;font-size:12px;border-left-width:1px}
 table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl td,.cl th{padding:6px;border-bottom:1px solid var(--ui-b);vertical-align:top;text-align:left}
 .cl th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
@@ -247,7 +249,7 @@ textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 textarea.big{width:100%;height:58vh;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:10px;font:14px/1.5 ui-monospace,Consolas,"Courier New",monospace}
 .form label{display:block;font-size:12px;color:var(--muted);margin:10px 0 3px}
 .form input[type=text],.form select{min-height:36px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px;width:100%}
-.drow{display:grid;grid-template-columns:76px 1fr 46px auto 36px;gap:6px;margin-bottom:6px;align-items:center}
+.drow{display:grid;grid-template-columns:76px 1fr 46px auto auto 36px;gap:6px;margin-bottom:6px;align-items:center}
 .drow .chk{margin:0;font-size:12px;color:var(--ui-ink)}
 .drow input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper)}
 table.keys{border-collapse:collapse;width:100%;font-size:13px}

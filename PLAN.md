@@ -42,6 +42,7 @@ In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-
    - A system `pointercancel` in mid-drag ends the drag with no change.
    - Grid lightness on the real screen and on paper; hairlines may print faint on a laser printer.
 5. **Try r1.7 on the laptop:** the real file dialogs; a revision, a variant, a restore; a locked show after an edit, and "Print changed pages" on paper; a change list printed for one actor. Keep the show file of a week's rehearsals and note its size (X6).
+5b. **Try r1.10 with the cast:** send the cast file the way the company would (chat, mail) and open it on an Android phone and an iPhone. Does it open as a page; do part and notes survive closing it; does a second file find the notes written on the first. If an attachment does not keep them, decide where the reader lives instead (a link to one static copy, or installed once on each phone) and send `.cast.json` files to it. Confirm or change the `[ASSUMED]` readings in `docs/specs/10-cast.md` §1.
 5a. **Try r1.8 on the laptop:** the colours by day and in the dark; whether the tag labels read at arm's length; whether the corner dock is in the way of the hand or the pen; the shortcuts on its keyboard (/ and ? on an Italian layout); one page with cues printed. Confirm or change the keys (UI-9).
 6. **Try the r1.0 features on the laptop** if that was never done: place an end on a sound cue, draw a stage template, base a second template on it, add a board.
 7. **Print one facing page with three or more boards** from r1.6 and look at it: two columns, names under the drawings, grid.
@@ -63,7 +64,7 @@ Follow-along view for the stage manager (D11); it can use cue ends to show what 
 
 ## 6. Cast and crew — ideas, not scheduled
 
-Collected on 2026-10-08 and 09. None is designed or decided; the cast would mostly use a phone.
+Collected on 2026-10-08 and 09; the cast would mostly use a phone. Built in r1.10 (`docs/specs/10-cast.md`): notes with an addressee, a page readable on a phone, memory practice by hiding one's own lines. Not built: the rehearsal day and the open/solved state of a note, the calendar, speech to text, pronunciation, writing back. None of those is designed or decided.
 
 - Notes with an addressee (character, department or all), the rehearsal day and a state (open, solved), kept as a history; filters in Review by person, by day and by state.
 - Rehearsal calendar: date, time, place, agenda and scenes per day; who is called, computed from the scenes (needs the actor's name beside each character); a call sheet per day; the notes of a day attached to that rehearsal.
@@ -96,7 +97,6 @@ Collected on 2026-10-08 and 09. None is designed or decided; the cast would most
 | A cue end pairs with the wrong start when numbers repeat | Medium | Low | Nearest-open rule, visible rail, review hint; the stage manager can retarget by editing the end |
 | The Templates view is a second place to draw, with its own way in and out | Medium | Low | Same pen, eraser and undo as a board; one "Back to script" control |
 | "Live in configurations" was meant literally: strokes inside `config.json` | Low | Low | Reading stated in `docs/specs/04-boards.md`; switching is a storage detail, not a redesign |
-| Chrome refuses the chosen folder | Low | Low | Top level of Desktop, Documents and Downloads is blocked; use a sub-folder |
 
 Closed: a writer editing a separate copy while the stage manager annotates (one editor, D15); the collaboration expectation (Q15); two days not being enough for R0 (built on day 0); movable props being wanted after all (ruled out, Q22); templates crowding a facing page or leaking into print (they live in the configuration, Q26).
 

@@ -19,7 +19,7 @@ fi
 echo "$hash" > .cache/$mode.tried
 step() { out=$("$@" 2>&1) || { echo "$out" | tail -n 25; echo "check $mode FAILED at: $*"; exit 1; }; }
 step python3 build.py
-for f in src/core.js src/view.js src/io.js; do step node --check $f; done
+for f in src/core.js src/view.js src/io.js src/cast.js; do step node --check $f; done
 step node test/run.js test/unit
 [ $mode = full ] && step node test/run.js test
 echo "$hash" > .cache/$mode.ok

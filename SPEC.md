@@ -1,7 +1,7 @@
 # Promptbook — Specification
 
 **Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
-**Tool described:** r1.9 (`VERSION` in `src/core.js`).
+**Tool described:** r1.10 (`VERSION` in `src/core.js`).
 **State:** r1.6 to r1.9 are built and committed on branch `master`; r1.8 and r1.9 are tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). r1.6 to r1.8 were checked in a simulated browser only; the r1.9 features were tried by the client on a real show and reported as working (2026-10-10). Nothing has been printed on paper (`docs/verification.md`).
 
 ---
@@ -27,7 +27,7 @@ A change starts at the top: a request is recorded as intent, turned into require
 | File | Answers |
 |---|---|
 | `SPEC.md` | Why the product exists, what binds it as a whole, what is assumed and still open |
-| `docs/specs/01` … `09` | Intent, requirements and consequences of each capability |
+| `docs/specs/01` … `10` | Intent, requirements and consequences of each capability |
 | `docs/decisions.md` | Every decision and conflict, with its source and what follows from it |
 | `docs/architecture.md` | How it is built: C4 context, containers, components |
 | `docs/verification.md` | What was checked, how, and what never was |
@@ -62,7 +62,7 @@ The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses)
 | Stage manager | Yes: the one user it is built and tested for | The prompt book: script, cues, ink, boards, history |
 | Writer or director | Edits the text, never at the same time as the stage manager (D15) | A script whose edits cost nobody a re-alignment |
 | Operators (lights, sound, video) | No | Cue lists on paper and as CSV, one per department |
-| Cast | No | Script pages, replaced pages after a change, the changes that reach each character |
+| Cast | Since r1.10, a file of their own (`promptbook-cast.html`, `docs/specs/10-cast.md`): they read, they never edit the script | The text on a phone, their own lines covered for practice, their own notes, the notes sent to them; on paper, script pages, replaced pages after a change, the changes that reach each character |
 
 ### 1.4 What it is not
 
@@ -167,6 +167,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e`, on `master`; no tag |
 | r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
 | r1.9 | 2026-10-10 | Blocks moved by dragging a grip, name asked before a board is made, "Delete" as the one word with the Delete key, cursor in the margin text of a new cue, Esc leaves Find | 01, 02, 04, 05, 09 | Tag `r1.9`, branch `master` |
+| r1.10 | 2026-10-10 | Notes for the cast, "Send to cast…", the script for the actors as a second file | 10; 02, 07, 09 | Not committed yet |
 
 What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
 

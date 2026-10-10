@@ -30,16 +30,14 @@ flowchart TB
 
   pb["<b>Promptbook</b><br/>[Software system]<br/>A prompt book in one HTML file:<br/>script, cues, ink, boards,<br/>cue lists, print, history"]
 
-  disk["<b>Local disk</b><br/>[External system]<br/>Holds the show file<br/>or an older show folder"]
+  disk["<b>Local disk</b><br/>[External system]<br/>Holds the show file"]
   print["<b>Printer or PDF</b><br/>[External system]<br/>The browser's print dialog"]
   sheet["<b>Spreadsheet</b><br/>[External system]<br/>Opens the CSV cue lists"]
   git["<b>git</b><br/>[External system, optional]<br/>Reads and merges the history<br/>kept inside the show"]
-  editor["<b>Text editor or Obsidian</b><br/>[External system, optional]<br/>Edits script.md in a show folder"]
   sync["<b>File copy or sync</b><br/>[External system, optional]<br/>Moves or replaces the show file"]
 
   sm -->|"annotates, edits, saves, prints"| pb
   wr -->|"edits the text in the tool"| pb
-  wr -.->|"or edits script.md outside"| editor
   pb -->|"reads and writes the show<br/>File System Access API"| disk
   pb -->|"book, script, cue lists,<br/>changed pages, change lists"| print
   pb -->|"cues.csv, one per department"| sheet
@@ -47,7 +45,6 @@ flowchart TB
   sheet -->|"cue lists"| ops
   print -->|"pages and changes"| cast
   git -.->|"log, diff, merge<br/>on the unzipped show"| disk
-  editor -.->|"writes script.md"| disk
   sync -.->|"replaces the file"| disk
 
   classDef person fill:#08427b,stroke:#052e56,color:#ffffff
@@ -55,13 +52,13 @@ flowchart TB
   classDef ext fill:#6b6b6b,stroke:#4a4a4a,color:#ffffff
   class sm,wr,ops,cast person
   class pb system
-  class disk,print,sheet,git,editor,sync ext
+  class disk,print,sheet,git,sync ext
 ```
 
 | Element | Role | Source |
 |---|---|---|
 | Stage manager | The one user for whom the tool is built and tested. | D13, D15 |
-| Writer or director | Changes the text, in the tool or, for an older show folder, in any editor. Never at the same time as the stage manager. | D2, D15 |
+| Writer or director | Changes the text in the tool. Never at the same time as the stage manager. | D2, D15 |
 | Operators, cast | Do not use the tool. They receive paper and CSV. | D9, HIS-9 |
 | Local disk | The only place a show is kept besides the browser's own storage. | D10 |
 | git | Optional. The tool writes a repository git can read; it never calls git. | HIS-1 |
@@ -78,28 +75,23 @@ flowchart TB
   subgraph system["Promptbook [Software system]"]
     app["<b>promptbook.html</b><br/>[Container: single-page application in Chrome or Edge]<br/>Plain JavaScript, CSS, embedded Inter font.<br/>All behaviour of the tool. No server, no network"]
     ls[("<b>localStorage</b><br/>[Container: browser storage]<br/>promptbook:draft, the show while not on disk<br/>promptbook:view, view settings and language")]
-    idb[("<b>IndexedDB promptbook / kv</b><br/>[Container: browser storage]<br/>Handle of the last show file or folder")]
+    idb[("<b>IndexedDB promptbook / kv</b><br/>[Container: browser storage]<br/>Handle of the last show file")]
     zip[("<b>Show file</b>, name.promptbook.zip<br/>[Container: file on the local disk]<br/>script.md, script.ink.json, config.json,<br/>boards/, templates/, .git/")]
-    dir[("<b>Older show folder</b><br/>[Container: folder on the local disk, legacy]<br/>The same files, loose")]
     bak[("<b>Backup</b>, name.promptbook.json<br/>[Container: file on the local disk]<br/>The whole show in one JSON file")]
   end
 
   out["<b>Exports</b><br/>[Files handed to others]<br/>cues.csv, cues.zip"]
   print["<b>Printer or PDF</b><br/>[External system]"]
   git["<b>git</b><br/>[External system, optional]"]
-  editor["<b>Text editor or Obsidian</b><br/>[External system, optional]"]
 
   sm -->|"pen, finger, mouse, keyboard"| app
   app -->|"draft, 0.7 s after a change,<br/>when the show is not on disk"| ls
   app -->|"remembers what to reopen"| idb
   app -->|"opens once into memory,<br/>rewrites the whole archive on every save"| zip
-  app -->|"reads and writes single files"| dir
   app -->|"exports by download,<br/>imports by file input"| bak
   app -->|"downloads"| out
   app -->|"window.print"| print
   zip -.->|"read by git once unzipped:<br/>log, diff, merge"| git
-  dir -.->|".git read by git in place"| git
-  dir -.->|"script.md edited by it;<br/>the tool reloads or asks"| editor
 
   classDef person fill:#08427b,stroke:#052e56,color:#ffffff
   classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
@@ -107,21 +99,20 @@ flowchart TB
   classDef ext fill:#6b6b6b,stroke:#4a4a4a,color:#ffffff
   class sm person
   class app container
-  class ls,idb,zip,dir,bak store
-  class out,print,git,editor ext
+  class ls,idb,zip,bak store
+  class out,print,git ext
 ```
 
 | Container | Technology | Holds | Written when | Spec |
 |---|---|---|---|---|
 | `promptbook.html` | HTML, CSS, JavaScript in one file of about 330 KB, of which about 110 KB is the font | Nothing durable. All state is in memory in one object, `S`. | — | all |
 | Show file | Zip (store or deflate), written by `buildZip` | The show and its history | 0.7 s after the last change; the whole archive each time | STO-1, STO-2 |
-| Older show folder | Loose files through a directory handle | The same files | The files that changed, one by one | STO-4 |
 | `localStorage` | Two keys | The draft of a show not on disk; view settings | Draft: 0.7 s after a change. Settings: on toggle | STO-7, UI-5 |
-| IndexedDB | One store, one key `dir` | A file or directory handle | After every open and "Save as show file…" | STO-5 |
+| IndexedDB | One store, one key `dir` | A file handle | After every open and "Save as show file…" | STO-5 |
 | Backup | JSON, `format: "promptbook"` | Script, ink, settings, boards and templates with images as data URLs | On request | STO-7 |
 | Exports | CSV with BOM; zip of CSVs | Cue lists | On request | CUE-35, CUE-36 |
 
-Three storage modes follow from these containers. `S.store.mode` is `zip`, `folder` or `memory`; every read and write in `src/io.js` branches on it.
+Two storage modes follow from these containers. `S.store.mode` is `zip` or `memory`: in `zip` the show's files are a map in memory (`S.store.files`) written out as one archive; in `memory` the show is saved as the draft.
 
 ## 4. Level 3 — Components of `promptbook.html`
 
@@ -263,7 +254,7 @@ Three properties of this path are the centre of the design:
 
 ## 6. Data
 
-The show is the same set of files in a show file and in an older show folder. Shapes are specified in `docs/specs/07-storage.md`.
+The show is a set of files inside the show file. Shapes are specified in `docs/specs/07-storage.md`.
 
 ```
 name.promptbook.zip

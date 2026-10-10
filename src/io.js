@@ -1,41 +1,21 @@
 /* =====================================================================
-   STORE: show file (.zip) or older show folder (Chrome, Edge), or in-browser fallback
-   A show file holds the same files a show folder does: script.md, script.ink.json,
-   config.json, boards/, templates/. In zip mode they live in s.files (path -> Blob)
-   and the whole archive is rewritten on each save.
+   STORE: show file (.zip; Chrome, Edge), or in-browser fallback
+   A show file holds script.md, script.ink.json, config.json, boards/, templates/.
+   They live in s.files (path -> Blob) and the whole archive is rewritten on each save.
    ===================================================================== */
-const onDisk = () => S.store.mode === 'folder' || S.store.mode === 'zip';
+const onDisk = () => S.store.mode === 'zip';
 function resetStore() {
   const s = S.store;
-  s.mode = 'none'; s.dir = null; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
+  s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
 }
-async function dirFor(sub) { return sub ? S.store.dir.getDirectoryHandle(sub, { create: true }) : S.store.dir; }
-async function readFile(name, sub) {
-  if (S.store.mode === 'zip') return S.store.files.get(sub ? sub + '/' + name : name) || null;
-  try { const d = await dirFor(sub); return await (await d.getFileHandle(name)).getFile(); }
-  catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
-}
-async function readText(name, sub) {
-  const f = await readFile(name, sub); if (!f) return null;
-  if (!sub) S.store.stamp[name] = f.lastModified;
-  return f.text();
-}
+const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
+async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
 async function readJSON(name, sub) {
   const tx = await readText(name, sub); if (tx == null) return null;
   try { return JSON.parse(tx); } catch (e) { console.warn('Unreadable JSON: ' + name); return null; }
 }
-async function writeBlob(sub, name, blob) {
-  if (S.store.mode === 'zip') { S.store.files.set(sub ? sub + '/' + name : name, blob instanceof Blob ? blob : new Blob([blob])); return null; }
-  const d = await dirFor(sub), fh = await d.getFileHandle(name, { create: true });
-  const w = await fh.createWritable(); await w.write(blob); await w.close();
-  return fh;
-}
-async function writeText(name, text) {
-  const fh = await writeBlob(null, name, text);
-  if (!fh) return;
-  S.store.stamp[name] = (await fh.getFile()).lastModified;
-}
+function writeBlob(sub, name, blob) { S.store.files.set(sub ? sub + '/' + name : name, blob instanceof Blob ? blob : new Blob([blob])); }
 function cfgFile() {
   const c = JSON.parse(JSON.stringify(S.cfg));
   if (onDisk() && c.defaultBoard) delete c.defaultBoard.imageData;
@@ -141,10 +121,6 @@ async function zipChanged() {
   if (s.stamp.zip === undefined) return false;   // not written yet
   try { return (await s.handle.getFile()).lastModified !== s.stamp.zip; } catch (e) { return false; }
 }
-async function changedOutside() {
-  const s = S.store;
-  try { const f = await readFile('script.md'); return !!f && f.lastModified !== s.stamp['script.md']; } catch (e) { return false; }
-}
 let saveT = 0;
 function markDirty(what, name) {
   if (!S.loaded) return;
@@ -163,35 +139,18 @@ async function saveNow(force) {
   try {
     if (onDisk()) {
       const any = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
-      if (s.mode === 'zip' && any && force !== true) {
+      if (any && force !== true) {
         if (!s.conflict && await zipChanged()) { s.conflict = true; showConflict(); }
         if (s.conflict) { s.saving = false; setStatus(); return; }
       }
-      if (d.script) {
-        if (s.mode === 'folder' && force !== true && !s.conflict && await changedOutside()) { s.conflict = true; showConflict(); }
-        if (s.mode === 'zip' || !s.conflict || force === true) {
-          d.script = false;
-          try { await writeText('script.md', serialize()); } catch (e) { d.script = true; throw e; }
-          s.conflict = false; showMemBanner();
-        }
-      }
-      if (d.ink) { d.ink = false; try { await writeText('script.ink.json', JSON.stringify(inkFile())); } catch (e) { d.ink = true; throw e; } }
-      if (d.cfg) { d.cfg = false; try { await writeText('config.json', JSON.stringify(cfgFile(), null, 2)); } catch (e) { d.cfg = true; throw e; } }
-      if (d.boards.size) {
-        const names = Array.from(d.boards); d.boards.clear();
-        for (const n of names) {
-          const B = S.boards.get(n); if (!B) continue;
-          try { await writeBlob('boards', slug(B.name) + '.json', JSON.stringify(boardFile(B))); } catch (e) { d.boards.add(n); throw e; }
-        }
-      }
-      if (d.tpls.size) {
-        const names = Array.from(d.tpls); d.tpls.clear();
-        for (const n of names) {
-          const T = S.templates.get(n); if (!T) continue;
-          try { await writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); } catch (e) { d.tpls.add(n); throw e; }
-        }
-      }
-      if (s.mode === 'zip' && any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); }
+      if (d.script) { d.script = false; writeBlob(null, 'script.md', serialize()); }
+      if (d.ink) { d.ink = false; writeBlob(null, 'script.ink.json', JSON.stringify(inkFile())); }
+      if (d.cfg) { d.cfg = false; writeBlob(null, 'config.json', JSON.stringify(cfgFile(), null, 2)); }
+      for (const n of d.boards) { const B = S.boards.get(n); if (B) writeBlob('boards', slug(B.name) + '.json', JSON.stringify(boardFile(B))); }
+      d.boards.clear();
+      for (const n of d.tpls) { const T = S.templates.get(n); if (T) writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); }
+      d.tpls.clear();
+      if (any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); }
       s.lastSave = new Date(); s.err = null;
     } else {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
@@ -237,9 +196,7 @@ function showMemBanner() {
 function showConflict() {
   showBanner(t('extChanged'), [
     [t('loadTheirs'), async () => {
-      if (S.store.mode === 'zip') { S.store.conflict = false; S.store.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; await reloadZip(); return; }
-      const tx = await readText('script.md'); S.store.conflict = false; S.store.dirty.script = false; showMemBanner();
-      if (tx != null) { commitText(tx); if (serialize() === parseScriptText(tx)) S.store.dirty.script = false; setStatus(); }
+      S.store.conflict = false; S.store.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; await reloadZip();
     }],
     [t('keepMine'), () => { S.store.dirty.script = true; saveNow(true); }]
   ]);
@@ -247,30 +204,12 @@ function showConflict() {
 async function checkExternal() {
   const s = S.store;
   if (document.hidden || !onDisk() || !S.loaded || s.saving || s.conflict || S.editing) return;
-  if (s.mode === 'zip') {
-    try {
-      if (!(await zipChanged())) return;
-      const d = s.dirty;
-      if (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size) { s.conflict = true; showConflict(); return; }
-      await reloadZip(); toast(t('reloaded'));
-    } catch (e) { console.warn(e); }
-    return;
-  }
   try {
-    if (!(await changedOutside())) return;
-    if (s.dirty.script) { s.conflict = true; showConflict(); return; }
-    const tx = await readText('script.md'); if (tx == null) return;
-    const norm = parseScriptText(tx);
-    if (norm === serialize()) return;
-    commitText(tx);
-    if (serialize() === norm) s.dirty.script = false;   // nothing to write back
-    setStatus(); toast(t('reloaded'));
+    if (!(await zipChanged())) return;
+    const d = s.dirty;
+    if (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size) { s.conflict = true; showConflict(); return; }
+    await reloadZip(); toast(t('reloaded'));
   } catch (e) { console.warn(e); }
-}
-function parseScriptText(tx) {
-  const out = [];
-  for (const b of parseScript(tx)) { for (let k = 0; k < b.gap; k++) out.push(''); out.push(b.raw); }
-  return out.join('\n') + '\n';
 }
 document.addEventListener('visibilitychange', checkExternal);
 window.addEventListener('focus', checkExternal);
@@ -317,15 +256,6 @@ async function grant(handle) {
   if (p !== 'granted') p = await handle.requestPermission({ mode: 'readwrite' });
   return p === 'granted';
 }
-async function openFolder(handle) {
-  try {
-    if (!handle) handle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'promptbook' });
-    if (!(await grant(handle))) throw new Error('permission denied');
-  } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
-  clearTimeout(saveT); resetStore();
-  const s = S.store; s.mode = 'folder'; s.dir = handle; s.name = handle.name;
-  return loadStore(handle);
-}
 async function openZipFile(handle) {
   try {
     if (!handle) [handle] = await window.showOpenFilePicker({ id: 'promptbook', types: ZIP_TYPES });
@@ -338,7 +268,6 @@ async function openZipFile(handle) {
   return loadStore(handle);
 }
 async function reloadZip() { return openZipFile(S.store.handle); }
-async function openAny(handle) { return handle && handle.kind === 'file' ? openZipFile(handle) : openFolder(handle); }
 const ZIP_TYPES = [{ description: 'Promptbook', accept: { 'application/zip': ['.zip'] } }];
 const showName = handle => handle.name.replace(/(\.promptbook)?\.zip$/i, '');
 async function loadStore(handle) {
@@ -359,7 +288,7 @@ async function loadStore(handle) {
     S.boards.forEach(B => { if (B.image) imgs.add('boards/' + B.image); });
     S.templates.forEach(T => { if (T.image) imgs.add('templates/' + T.image); });
     if (cfg && cfg.defaultBoard && cfg.defaultBoard.image) imgs.add('boards/' + cfg.defaultBoard.image);
-    for (const key of imgs) { const k = key.indexOf('/'), blob = await readFile(key.slice(k + 1), key.slice(0, k)); if (blob) S.urls.set(key, URL.createObjectURL(blob)); }
+    for (const key of imgs) { const blob = s.files.get(key); if (blob) S.urls.set(key, URL.createObjectURL(blob)); }
     loadShow(cfg, text || '', ink);
     idbSet('dir', handle);
     if (text == null) openTextDialog(true);
@@ -375,37 +304,20 @@ function startMemory(text, cfg, inkF, boards, templates) {
 }
 function loadBundle(b) { startMemory(b.script || '', b.config, b.ink, b.boards, b.templates); }
 async function dataURLBlob(u) { return (await fetch(u)).blob(); }
-async function folderFiles(dir, out) {
-  // only what a show uses: the picked save file, or anything else lying in the folder, must not end up inside the zip
-  for await (const [nm, h] of dir.entries()) {
-    if (h.kind === 'file' && /^(script\.md|script\.ink\.json|config\.json)$/.test(nm)) out.set(nm, await h.getFile());
-    else if (h.kind === 'directory' && (nm === 'boards' || nm === 'templates'))
-      for await (const [fn, fh] of h.entries()) if (fh.kind === 'file' && !/\.zip$/i.test(fn)) out.set(nm + '/' + fn, await fh.getFile());
-  }
-  return out;
-}
-async function gitFiles(dir, out) {
-  const walk = async (d, pre) => { for await (const [nm, hd] of d.entries()) { if (hd.kind === 'file') out.set(pre + nm, await hd.getFile()); else await walk(hd, pre + nm + '/'); } };
-  try { await walk(await dir.getDirectoryHandle('.git'), GIT); } catch (e) { /* no history */ }
-}
 async function saveToZip() {
   let handle;
   try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
   catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
   const s = S.store;
-  let files = new Map();
-  try {
-    if (s.mode === 'folder') { files = await folderFiles(s.dir, new Map()); await gitFiles(s.dir, files); }   // keeps the images already in the folder, and the history
-    else if (s.mode === 'zip') files = new Map(s.files);
-  } catch (e) { saveError(e); return; }
-  s.mode = 'zip'; s.dir = null; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
+  const files = new Map(s.mode === 'zip' ? s.files : []);   // keeps the images already in the show file, and the history
+  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
-      const blob = await dataURLBlob(B.imageData); await writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
+      const blob = await dataURLBlob(B.imageData); writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
       S.urls.set(imgKey(B), URL.createObjectURL(blob)); B.imageData = null;
     }
     const db = S.cfg.defaultBoard;
-    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); await writeBlob('boards', db.image, blob); S.urls.set('boards/' + db.image, URL.createObjectURL(blob)); } delete db.imageData; }
+    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); writeBlob('boards', db.image, blob); S.urls.set('boards/' + db.image, URL.createObjectURL(blob)); } delete db.imageData; }
   } catch (e) { saveError(e); }
   s.dirty.script = s.dirty.ink = s.dirty.cfg = true; S.boards.forEach(B => s.dirty.boards.add(B.name)); S.templates.forEach(T => s.dirty.tpls.add(T.name));
   await saveNow(true);
@@ -416,10 +328,10 @@ async function saveToZip() {
 async function exportBundle() {
   const b = bundle(true);
   if (onDisk()) {
-    for (const o of b.boards) if (o.image && !o.imageData) { try { const f = await readFile(o.image, 'boards'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
-    for (const o of b.templates) if (o.image && !o.imageData) { try { const f = await readFile(o.image, 'templates'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
+    for (const o of b.boards) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'boards'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
+    for (const o of b.templates) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'templates'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
     const db = b.config.defaultBoard;
-    if (db && db.image && !db.imageData) { try { const f = await readFile(db.image, 'boards'); if (f) db.imageData = await blobToDataURL(f); } catch (e) { /* skip */ } }
+    if (db && db.image && !db.imageData) { try { const f = readFile(db.image, 'boards'); if (f) db.imageData = await blobToDataURL(f); } catch (e) { /* skip */ } }
   }
   const d = new Date(), p = n => String(n).padStart(2, '0');
   const stamp = d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
@@ -438,8 +350,8 @@ function importBundle() {
 
 /* =====================================================================
    HISTORY: the show under git
-   The show keeps its history in git's own format, in a .git folder beside script.md: inside the show
-   file, or in the show folder. A revision is a commit with a tag; a variant is a branch. Only loose
+   The show keeps its history in git's own format, in a .git folder beside script.md, inside the show
+   file. A revision is a commit with a tag; a variant is a branch. Only loose
    objects, refs and HEAD are written, which is all git needs to read it (log, diff, branch, push).
    There is no index: after unzipping a show, run "git reset" once. Packed objects are not read.
    ===================================================================== */
@@ -454,28 +366,16 @@ function cat(parts) {
 const refName = s => String(s).normalize('NFC').replace(/[^\p{L}\p{N}_ -]+/gu, '').trim().replace(/[\s-]+/g, '-').replace(/^-+|-+$/g, '') || 'x';
 const refLabel = n => n.replace(/-/g, ' ');
 const SHOW_FILE = /^(script\.md|script\.ink\.json|config\.json)$|^(boards|templates)\/[^/]+$/;
-async function gDir(parts, create) { let d = S.store.dir; for (const p of parts) d = await d.getDirectoryHandle(p, { create }); return d; }
 async function gRead(path) {
-  const s = S.store;
-  if (s.mode === 'zip') { const b = s.files.get(GIT + path); return b ? new Uint8Array(await b.arrayBuffer()) : null; }
-  const parts = (GIT + path).split('/'), name = parts.pop();
-  try { return new Uint8Array(await (await (await (await gDir(parts, false)).getFileHandle(name)).getFile()).arrayBuffer()); }
-  catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) return null; throw e; }
+  const b = S.store.files.get(GIT + path);
+  return b ? new Uint8Array(await b.arrayBuffer()) : null;
 }
-async function gWrite(path, data) {
-  const s = S.store;
-  if (typeof data === 'string') data = ENC.encode(data);
-  if (s.mode === 'zip') { s.files.set(GIT + path, new Blob([data])); return; }
-  const parts = (GIT + path).split('/'), name = parts.pop();
-  const w = await (await (await gDir(parts, true)).getFileHandle(name, { create: true })).createWritable(); await w.write(data); await w.close();
-}
+function gWrite(path, data) { S.store.files.set(GIT + path, new Blob([data])); }
 /* refs under a prefix such as refs/tags/: name -> sha */
 async function gRefs(prefix) {
   const s = S.store, out = new Map(), pk = await gRead('packed-refs');
   if (pk) for (const l of DEC.decode(pk).split('\n')) { const m = /^([0-9a-f]{40}) (.+)$/.exec(l); if (m && m[2].startsWith(prefix)) out.set(m[2].slice(prefix.length), m[1]); }
-  let names = [];
-  if (s.mode === 'zip') names = Array.from(s.files.keys()).filter(k => k.startsWith(GIT + prefix)).map(k => k.slice(GIT.length + prefix.length));
-  else try { for await (const [nm, hd] of (await gDir((GIT + prefix).split('/').filter(Boolean), false)).entries()) if (hd.kind === 'file') names.push(nm); } catch (e) { /* none yet */ }
+  const names = Array.from(s.files.keys()).filter(k => k.startsWith(GIT + prefix)).map(k => k.slice(GIT.length + prefix.length));
   for (const n of names) { const b = await gRead(prefix + n); if (b) out.set(n, DEC.decode(b).trim()); }
   return out;
 }
@@ -552,11 +452,9 @@ async function settled() {
 }
 async function workFiles() {
   const s = S.store;
-  if (s.mode !== 'zip') return folderFiles(s.dir, new Map());
   await pruneImages(s.files);
   return new Map(Array.from(s.files).filter(([k]) => SHOW_FILE.test(k)));
 }
-const gFlush = () => S.store.mode === 'zip' ? flushZip() : null;
 /* Commit the show as it is. Without "always", nothing is written when it equals the last commit. */
 async function gSave(msg, always) {
   await settled();
@@ -577,22 +475,11 @@ async function gCheckout(tree) {
     if (!SHOW_FILE.test(path)) continue;
     const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
   }
-  if (s.mode === 'zip') {
-    s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
-    await flushZip();
-  } else {
-    for (const sub of ['boards', 'templates']) try {
-      const d = await s.dir.getDirectoryHandle(sub), gone = [];
-      for await (const [nm, hd] of d.entries()) if (hd.kind === 'file' && !blobs.has(sub + '/' + nm)) gone.push(nm);
-      for (const nm of gone) await d.removeEntry(nm);
-    } catch (e) { /* no such folder */ }
-    if (!blobs.has('script.ink.json')) try { await s.dir.removeEntry('script.ink.json'); } catch (e) { /* none */ }
-    for (const [path, b] of blobs) { const k = path.lastIndexOf('/'); await writeBlob(k < 0 ? null : path.slice(0, k), path.slice(k + 1), b); }
-  }
+  s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
+  await flushZip();
   clearTimeout(saveT);
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; s.conflict = false;
-  if (s.mode === 'folder') s.stamp = {};
-  return loadStore(s.handle || s.dir);
+  return loadStore(s.handle);
 }
 /* a revision: a commit named by the stage manager, with a tag; "lock" also fixes the page numbers there */
 async function histSave(name, lock) {
@@ -601,7 +488,7 @@ async function histSave(name, lock) {
   if (lock) { S.cfg.lock = makeLock(name, tag); markDirty('cfg'); relayout(true); }
   const sha = await gSave(name, true);
   await gWrite('refs/tags/' + tag, sha + '\n');
-  await gFlush();
+  await flushZip();
   return sha;
 }
 /* a variant: a branch that starts from the show as it is now */
@@ -610,7 +497,7 @@ async function histVariant(name) {
   if (await gRef(ref)) throw new Error(t('hiTaken'));
   const sha = await gSave(t('hiBefore', name), false);
   await gWrite(ref, sha + '\n'); await gWrite('HEAD', 'ref: ' + ref + '\n');
-  await gFlush();
+  await flushZip();
 }
 async function histSwitch(branch) {
   const ref = 'refs/heads/' + branch, sha = await gRef(ref);
@@ -770,18 +657,19 @@ function openSettings() {
       h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
-      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input');
+      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input'), cl = h('label', 'chk'), cc = h('input');
       c.type = 'text'; n.type = 'text'; col.type = 'color'; x.type = 'button';
       c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
       cb.type = 'checkbox'; cb.checked = !!d.review; rv.append(cb, t('deptReview')); rv.title = t('deptReviewTip');
-      x.onclick = () => r.remove(); r.append(c, n, col, rv, x); list.appendChild(r);
+      cc.type = 'checkbox'; cc.checked = !!d.cast; cl.append(cc, t('deptCast')); cl.title = t('deptCastTip');
+      x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
     const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
     body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }; });
       const paperChanged = ps.value !== S.cfg.paper;
       S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
@@ -791,6 +679,44 @@ function openSettings() {
       markDirty('cfg'); relayout(true);
       if (S.mode === 'templates') renderTemplates();
     });
+  }, true);
+}
+
+/* ---------- cast: the reader for the actors, with the show inside ---------- */
+const CAST_APP = "/*CAST*/";   // src/cast.html as built; build.py writes it here
+function castHTML(pack) { return CAST_APP.replace('/*PACK*/', () => JSON.stringify(pack).replace(/</g, '\\u003c')); }
+function openCast() {
+  openDlg(t('caTitle'), (body, foot, close) => {
+    const fill = () => {
+      body.textContent = ''; foot.textContent = '';
+      body.appendChild(h('p', 'hint', t('caHint')));
+      if (!S.cfg.departments.some(d => d.cast)) {
+        body.appendChild(h('p', 'hint', t('caNoDept')));
+        const ab = h('button', 'btn sm', t('caAddDept')); ab.type = 'button';
+        ab.onclick = () => {
+          let code = 'NOTE'; for (let n = 2; deptOf(code); n++) code = 'NOTE' + n;
+          S.cfg.departments.push({ code, name: t('caDeptName'), colour: '#0f8b8d', review: true, cast: true });
+          markDirty('cfg'); relayout(true); fill();
+        };
+        body.appendChild(ab);
+      } else {
+        const notes = castPack().notes, by = new Map();
+        for (const n of notes) for (const w of n.to.length ? n.to : [t('caEveryone')]) by.set(w, (by.get(w) || 0) + 1);
+        body.appendChild(h('p', null, notes.length ? t('caCount', notes.length) : t('caNone')));
+        if (notes.length) body.appendChild(h('p', null, Array.from(by, q => q[0] + ' ×' + q[1]).join('  ·  ')));
+      }
+      const name = slug(titleOf() || S.store.name || 'show');
+      const save = (label, cls, file, make) => { const bt = h('button', 'btn' + cls, label); bt.type = 'button'; bt.style.cssText = 'display:block;width:100%;margin:0 0 8px'; bt.onclick = () => {
+        if (!S.cfg.castId) { S.cfg.castId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8); markDirty('cfg'); }   // from the first file on, the actors' notes are kept under this
+        download(name + file, make(castPack())); close();
+      };
+      body.appendChild(bt); };
+      save(t('caSaveHtml'), ' pri', '-cast.html', p => new Blob([castHTML(p)], { type: 'text/html' }));
+      save(t('caSaveJson'), '', '.cast.json', p => new Blob([JSON.stringify(p)], { type: 'application/json' }));
+      body.appendChild(h('p', 'hint', t('caJsonHint')));
+      dlgBtn(foot, t('close'), '', close);
+    };
+    fill();
   }, true);
 }
 
@@ -828,17 +754,17 @@ function setZoom(f) {
 function buildMenu() {
   const m = $('#menu'); m.textContent = '';
   const add = (label, fn, off) => { const b = h('button', null, label); b.type = 'button'; b.disabled = !!off; b.onclick = () => { m.hidden = true; fn(); }; m.appendChild(b); };
-  const fs = !!window.showOpenFilePicker, fd = !!window.showDirectoryPicker;
+  const fs = !!window.showOpenFilePicker;
   add(t('mText'), () => openTextDialog(false), !S.loaded);
   add(t('mSettings'), openSettings, !S.loaded);
   add(t('mTemplates'), () => { if (S.mode === 'templates') exitTemplates(); else enterTemplates(); }, !S.loaded);
   add(t('mHistory'), openHistory, !S.loaded);
+  add(t('mCast'), openCast, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
   add(t('keys'), openKeys);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
   add(t('mOpen'), () => openZipFile(), !fs);
-  add(t('mOpenFolder'), () => openFolder(), !fd);
   add(t('mClose'), async () => { await saveNow(); S.loaded = false; showStart(); }, !S.loaded);
 }
 function bindUI() {
@@ -972,13 +898,13 @@ async function showStart() {
   const el = $('#start'); el.textContent = ''; el.hidden = false;
   const card = h('div', 'card');
   card.append(h('h1', null, 'Promptbook'), h('div', 'sub', t('appSub') + ' · ' + VERSION));
-  const fs = !!window.showOpenFilePicker, fd = !!window.showDirectoryPicker;
+  const fs = !!window.showOpenFilePicker;
   const add = (label, fn, pri) => { const b = h('button', 'btn' + (pri ? ' pri' : ''), label); b.type = 'button'; b.onclick = fn; card.appendChild(b); return b; };
   el.appendChild(card);
   const last = fs ? await idbGet('dir') : null;
-  if (last && last.name) add(t('reopen', showName(last)), () => openAny(last), true);
-  add(t('openFile'), () => openZipFile(), !(last && last.name)).disabled = !fs;
-  add(t('openFolder'), () => openFolder()).disabled = !fd;
+  const again = last && last.kind === 'file';   // a show folder remembered by an older release is not offered
+  if (again) add(t('reopen', showName(last)), () => openZipFile(last), true);
+  add(t('openFile'), () => openZipFile(), !again).disabled = !fs;
   const dr = loadDraft();
   if (dr) add(t('contDraft', new Date(dr.when).toLocaleString()), () => loadBundle(dr));
   add(t('trySample'), () => startMemory(SAMPLE, { title: 'Il molo' }));
@@ -1001,6 +927,6 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openFolder, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
-  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks };
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+  openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();

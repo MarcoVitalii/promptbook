@@ -92,16 +92,25 @@ function big() {
   await page.evaluate(() => document.body.classList.remove('pr-script'));
   console.log('script pages', n);
 
-  // ---- folder mode through the same file API (browser-private folder) ----
+  // ---- a show file through the same file API (browser-private file) ----
   const res = await page.evaluate(async () => {
     const root = await navigator.storage.getDirectory();
-    const dir = await root.getDirectoryHandle('show', { create: true });
-    const w = await (await dir.getFileHandle('script.md', { create: true })).createWritable();
-    await w.write('# ATTO PRIMO\n\nANNA: Chi è là? Rispondi!\nMARCO: Sono io.\n'); await w.close();
-    window.__dir = dir;
-    return await PB.openFolder(dir);
+    const fh = await root.getFileHandle('show.promptbook.zip', { create: true });
+    const w = await fh.createWritable();
+    await w.write(await PB.buildZip(new Map([['script.md', new Blob(['# ATTO PRIMO\n\nANNA: Chi è là? Rispondi!\nMARCO: Sono io.\n'])]]))); await w.close();
+    return await PB.openZipFile(fh);
   });
-  ok(res === true, 'folder opened');
+  ok(res === true, 'show file opened');
+  const onDisk = () => page.evaluate(async () => {
+    const out = {}, f = await (await (await navigator.storage.getDirectory()).getFileHandle('show.promptbook.zip')).getFile();
+    for (const [k, b] of await PB.readZip(f)) out[k] = (await b.text()).slice(0, 400);
+    return out;
+  });
+  const outside = (from, to) => page.evaluate(async ([a, b]) => {
+    const fh = await (await navigator.storage.getDirectory()).getFileHandle('show.promptbook.zip'), m = await PB.readZip(await fh.getFile());
+    const tx = await m.get('script.md').text(); m.set('script.md', new Blob([a ? tx.replace(a, b) : tx + b])); await new Promise(r => setTimeout(r, 30));
+    const w = await fh.createWritable(); await w.write(await PB.buildZip(m)); await w.close();
+  }, [from, to]);
   const pen = async pts => {
     await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: pts[0][0], y: pts[0][1], button: 'left', buttons: 1, clickCount: 1, pointerType: 'pen' });
     for (const p of pts.slice(1)) await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p[0], y: p[1], button: 'left', buttons: 1, pointerType: 'pen' });
@@ -118,19 +127,16 @@ function big() {
   bb = await page.locator('.board svg').boundingBox();
   await pen([[bb.x + 50, bb.y + 50], [bb.x + 150, bb.y + 150]]);
   await page.waitForTimeout(1500);
-  const files = await page.evaluate(async () => {
-    const out = {}; const walk = async (d, p) => { for await (const [n, h] of d.entries()) { if (h.kind === 'file') out[p + n] = (await (await h.getFile()).text()).slice(0, 400); else await walk(h, p + n + '/'); } };
-    await walk(window.__dir, ''); return out;
-  });
+  const files = await onDisk();
   console.log(JSON.stringify(files, null, 1));
   ok(files['script.md'] && files['script.md'].includes('Rispondi! {LX 1}') && /\{BOARD Tavola 1\}/.test(files['script.md']), 'script.md written with cue and board token');
   ok(files['script.ink.json'] && JSON.parse(files['script.ink.json']).blocks[0].text === 'MARCO: Sono io.', 'script.ink.json keyed by block text');
   ok(!!files['boards/tavola-1.json'], 'board file written');
   ok((await page.locator('#status').textContent()).startsWith('Salvato'), 'status shows saved: ' + await page.locator('#status').textContent());
 
-  // reload page, reopen the folder: everything comes back
+  // reload page, reopen the show file: everything comes back
   await page.reload(); await page.waitForSelector('#start .card');
-  ok((await page.locator('#start').textContent()).includes('Riapri «show»'), 'start screen offers to reopen the last folder');
+  ok((await page.locator('#start').textContent()).includes('Riapri «show»'), 'start screen offers to reopen the last show file');
   await page.getByText('Riapri «show»').click();
   await page.waitForSelector('.page.script .row');
   await page.waitForSelector('.ink path');
@@ -139,20 +145,20 @@ function big() {
   ok(await page.locator('.tag', { hasText: 'LX 1' }).count() === 1, 'cue restored');
 
   // external edit of another block while open -> auto reload on focus, ink stays
-  await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); const fh = await d.getFileHandle('script.md'); const tx = await (await fh.getFile()).text(); await new Promise(r => setTimeout(r, 30)); const w = await fh.createWritable(); await w.write(tx.replace('ANNA: Chi è là?', 'ANNA: Chi va là?')); await w.close(); window.dispatchEvent(new Event('focus')); });
+  await outside('ANNA: Chi è là?', 'ANNA: Chi va là?'); await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await page.waitForTimeout(600);
   ok(await page.evaluate(() => PB.serialize().includes('Chi va là?')), 'outside edit picked up without re-import');
   ok(await page.locator('.ink path').count() === 1 && await page.locator('.flag').count() === 0, 'ink on the untouched block is undisturbed');
   ok(await page.locator('.tag', { hasText: 'LX 1' }).count() === 1, 'cue survives the outside edit');
   // external edit of the INKED block -> flag
-  await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); const fh = await d.getFileHandle('script.md'); const tx = await (await fh.getFile()).text(); await new Promise(r => setTimeout(r, 30)); const w = await fh.createWritable(); await w.write(tx.replace('MARCO: Sono io.', 'MARCO: Sono io, tuo fratello.')); await w.close(); window.dispatchEvent(new Event('focus')); });
+  await outside('MARCO: Sono io.', 'MARCO: Sono io, tuo fratello.'); await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await page.waitForTimeout(600);
   ok(await page.locator('.ink path').count() === 1 && await page.locator('.flag').count() === 1, 'outside edit of the inked line keeps the ink and flags it');
   // conflict: unsaved local change + outside change
-  await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); const fh = await d.getFileHandle('script.md'); const tx = await (await fh.getFile()).text(); await new Promise(r => setTimeout(r, 30)); const w = await fh.createWritable(); await w.write(tx + '\nANNA: aggiunta fuori.\n'); await w.close(); PB.commitText(PB.serialize() + '\nMARCO: aggiunta dentro.\n'); });
+  await outside(null, '\nANNA: aggiunta fuori.\n'); await page.evaluate(() => PB.commitText(PB.serialize() + '\nMARCO: aggiunta dentro.\n'));
   await page.waitForTimeout(1500);
   ok(await page.locator('#banner').isVisible() && await page.evaluate(() => PB.S.store.conflict) && (await page.locator('#banner button').count()) === 2, 'conflict banner instead of overwriting: ' + await page.locator('#banner').textContent());
-  const disk = await page.evaluate(async () => { const d = await (await navigator.storage.getDirectory()).getDirectoryHandle('show'); return (await (await d.getFileHandle('script.md')).getFile()).text(); });
+  const disk = (await onDisk())['script.md'];
   ok(disk.includes('aggiunta fuori') && !disk.includes('aggiunta dentro'), 'file on disk untouched while the conflict is open');
 
   console.log(errs.join('\n') || 'no page errors');

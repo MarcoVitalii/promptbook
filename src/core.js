@@ -4,17 +4,17 @@
    parse  : text -> blocks, cues, board tokens
    layout : blocks -> fixed-measure pages
    view   : rendering, pins, pen, editing, boards
-   store  : folder (File System Access) | in-browser fallback
+   store  : show file (.zip, File System Access) | in-browser fallback
    ===================================================================== */
 
 /* ---------- strings ---------- */
 const STR = {
 en: {
-  appSub: 'Prompt book', openFile: 'Open show file…', openFolder: 'Open an older show folder…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
+  appSub: 'Prompt book', openFile: 'Open show file…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
   pasteNew: 'Start from pasted text', contDraft: 'Continue the unsaved draft ({0})', importBk: 'Import a backup file…',
   startHint: 'A show is one .zip file: script, ink, settings, boards and images together. Copy that file to move the show. Create it with “Start from pasted text” or the sample, then “Save as show file…”.',
   noFs: 'This browser cannot save show files. Open the tool in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
-  menu: 'Menu', mOpen: 'Open show file…', mOpenFolder: 'Open older show folder…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
+  menu: 'Menu', mOpen: 'Open show file…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
   mSettings: 'Settings…', mClose: 'Close show', jump: 'Jump to act or scene', jumpTo: 'Jump to…', find: 'Find…',
   eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
   boards: 'Boards', boardsTip: 'Show the facing page', cues: 'Cues', cuesTip: 'Show or hide cues', ink: 'Ink', inkTip: 'Show or hide ink',
@@ -75,14 +75,33 @@ en: {
   lkChanged: 'Changed pages: {0}', lkGone: 'Pages now empty: {0}', lkNone: 'No page has changed.',
   lkUnlock: 'Unlock', lkPrint: 'Print changed pages', lkMark: 'changed since “{0}”',
   dfTitle: 'Changes', dfFrom: 'From', dfTo: 'To', dfWho: 'Show', dfAll: 'Everything, cues too', dfText: 'Text', dfNone: 'No changes.',
-  dfAdd: 'added', dfDel: 'cut', dfChg: 'changed', dfCue: 'cues', dfCueLine: 'the line before yours', dfCount: '{0} changes', dfFor: 'for {0}', dfBack: 'Back'
+  dfAdd: 'added', dfDel: 'cut', dfChg: 'changed', dfCue: 'cues', dfCueLine: 'the line before yours', dfCount: '{0} changes', dfFor: 'for {0}', dfBack: 'Back',
+  mCast: 'Send to cast…', caTitle: 'Send to cast', deptCast: 'Cast', deptCastTip: 'Notes for the actors: sent with “Send to cast…”, listed under Review, left out of the cue list',
+  caHint: 'The cast file holds the text without cues, comments and to-do notes, plus the notes of the departments marked “Cast”. An actor opens it in a browser, on a phone too: it shows the script, hides their own lines for practice and keeps their own notes on their device. Send a new file after a rehearsal: the notes they wrote stay with them.',
+  caNoDept: 'No department is marked “Cast” yet. The notes pinned under such a department are the ones the actors receive; its name tells them who is writing, for example Director.',
+  caAddDept: 'Add a “Notes” department', caDeptName: 'Notes', caCount: 'Notes for the cast: {0}', caNone: 'No note for the cast yet: the file will hold the text only.',
+  caEveryone: 'Everyone', caSaveHtml: 'Save the cast file (.html)', caSaveJson: 'Text and notes only (.cast.json)',
+  caJsonHint: 'The .html file is the reader with this show inside: one file to send. The .cast.json file is for who already keeps the reader and opens the show from its menu.',
+  caFor: 'For: blank = {0}', caNote: 'Note for the cast', rvCast: 'Notes for the cast',
+  acApp: 'Cast script', acOpen: 'Open a cast file…', acStart: 'Open the file you received from the stage manager (…-cast.html or .cast.json). Your part and your notes stay on this device.',
+  acPart: 'My part', acPartHint: 'Tick every name you speak under. Groups and choruses are listed as the script writes them: tick the ones you are part of.',
+  acHide: 'Hide my lines', acHideTip: 'Cover my lines to practise; tap a covered line to see it', acPickFirst: 'Tick your character first',
+  acNotes: 'Notes', acForMe: 'For me', acMine: 'My notes', acGot: 'Received', acAdd: '+ Note', acNotePh: 'Your note on this line',
+  acLost: 'My notes whose line has changed', acNoNotes: 'No notes.', acRead: 'Read', acSize: 'Text size', acExport: 'Export my notes', acImport: 'Import my notes…',
+  acSent: 'Sent {0}', acBad: 'This is not a cast file.', acNewer: 'This file needs a newer reader: ask for the .html cast file.', acLoaded: 'Show updated: {0}',
+  acTo: 'for {0}', acImported: 'Notes imported: {0}', acNoSpeak: 'No speaker found in this script.', acLang: 'Italiano',
+  acNews: 'What is new', acNewsFile: 'File of {0}', acNewsNotes: 'Notes to read: {0}', acNewsLines: 'Lines changed since the file before: {0}, mine {1}',
+  acNewsMoved: 'My notes on a line that changed: {0}', acNewsLost: 'My notes whose line was cut: {0}', acNewsNone: 'Nothing changed for you.',
+  acMoved: 'The line has changed since you wrote this. Save to keep the note here.', acAttach: 'Put on this line', acLostHint: 'Tap a line, then its note button, to put one of these back.',
+  acOlder: 'This file is older than the one opened last ({0}). Nothing was updated.', acOlderAsk: 'This file is older than the one you have ({0}). Open it anyway?',
+  acNoStore: 'This browser does not keep your notes when the page is closed. Use “Export my notes” before you close it.', acLine: 'Notes on this line'
 },
 it: {
-  appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', openFolder: 'Apri una vecchia cartella…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
+  appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
   pasteNew: 'Inizia incollando il testo', contDraft: 'Riprendi la bozza non salvata ({0})', importBk: 'Importa un file di backup…',
   startHint: 'Uno spettacolo è un solo file .zip: copione, appunti a penna, impostazioni, schemi e immagini insieme. Per spostarlo basta copiare quel file. Crealo con «Inizia incollando il testo» o con l’esempio, poi «Salva come file spettacolo…».',
   noFs: 'Questo browser non può salvare i file dello spettacolo. Per farlo apri lo strumento in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
-  menu: 'Menu', mOpen: 'Apri file spettacolo…', mOpenFolder: 'Apri vecchia cartella…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
+  menu: 'Menu', mOpen: 'Apri file spettacolo…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
   mSettings: 'Impostazioni…', mClose: 'Chiudi spettacolo', jump: 'Vai ad atto o scena', jumpTo: 'Vai a…', find: 'Cerca…',
   eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
   boards: 'Tavole', boardsTip: 'Mostra la pagina a fronte', cues: 'Cue', cuesTip: 'Mostra o nascondi i cue', ink: 'Tratti', inkTip: 'Mostra o nascondi l’inchiostro',
@@ -143,7 +162,26 @@ it: {
   lkChanged: 'Pagine cambiate: {0}', lkGone: 'Pagine ora vuote: {0}', lkNone: 'Nessuna pagina è cambiata.',
   lkUnlock: 'Sblocca', lkPrint: 'Stampa le pagine cambiate', lkMark: 'cambiata dopo «{0}»',
   dfTitle: 'Modifiche', dfFrom: 'Da', dfTo: 'A', dfWho: 'Mostra', dfAll: 'Tutto, anche i cue', dfText: 'Testo', dfNone: 'Nessuna modifica.',
-  dfAdd: 'aggiunta', dfDel: 'tagliata', dfChg: 'cambiata', dfCue: 'cue', dfCueLine: 'la battuta prima della tua', dfCount: '{0} modifiche', dfFor: 'per {0}', dfBack: 'Indietro'
+  dfAdd: 'aggiunta', dfDel: 'tagliata', dfChg: 'cambiata', dfCue: 'cue', dfCueLine: 'la battuta prima della tua', dfCount: '{0} modifiche', dfFor: 'per {0}', dfBack: 'Indietro',
+  mCast: 'Invia agli attori…', caTitle: 'Invia agli attori', deptCast: 'Attori', deptCastTip: 'Note per gli attori: inviate con «Invia agli attori…», elencate in Rivedi e lasciate fuori dalla lista cue',
+  caHint: 'Il file per gli attori contiene il testo senza cue, commenti e appunti «da fare», più le note dei reparti segnati «Attori». Un attore lo apre in un browser, anche sul telefono: mostra il copione, nasconde le sue battute per provare a memoria e tiene le sue note sul suo dispositivo. Invia un nuovo file dopo una prova: le note che ha scritto restano a lui.',
+  caNoDept: 'Nessun reparto è ancora segnato «Attori». Le note messe sotto un reparto così sono quelle che gli attori ricevono; il suo nome dice loro chi scrive, per esempio Regia.',
+  caAddDept: 'Aggiungi un reparto «Note»', caDeptName: 'Note', caCount: 'Note per gli attori: {0}', caNone: 'Ancora nessuna nota per gli attori: il file conterrà solo il testo.',
+  caEveryone: 'Tutti', caSaveHtml: 'Salva il file per gli attori (.html)', caSaveJson: 'Solo testo e note (.cast.json)',
+  caJsonHint: 'Il file .html è il lettore con dentro questo spettacolo: un solo file da inviare. Il file .cast.json è per chi tiene già il lettore e apre lo spettacolo dal suo menu.',
+  caFor: 'Per: vuoto = {0}', caNote: 'Nota per gli attori', rvCast: 'Note per gli attori',
+  acApp: 'Copione per gli attori', acOpen: 'Apri un file per gli attori…', acStart: 'Apri il file ricevuto dalla direzione di scena (…-cast.html o .cast.json). La tua parte e le tue note restano su questo dispositivo.',
+  acPart: 'La mia parte', acPartHint: 'Spunta ogni nome sotto cui parli. Gruppi e cori sono elencati come li scrive il copione: spunta quelli di cui fai parte.',
+  acHide: 'Nascondi le mie battute', acHideTip: 'Copre le mie battute per provare a memoria; tocca una battuta coperta per vederla', acPickFirst: 'Spunta prima il tuo personaggio',
+  acNotes: 'Note', acForMe: 'Per me', acMine: 'Le mie note', acGot: 'Ricevute', acAdd: '+ Nota', acNotePh: 'La tua nota su questa battuta',
+  acLost: 'Mie note la cui battuta è cambiata', acNoNotes: 'Nessuna nota.', acRead: 'Letta', acSize: 'Dimensione del testo', acExport: 'Esporta le mie note', acImport: 'Importa le mie note…',
+  acSent: 'Inviato {0}', acBad: 'Questo non è un file per gli attori.', acNewer: 'Questo file richiede un lettore più recente: chiedi il file .html per gli attori.', acLoaded: 'Spettacolo aggiornato: {0}',
+  acTo: 'per {0}', acImported: 'Note importate: {0}', acNoSpeak: 'Nessun personaggio trovato in questo copione.', acLang: 'English',
+  acNews: 'Novità', acNewsFile: 'File del {0}', acNewsNotes: 'Note da leggere: {0}', acNewsLines: 'Battute cambiate dal file precedente: {0}, mie {1}',
+  acNewsMoved: 'Mie note su una battuta cambiata: {0}', acNewsLost: 'Mie note la cui battuta è stata tagliata: {0}', acNewsNone: 'Per te non è cambiato niente.',
+  acMoved: 'La battuta è cambiata da quando l’hai scritta. Salva per tenere qui la nota.', acAttach: 'Metti su questa battuta', acLostHint: 'Tocca una battuta, poi il suo pulsante delle note, per rimetterne una.',
+  acOlder: 'Questo file è più vecchio dell’ultimo aperto ({0}). Non è stato aggiornato niente.', acOlderAsk: 'Questo file è più vecchio di quello che hai ({0}). Aprirlo lo stesso?',
+  acNoStore: 'Questo browser non conserva le tue note quando la pagina viene chiusa. Usa «Esporta le mie note» prima di chiuderla.', acLine: 'Note su questa battuta'
 }};
 let LANG = 'en';
 function t(k) {
@@ -178,7 +216,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.9';
+const VERSION = 'r1.10';
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -187,14 +225,14 @@ function defaultConfig() {
     { code: 'SND', name: it ? 'Audio' : 'Sound', colour: '#1f6fd6' },
     { code: 'VID', name: 'Video', colour: '#7a3fd1' },
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
-    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null };
+    templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null, castId: '' };
 }
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review };
+    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast };
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -204,6 +242,7 @@ function normCfg(c) {
   o.templateFade = clamp(+o.templateFade || 0.4, 0.15, 0.8);
   const gr = parseInt(o.boardGrid, 10);   // grid step in board units; 0 is off and must survive, null or '' is not 0
   o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
+  o.castId = typeof o.castId === 'string' ? o.castId : '';   // names the show to the actors' files, whatever its title becomes
   const lk = o.lock;   // locked page numbers, see makeLock
   o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
   return o;
@@ -223,12 +262,14 @@ const S = {
   view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
   hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
-  store: { mode: 'none', dir: null, name: '', stamp: {}, dirty: { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }, conflict: false, lastSave: null, err: null }
+  store: { mode: 'none', name: '', stamp: {}, dirty: { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }, conflict: false, lastSave: null, err: null }
 };
 const paper = () => PAPERS[S.cfg.paper] || PAPERS.A4;
 const deptOf = code => S.cfg.departments.find(d => d.code === code) || null;
 /* a review department holds notes for after the rehearsal: listed in Review, never in the cue list */
 const isReview = code => { const d = deptOf(code); return !!(d && d.review); };
+/* a cast department holds notes for the actors: a review department whose notes are also sent to them */
+const isCast = code => { const d = deptOf(code); return !!(d && d.cast); };
 const titleOf = () => (S.meta && S.meta.title) || S.cfg.title;   // the script's own title wins over Settings
 /* what is printed for page number n: the number itself, or its locked label such as 12A */
 const pl = n => { const P = n ? S.pages[n - 1 + S.pageOff] : null; return P ? P.label : (n || ''); };
@@ -929,6 +970,54 @@ function diffNames(D) {
     if (b.type === 'speech' && !GROUP_NAME.test(normName(b.name))) for (const p of normName(b.name).split(NAME_SEP).filter((x, k) => k % 2 === 0 && x)) seen.add(p);
   }
   return meta ? meta.chars.map(c => c.name) : Array.from(seen).sort();
+}
+
+/* ---------- cast ----------
+   What the actors receive: the text with every token, comment and cue line taken out, and the notes of
+   the cast departments laid over it. A note belongs to a whole block, named by its place in that text.
+   Who it is for is its label, names divided by commas; with no label it is for whoever speaks the
+   block, and for everyone on a block nobody speaks. ALL or TUTTI as the label means everyone. */
+const CAST_ALL = /^(?:ALL|EVERYONE|EVERYBODY|TUTTI|TUTTE)$/;
+/* the block a note belongs to: its own, or for a note on its own line the block above it, else the one below */
+function castBlock(b) {
+  if (b.type !== 'mark') return b;
+  const i = S.blocks.indexOf(b), ok = x => x.type !== 'mark' && x.type !== 'note' && x.type !== 'meta';
+  for (let k = i - 1; k >= 0; k--) if (ok(S.blocks[k])) return S.blocks[k];
+  for (let k = i + 1; k < S.blocks.length; k++) if (ok(S.blocks[k])) return S.blocks[k];
+  return null;
+}
+/* who speaks the block of a note: the addressee when the label is blank; '' = nobody, so everyone */
+function castSpeaker(b) { const o = b && castBlock(b); return o && o.type === 'speech' ? normName(o.name) : ''; }
+function castTo(c, meta, b) {
+  const out = [];
+  for (const p of c.label.split(/\s*[,;]\s*/).concat(c.links.map(cueName))) {
+    let n = normName(p); if (!n) continue;
+    if (CAST_ALL.test(n)) return [];
+    if (meta && meta.alias.has(n)) n = meta.alias.get(n);
+    if (!out.includes(n)) out.push(n);
+  }
+  if (!out.length) { const sp = castSpeaker(b); if (sp) out.push(sp); }
+  return out;
+}
+const castNote = c => !c.board && !c.end && isCast(c.dept) && !!(c.desc || c.notes);
+function castPack() {
+  const out = [], notes = [], ids = new Map(), at = new Map(), re = new RegExp(TOKEN_SRC, 'g');
+  let skipped = 0;
+  for (const b of S.blocks) {
+    if (b.type === 'note' || b.type === 'mark') { skipped += b.gap; continue; }
+    /* tokens out; the space before one goes with it, and a line that held only tokens is not left blank */
+    const raw = b.type === 'meta' ? b.raw : b.raw.replace(re, '\uE001').replace(/[ \t]+(?=\uE001)/g, '').replace(/\uE001[ \t]+(?=[ \t\n]|$)/g, '\uE001')
+      .replace(/\n[ \t]*\uE001+[ \t]*(?=\n|$)/g, '').replace(/\uE001/g, '').replace(/[ \t]+$/gm, '');
+    at.set(b, out.length);
+    out.push('\n'.repeat(out.length ? Math.max(b.gap, skipped ? 1 : 0) : 0) + raw); skipped = 0;
+  }
+  for (const b of S.blocks) for (const c of b.cues) {
+    const o = castNote(c) ? castBlock(b) : null; if (!o || !at.has(o)) continue;
+    const d = deptOf(c.dept), to = castTo(c, S.meta, b), text = [c.desc, c.notes].filter(Boolean).join(' — ');
+    const k = hash([c.dept, to.join(','), text, out[at.get(o)]].join('\u0001')), n = ids.get(k) || 0; ids.set(k, n + 1);
+    notes.push({ id: n ? k + '.' + n : k, dept: c.dept, from: d.name || c.dept, colour: d.colour, to, text, block: at.get(o) });
+  }
+  return { format: 'promptbook-cast', version: 1, made: VERSION, show: S.cfg.castId, title: titleOf(), when: new Date().toISOString(), lang: LANG, script: out.join('\n') + '\n', notes };
 }
 
 /* ---------- locked page numbers ----------

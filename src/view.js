@@ -1119,7 +1119,30 @@ function openCueEdit(b, c, x, y, fresh) {
       const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs), last = nc && !c.end ? lastLabelBefore(nb, nc, dept) : '', nx = nc && fresh ? nextLabel(nb, nc, dept) : '';
       li.placeholder = t('label') + (nx ? ' (' + t('nextLabel', nx) + ')' : last ? ' (' + t('lastLabel', last) + ')' : '');
     };
-    setPh(); di.placeholder = t('desc'); ni.placeholder = t('notes');
+    /* a note for the cast: the label is who it is for, picked from the speakers of the script */
+    const who = h('div', 'who');
+    const fillWho = () => {
+      const cast = isCast(dept); who.hidden = !cast; who.textContent = '';
+      di.placeholder = cast ? t('caNote') : t('desc'); ni.placeholder = cast ? t('hasNotes') : t('notes');
+      if (!cast) return;
+      /* left blank, the note is for whoever speaks the block; "Everyone" and the names say otherwise */
+      const nb = S.byId.get(bid), all = t('caEveryone').toUpperCase();
+      li.placeholder = t('caFor', (nb && castSpeaker(nb)) || t('caEveryone'));
+      const names = S.meta && S.meta.chars.length ? S.meta.chars.map(q => q.name) : Array.from(new Set(S.blocks.filter(q => q.type === 'speech' && !NAME_SEP.test(q.name)).map(q => q.name)));
+      const cur = () => li.value.split(/\s*[,;]\s*/).map(normName).filter(Boolean), btns = [];
+      for (const nm of [all].concat(names)) {
+        const bt = h('button', 'chip', nm === all ? t('caEveryone') : nm); bt.type = 'button';
+        bt.onclick = () => {
+          let l = cur();
+          if (nm === all) l = l.includes(all) ? [] : [all]; else { rm(l, all); if (rm(l, nm) < 0) l.push(nm); }
+          li.value = l.join(', '); lit(); di.focus({ preventScroll: true });
+        };
+        btns.push([bt, nm]); who.appendChild(bt);
+      }
+      const lit = () => { const l = cur(); for (const [bt, nm] of btns) bt.classList.toggle('on', l.includes(nm)); };
+      lit();
+    };
+    setPh(); fillWho();
     if (c.end) p.appendChild(h('p', 'pt', c.startRef ? t('endTitle', cueName(c.startRef) + (c.startRef.desc ? ' — ' + c.startRef.desc : '')) : t('endLoose')));
     else if (c.links.length) p.appendChild(h('p', 'pt', t('linkTitle', c.links.map(cueName).join(', '))));
     const apply = () => {
@@ -1147,8 +1170,8 @@ function openCueEdit(b, c, x, y, fresh) {
       commitText(textEdits([{ b: nb, s: nc.s, e: nc.e, text: text(nc) }]));
       const b2 = S.byId.get(bid), c2 = b2 && b2.cues.find(q => q.s === cs); if (c2) openCueEdit(b2, c2, x, y);
     };
-    p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); setPh(); }));
-    p.append(li, di, ni);
+    p.appendChild(deptButtons('small', dept, code => { dept = code; apply(); setPh(); fillWho(); }));
+    p.append(li, who, di, ni);
     const row = h('div', 'prow');
     const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)';
     del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
@@ -1426,9 +1449,11 @@ function renderDrawer() {
       for (const it of items) { const bt = h('button', 'it', label(it)); bt.type = 'button'; bt.onclick = () => onClick(it); body.appendChild(bt); }
     };
     const snip = s => s.length > 90 ? s.slice(0, 90) + '…' : s;
-    if (rv.todos.length) {   // notes left during the rehearsal; the tick removes the note from the script
-      body.appendChild(h('h3', null, t('rvTodo') + ' (' + rv.todos.length + ')'));
-      for (const o of rv.todos) {
+    /* notes left during the rehearsal, then those for the actors; the tick removes the note from the script */
+    for (const [title, list] of [[t('rvTodo'), rv.todos.filter(o => !isCast(o.c.dept))], [t('rvCast'), rv.todos.filter(o => isCast(o.c.dept))]]) {
+      if (!list.length) continue;
+      body.appendChild(h('h3', null, title + ' (' + list.length + ')'));
+      for (const o of list) {
         const r = h('div', 'todo'), bt = h('button', 'it', (o.page ? 'p. ' + o.page + ' — ' : '') + snip([o.c.label, o.c.desc, o.c.notes].filter(Boolean).join(' — ') || o.c.dept) + '  · ' + (o.who ? o.who + ': ' : '') + o.ctx);
         bt.type = 'button'; bt.style.setProperty('--c', cueColour(o.c)); bt.onclick = () => jumpTo(o.b);
         const ok = h('button', 'btn sm', '\u2713'); ok.type = 'button'; ok.title = t('done'); ok.onclick = () => removeCue(o.b.id, o.c.s);

@@ -126,22 +126,5 @@ const TEXT = L.join('\n') + '\n';
   await ev(() => PB.unlockPages());
   ok(/^ {0,2}1 2 3 4/.test((await labels()).trim()) && !/[A-Z*]/.test(await labels()), 'unlocked, the pages are numbered 1, 2, 3 again');
 
-  // 9. an older show folder keeps its history in a .git folder beside the script
-  ok(await ev(async tx => {
-    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('hshow', { create: true });
-    const w = await (await dir.getFileHandle('script.md', { create: true })).createWritable(); await w.write(tx); await w.close();
-    return PB.openFolder(dir);
-  }, 'ANNA: Uno.\nMARCO: Due.\n'), 'a show folder opens');
-  await ev(() => PB.histSave('Uno', false));
-  await ev(() => PB.commitText('ANNA: Uno.\nMARCO: Tre.\n'));
-  await ev(() => PB.histSave('Due', false));
-  const fold = await ev(async () => {
-    const s = await PB.histState(); await PB.histRestore(s.log[1].sha);
-    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('hshow');
-    const head = await (await (await (await dir.getDirectoryHandle('.git')).getFileHandle('HEAD')).getFile()).text();
-    return { n: s.log.length, head, disk: await (await (await dir.getFileHandle('script.md')).getFile()).text(), now: PB.serialize() };
-  });
-  ok(fold.n === 2 && fold.head === 'ref: refs/heads/main\n' && fold.disk === 'ANNA: Uno.\nMARCO: Due.\n' && fold.now === fold.disk, 'revisions are written under .git in the folder and a restore rewrites script.md');
-
   await done(); srv.close();
 })();
