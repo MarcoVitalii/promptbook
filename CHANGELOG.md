@@ -1,10 +1,21 @@
 # Changelog
 
-## Not yet released
+## r1.11 — not yet released
 
+- **Show mode**, for show day. The "Show" button in the top bar makes the book read only: the pen draws nothing, a tap pins nothing, no cue or block can be moved, nothing opens for editing. It is also a focus mode: the toolbar, the corner buttons and the facing page are gone and the script is as large as the window allows. "Leave" takes two presses, so a stray touch does not end it, and puts everything back.
+- **A line runs down the script.** Space starts and stops it. Double tap a word to put it there, or Arrow down and Arrow up for one block. The line is a clock: it does not hear the stage, so pauses and silent business need a stop or a correction.
+- **Every block has its own time.** To begin with it is its words at 130 a minute. In rehearsal, turn on "Time it": while the line runs, each double tap (or Arrow down) says "the show is here", and the real time since the mark before is kept for the blocks in between. Mark often for fine times, rarely for rough ones. "Undo" takes the last one back; −5 s and +5 s set the block the line is in by hand, which is the way to give a silent fight its minute. Stop the line before jumping elsewhere. "Time it" is off every time show mode is entered, so a show night changes nothing. A block whose words change goes back to the estimate.
+- **The page no longer scrolls under your eyes.** It stands still while the line goes down it, and jumps a third of the window when the line is two thirds down. Scroll anywhere to look at something else: the line keeps running, and "Back to the line" (or Enter) returns to it.
+- **Warnings and standbys, counted down.** Cues the line will reach within 30 seconds are in STANDBY, within 2 minutes in WARNING, each with the estimated time to it; cues on the same word are one call; a cue just passed shows as GO for 4 seconds. Their tags are outlined on the page. Both times are in Settings; a warning time of 0 turns warnings off.
+- **How long the show is and how far in.** The panel shows the time so far, the whole, what is left and when it would end. A map shows the show scene by scene, each as long as its time, with a tick for every cue; press it to look at that place.
+- **Pace of the night:** − and + (or `[` and `]`) make the line run slower or faster than the times say, for tonight only. After a minute of corrections the panel offers the pace it measured.
+- **A rail on the right** holds the calls, the clock and the pace. On the page the block being spoken is lit, with a small mark on its left edge that shows roughly how far into it the show is. Press a call to look at the place of its cue: the line runs on where it was, and "Back to the line" returns.
+- **S enters show mode**, and S twice leaves it. The list of shortcuts (?) now shows only the keys of the mode you are in.
+- The screen is kept awake in show mode where the browser allows it.
+- Checked in a simulated browser only: not yet on the laptop with pen and touch, and neither the pace of 130 nor the timing has been tried in a real rehearsal.
 - A cue can be dragged between two lines again, as a block can: carry its tag to the space between two blocks, and release where the line in the cue's colour shows. The cue gets a line of its own there. Released on a word it goes after that word, as before. Checked in a simulated browser with the mouse; not tried with a finger, for which the space between two blocks may be narrow.
 
-**Compatibility.** Nothing changes in the files.
+**Compatibility.** Show files written by r1.10 open unchanged. `config.json` gains `show` (pace, standby and warning times, the timed blocks); an older release keeps it and ignores it.
 
 ## r1.10 — 2026-10-10
 

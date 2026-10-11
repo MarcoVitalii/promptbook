@@ -56,6 +56,69 @@ button,input,select,textarea{font:inherit;color:inherit}
 body.night #banner{background:color-mix(in srgb,var(--sel) 40%,var(--ui))}
 
 /* ---------- work area ---------- */
+/* show mode: focus. Nothing that edits; a rail of calls on the right and a map of the show down the edge */
+body.show{--go:#2f8f4e}
+body.show.night{--go:#49b36b}
+body.show #bar,body.show #banner,body.show #dock,body.show .grip,body.show .pbtn{display:none!important}
+body.show .tag,body.show .w{cursor:default}
+#showside{width:300px;display:flex;flex-direction:column;gap:12px;flex:none;box-sizing:border-box;min-height:0;overflow:hidden;padding:14px;background:var(--ui);color:var(--ui-ink);border-left:1px solid var(--ui-b);font-size:14px}
+#showside[hidden],#shProg[hidden],#shLearnBox[hidden],#showside button[hidden]{display:none}
+#showside button{background:var(--ui2);color:var(--ui-ink);border:1px solid var(--ui-b);border-radius:7px;min-height:38px;min-width:40px;padding:0 10px;cursor:pointer;white-space:nowrap;font:inherit}
+#showside button.on{color:var(--acc);border-color:var(--acc)}
+#shClock{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;font-variant-numeric:tabular-nums}
+#shClock b{font-size:30px;line-height:1}
+#shClock span{font-size:16px;color:var(--muted)}
+#shClock i{flex-basis:100%;font-style:normal;font-size:13px;color:var(--muted)}
+#shCalls{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}
+.call{position:relative;flex:none;display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:baseline;padding:8px 10px;border-radius:8px;background:var(--ui2);border-left:5px solid var(--ui-b);overflow:hidden}
+.call[data-n]{cursor:pointer}
+.call .st{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.call .cd{font-style:normal;font-size:22px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.call .cue{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 7px;min-width:0}
+.call .chip{background:var(--c);color:var(--ct);border-radius:5px;padding:1px 8px;font-weight:700;white-space:nowrap}
+.call.none{display:block;background:transparent;border-left-color:transparent;color:var(--muted)}
+.call.later{background:transparent;padding:1px 10px;border-left-color:transparent;opacity:.8}
+.call.later .cd{font-size:14px;font-weight:400}
+.call.warning .st{color:var(--ui-ink)}
+.call.warning{border-left-color:var(--muted)}
+.call.standby{border-left-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--ui))}
+.call.standby .st{color:var(--acc);font-size:13px;font-weight:700}
+.call.standby .cd{font-size:30px}
+.call.standby::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:calc(var(--f)*100%);background:var(--acc)}
+.call.go{background:var(--go);border-left-color:var(--go);color:#fff}
+.call.go .st{color:#fff;font-size:22px;line-height:1}
+#shLearnBox{display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1px dashed var(--acc);border-radius:8px;font-size:13px}
+#shLearnBox div{display:flex;align-items:center;gap:6px;min-height:20px}
+#shLearnBox div[hidden]{display:none}
+#shLearnBox span{flex:1;min-width:0}
+#shLearnBox button{min-height:30px;min-width:0;padding:0 8px}
+#shCtl,#shMore{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#showside .pace{display:flex;align-items:center;gap:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#shPlay{min-width:56px!important;font-size:18px!important}
+#shBack{background:var(--acc)!important;color:var(--ui)!important;border-color:var(--acc)!important;font-weight:700!important}
+#shLeave{margin-left:auto}
+/* the place of the show on the page: the block being spoken is lit, and a small mark on its left edge is the line */
+#showBand{position:absolute;left:0;z-index:2;pointer-events:none;box-sizing:border-box;border-left:7px solid var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
+#showLine{position:absolute;left:0;width:30px;height:0;border-top:3px solid var(--acc);z-index:3;pointer-events:none}
+#showLine[hidden],#showBand[hidden]{display:none}
+/* a cue being called is marked on its own tag */
+body.show .tag[data-st=standby]{outline:2.5px solid var(--acc);outline-offset:1px}
+body.show .tag[data-st=warning]{outline:1.5px dashed var(--tx2);outline-offset:1px}
+body.show .tag[data-st=go]{outline:3px solid var(--go);outline-offset:1px}
+/* the map of the show */
+#shProg{position:relative;flex:none;width:28px;display:flex;flex-direction:column;overflow:hidden;background:var(--ui2);border-left:1px solid var(--ui-b);cursor:pointer;--p:0}
+#shProg .track{flex:1;display:flex;flex-direction:inherit;min-width:0;min-height:0}
+#shProg .seg{flex:1 1 0;min-width:0;min-height:0;overflow:hidden;box-sizing:border-box;font-size:11px;line-height:14px;color:var(--ui-ink);white-space:nowrap}
+#shProg .tick,#shProg .done,#shProg .head{position:absolute;pointer-events:none}
+#shProg .tick{opacity:.9}
+#shProg .done{left:0;top:0;background:color-mix(in srgb,var(--ui-ink) 24%,transparent)}
+#shProg .head{background:var(--acc)}
+#shProg .seg{border-top:1px solid var(--muted)}
+#shProg .seg.act{border-top:3px solid var(--ui-ink)}
+#shProg .seg:first-child{border-top:0}
+#shProg .tick{left:10px;right:0;height:2px;top:calc(var(--p)*1%)}
+#shProg .done{right:0;height:calc(var(--p)*1%)}
+#shProg .head{left:0;right:0;height:4px;margin-top:-2px;top:calc(var(--p)*1%)}
 #work{flex:1;display:flex;min-height:0}
 #deskwrap{flex:1;display:flex;min-width:0;min-height:0;position:relative}
 /* zoom, night and help float over the corner of the desk, out of the toolbar */
@@ -290,7 +353,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #bar,#banner,#showside,#shProg,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
   #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}

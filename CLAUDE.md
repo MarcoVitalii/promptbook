@@ -38,7 +38,7 @@ Sections inside the JS files are marked `/* ---------- name ---------- */`. Grep
 Read only the part that is needed; do not load these whole. Each capability file has the same three parts: Intent (the request, in the client's words), Requirements (one ID each, with the test files that check it), Consequences (design, limits, compatibility, not built, not verified).
 
 - `SPEC.md`: entry point. How the specification is organised, goals G1 to G6, constraints C1 to C11, assumptions, open questions, table of releases.
-- `docs/specs/`: one file per capability. `01-script-text.md` (TXT), `02-cues.md` (CUE), `03-ink.md` (INK), `04-boards.md` (BRD), `05-input.md` (INP), `06-pages-print.md` (PAG, page layout locked), `07-storage.md` (STO, data shapes in §2.3, compatibility in §2.4), `08-history.md` (HIS), `09-workbench.md` (UI), `10-cast.md` (CST: notes for the cast, the cast file, the script for the actors).
+- `docs/specs/`: one file per capability. `01-script-text.md` (TXT), `02-cues.md` (CUE), `03-ink.md` (INK), `04-boards.md` (BRD), `05-input.md` (INP), `06-pages-print.md` (PAG, page layout locked), `07-storage.md` (STO, data shapes in §2.3, compatibility in §2.4), `08-history.md` (HIS), `09-workbench.md` (UI), `10-cast.md` (CST: notes for the cast, the cast file, the script for the actors), `11-show.md` (SHW: show mode, read only, the running line, warnings and standbys).
 - `docs/decisions.md`: decisions D1 to D19 and conflicts K1 to K10, with what follows from each.
 - `docs/architecture.md`: C4 diagrams (context, containers, components) and the component table that maps to sections of `src/`.
 - `docs/verification.md`: check record per release, test file to requirement mapping, what was never verified.

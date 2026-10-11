@@ -241,6 +241,7 @@ function loadShow(cfg, text, inkF) {
   for (const n of S.templates.keys()) if (!S.cfg.templates.includes(n)) S.cfg.templates.push(n);
   S.cfg.templates = S.cfg.templates.filter(n => S.templates.has(n));
   applyPaper();
+  showOff();
   S.blocks = []; S.byId = new Map(); S.groups = []; S.nextId = 1; S.hist = []; S.redo = []; S.meas = new Map();
   S.sel = null; S.findAt = null; S.cueFilter = null;
   for (const E of S.els) E.sp.remove();
@@ -652,9 +653,14 @@ function openSettings() {
     const fs2 = h('select'); for (const v of [0.25, 0.4, 0.55, 0.7]) { const o = h('option', null, Math.round(v * 100) + '%'); o.value = v; fs2.appendChild(o); }
     fs2.value = [0.25, 0.4, 0.55, 0.7].reduce((a, v) => Math.abs(v - S.cfg.templateFade) < Math.abs(a - S.cfg.templateFade) ? v : a, 0.4);
     const gs = h('select'); for (const [v, k] of [[0, 'gridOff'], [25, 'gridFine'], [50, 'gridCoarse']]) { const o = h('option', null, t(k)); o.value = v; gs.appendChild(o); } gs.value = S.cfg.boardGrid;
+    const sn = k => { const i = h('input'); i.type = 'number'; i.value = S.cfg.show[k]; return i; };
+    const sw = sn('wpm'), ss = sn('standby'), sg = sn('warning');
+    let times = S.cfg.show.times;
+    const fg = h('button', 'btn sm', t('shForget', Object.keys(times).length)); fg.type = 'button'; fg.onclick = () => { times = {}; fg.disabled = true; };
     const tb = h('button', 'btn sm', t('tplManage') + ' (' + S.templates.size + ')'); tb.type = 'button'; tb.onclick = () => { close(); enterTemplates(); };
     body.append(h('label', null, t('showTitle')), ti, h('label', null, t('paperL')), ps, h('label', null, t('langL')), ls,
-      h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs, h('label', null, t('deptsL')));
+      h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs,
+      h('label', null, t('paceL')), sw, ...(Object.keys(times).length ? [h('label'), fg] : []), h('label', null, t('standbyL')), ss, h('label', null, t('warningL')), sg, h('label', null, t('deptsL')));
     const list = h('div'); body.appendChild(list);
     const addRow = d => {
       const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input'), cl = h('label', 'chk'), cc = h('input');
@@ -671,7 +677,7 @@ function openSettings() {
     dlgBtn(foot, t('save'), 'pri', () => {
       const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }; });
       const paperChanged = ps.value !== S.cfg.paper;
-      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value }));
+      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value, show: { wpm: sw.value, standby: ss.value, warning: sg.value, times } }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
       close();
       if (paperChanged) S.meas = new Map();
@@ -736,7 +742,7 @@ function applyPaper() {
   st.setProperty('--tfade', S.cfg.templateFade || 0.4);
   $('#pageRule').textContent = '@page{size:' + pp.css + ';margin:0}@page cues{size:' + pp.css + ';margin:12mm}@media print{#cuePrint{page:cues;padding:0!important}}';
 }
-function savePrefs() { try { localStorage.setItem('promptbook:view', JSON.stringify({ facing: S.view.facing, cues: S.view.cues, ink: S.view.ink, night: S.view.night, finger: S.tool.finger, lang: LANG })); } catch (e) { /* ignore */ } }
+function savePrefs() { try { localStorage.setItem('promptbook:view', JSON.stringify({ facing: (S.show.keep || S.view).facing, cues: S.view.cues, ink: S.view.ink, night: S.view.night, finger: S.tool.finger, lang: LANG })); } catch (e) { /* ignore */ } }
 function applyView() {
   const c = document.body.classList, v = S.view;
   c.toggle('facing', v.facing); c.toggle('nocues', !v.cues); c.toggle('noink', !v.ink); c.toggle('night', v.night);
@@ -749,7 +755,9 @@ function updUndo() { $('#bUndo').disabled = !S.hist.length; $('#bRedo').disabled
 function setZoom(f) {
   const a = desk.scrollHeight ? desk.scrollTop / desk.scrollHeight : 0;
   if (f === 0) S.view.fit = true; else { S.view.fit = false; S.view.zoom = clamp(S.view.zoom * f, 0.3, 3); }
+  const fw = S.show.on && S.show.follow;
   sizeWrap(); desk.scrollTop = a * desk.scrollHeight; renderVisible(); applyView();
+  if (fw) showBack();
 }
 function buildMenu() {
   const m = $('#menu'); m.textContent = '';
@@ -786,6 +794,17 @@ function bindUI() {
   $('#search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(e.target.value.trim(), e.shiftKey ? -1 : 1); } });
   $('#search').addEventListener('input', () => { S.findAt = null; });
   $('#bKeys').onclick = openKeys;
+  $('#bShow').onclick = showOn; $('#shPlay').onclick = showToggle; $('#shBack').onclick = showBack; $('#shLeave').onclick = showLeave;
+  const pace = d => () => { showTempo(S.show.tempo + d); showTick(); };   // of the night: the line against the times
+  $('#shSlow').onclick = pace(-0.05); $('#shFast').onclick = pace(0.05);
+  $('#shUse').onclick = () => { showTempo(showMeasured()); S.show.cal = { want: 0, ms: 0 }; showTick(); };
+  $('#shLearn').onclick = () => { S.show.learn = !S.show.learn; S.show.last = null; showTick(); };
+  $('#shDn').onclick = () => { showNudge(-5); showTick(); }; $('#shUp').onclick = () => { showNudge(5); showTick(); };
+  $('#shUndo').onclick = () => { showUnlearn(); showTick(); };
+  $('#shRest').onclick = () => { showRest(showStats().wpm); showTick(); };
+  $('#shCalls').addEventListener('pointerdown', e => { const c = e.target.closest('.call[data-n]'); if (c) showPeek(+c.dataset.n); });   // the cards are built again every second: a click could lose its target
+  $('#shNight').onclick = () => $('#bNight').click();
+  $('#shProg').onclick = e => { const r = $('#shProg').getBoundingClientRect(); showLook((e.clientY - r.top) / r.height); };
   $('#bReview').onclick = () => toggleDrawer('review');
   $('#bList').onclick = () => toggleDrawer('cues');
   $('#bPrint').onclick = e => {
@@ -806,18 +825,24 @@ const KEYS = [
   ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
   ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
   ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['?', 'keys']
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['S', 'kShow'], ['?', 'keys']
+];
+/* the keys of show mode: ? lists only the ones of the mode the book is in */
+const KEYS_SHOW = [
+  ['Space', 'kShPlay'], ['Enter', 'kShBack'], ['\u2193 \u2191', 'kShStep'], ['[ ]', 'kShPace'],
+  ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'],
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['S', 'kShLeave'], ['?', 'keys']
 ];
 let keysClose = null;
 function openKeys() {
   keysClose = openDlg(t('keys'), (body, foot, close) => {
     const tb = h('table', 'keys');
-    for (const [ks, s] of KEYS) {
+    for (const [ks, s] of (S.show.on ? KEYS_SHOW : KEYS)) {
       const r = h('tr'), d = h('td');
       for (const x of ks.split(' ')) d.appendChild(h('kbd', null, x));
       r.append(d, h('td', null, t(s))); tb.appendChild(r);
     }
-    body.append(tb, h('p', 'hint', t('kHint')));
+    body.append(tb, h('p', 'hint', t(S.show.on ? 'kShHint' : 'kHint')));
     dlgBtn(foot, t('close'), 'pri', () => { keysClose = null; close(); });
   }, true);
 }
@@ -825,10 +850,16 @@ const focusFind = () => { $('#search').focus(); $('#search').select(); };
 const press = id => () => $(id).click();
 const KEYMAP = {
   b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), e: press('#bErase'), f: press('#bFinger'),
-  l: press('#bList'), r: press('#bReview'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
+  l: press('#bList'), r: press('#bReview'), s: press('#bShow'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
   '/': focusFind, '?': openKeys, pagedown: () => pageStep(1), pageup: () => pageStep(-1),
   home: () => { desk.scrollTop = 0; }, end: () => { desk.scrollTop = desk.scrollHeight; }
 };
+/* show mode has keys of its own, and of the others only those that change nothing in the show */
+const SHOWKEYS = {
+  ' ': () => showToggle(), enter: () => showBack(), arrowdown: () => showStep(1), arrowup: () => showStep(-1),
+  '[': () => $('#shSlow').click(), ']': () => $('#shFast').click(), s: () => showLeave()
+};
+for (const k of ['c', 'i', 'n', 'l', '+', '=', '-', '0', '?', 'pagedown', 'pageup', 'home', 'end']) SHOWKEYS[k] = KEYMAP[k];
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
@@ -847,6 +878,11 @@ document.addEventListener('keydown', e => {
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
   if (!S.loaded || !$('#dlg').hidden) return;
   if (POP && POP.key && POP.key(e)) { e.preventDefault(); return; }
+  if (S.show.on) {
+    const fn = !mod && !e.altKey && !e.isComposing && SHOWKEYS[k];
+    if (fn) { e.preventDefault(); if (a && a.blur && a !== document.body) a.blur(); fn(); }   // Space must not press the button that has the focus
+    return;
+  }
   if (mod && !e.altKey) {
     if (k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
     else if (k === 'y') { e.preventDefault(); redo(); }
@@ -858,7 +894,7 @@ document.addEventListener('keydown', e => {
   if (fn) { e.preventDefault(); $('#menu').hidden = true; fn(); }
 });
 document.addEventListener('paste', e => {
-  if (!S.loaded || S.editing || S.mode === 'templates' || !$('#dlg').hidden) return;
+  if (!S.loaded || S.editing || S.show.on || S.mode === 'templates' || !$('#dlg').hidden) return;
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
   const it = Array.from((e.clipboardData && e.clipboardData.items) || []).find(i => i.kind === 'file' && i.type.startsWith('image/'));
@@ -928,5 +964,6 @@ async function init() {
   showStart();
 }
 window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+  showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo,
   openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();

@@ -60,7 +60,7 @@ From the review, when there is room: undo of a board rename (X5); only `data:` i
 
 ## 5. R2 — later
 
-Follow-along view for the stage manager (D11); it can use cue ends to show what is running. Standbys and warnings (D5). More than one device at a time is not planned (D15). Single screen, so D12 is not reopened.
+Built in r1.11 as show mode (`docs/specs/11-show.md`): the follow-along view for the stage manager (D11), standbys and warnings (D5). **To do before a show:** try it on the laptop with pen and touch in a run-through with "Time it" on. Three layouts were built and one kept on 2026-10-11 (SHW-26). Left out, to decide after that run: coming back to the line on its own, times shown beside each block, an interval, averaging several runs, showing what is running from cue ends, marking a cue as called. More than one device at a time is not planned (D15). Single screen, so D12 is not reopened.
 
 ## 6. Cast and crew — ideas, not scheduled
 

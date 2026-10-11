@@ -69,6 +69,10 @@ Three properties of the method to keep in mind when reading a green result:
 | `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
 | `unit/cast` | 15 | CST-1, CST-2, CST-5, CST-6 |
 | `cast` | 56 | CST-1, CST-3 to CST-5, CST-7 to CST-16, CST-18 to CST-20 |
+| `unit/show` | 59 | SHW-2, SHW-5, SHW-6, SHW-9 to SHW-14, SHW-19 to SHW-24 |
+| `show` | 79 | SHW-1 to SHW-3, SHW-5, SHW-7 to SHW-15, SHW-20, SHW-22, SHW-24 to SHW-26, SHW-29, SHW-30 |
+
+**r1.11, 2026-10-11, show mode, second build, one layout kept.** `sh scripts/check.sh full --force`: 650 checks in 18 files pass (`unit/show` 59, `show` 79). Time is not waited for in the checks: the clock of the line is moved by hand. Three layouts were built and looked at in screenshots, day and night, at 1366 × 768; the client kept one, and the kept one was looked at again (`show-book.png`, `show-night.png`). Never verified: the real laptop with pen and touch, a finger scroll letting go of the line (the check uses the wheel and Page Down), a finger press on a call (SHW-29, checked with the mouse), the wake lock (SHW-4), the pace of 130 and the weights of SHW-6 against a real run, timing a real rehearsal (SHW-20, SHW-21), a show of 100 pages in show mode, whether a jump of the page is easy to follow from the prompt desk.
 
 **r1.10, 2026-10-11, show folders removed.** `sh scripts/check.sh full --force`: 558 checks in 17 files pass. The folder half of `scale-folder` now runs on a show file (same 22 checks); the two folder checks of `history` are gone. Not done: a real show folder zipped by Explorer or Finder and opened.
 

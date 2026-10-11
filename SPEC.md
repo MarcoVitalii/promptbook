@@ -1,7 +1,7 @@
 # Promptbook — Specification
 
 **Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
-**Tool described:** r1.10 (`VERSION` in `src/core.js`).
+**Tool described:** r1.11 (`VERSION` in `src/core.js`).
 **State:** r1.6 to r1.9 are built and committed on branch `master`; r1.8 and r1.9 are tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). r1.6 to r1.8 were checked in a simulated browser only; the r1.9 features were tried by the client on a real show and reported as working (2026-10-10). Nothing has been printed on paper (`docs/verification.md`).
 
 ---
@@ -66,7 +66,7 @@ The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses)
 
 ### 1.4 What it is not
 
-Not a show-control system: no console or playback export (D9), no timing data (D4). Not a co-editing tool (D15). Not a calling tool yet: a follow-along view is postponed (D11), and standbys and warnings are out of scope (D5). Not planned at all: score or bar-number cueing, handwriting recognition, any server.
+Not a show-control system: no console or playback export (D9), no timing data (D4). Not a co-editing tool (D15). Since r1.11 a calling aid for the stage manager alone (D11, D5 as amended; `docs/specs/11-show.md`): the line that marks the place is a clock that goes through each block in the time learned for it in rehearsal, and does not know what happens on stage. Not planned at all: score or bar-number cueing, handwriting recognition, any server.
 
 ## 2. Requirements
 
@@ -96,11 +96,12 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 41 | r0 |
 | Ink over the script | `docs/specs/03-ink.md` | INK | 11 | r0 |
 | Boards and templates | `docs/specs/04-boards.md` | BRD | 27 | r0 |
-| Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 11 | r0 |
+| Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 12 | r0 |
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
 | Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 14 | r0 |
 | History, variants and changes | `docs/specs/08-history.md` | HIS | 12 | r1.7 |
 | Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 11 | r0 |
+| Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 30 (5 withdrawn) | r1.11 |
 
 ## 3. Consequences
 
@@ -168,6 +169,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
 | r1.9 | 2026-10-10 | Blocks moved by dragging a grip, name asked before a board is made, "Delete" as the one word with the Delete key, cursor in the margin text of a new cue, Esc leaves Find | 01, 02, 04, 05, 09 | Tag `r1.9`, branch `master` |
 | r1.10 | 2026-10-10 | Notes for the cast, "Send to cast…", the script for the actors as a second file | 10; 02, 07, 09 | Not committed yet |
+| r1.11 | not released | Show mode: read only, focus, a line running through blocks timed in rehearsal, the page in steps, warnings and standbys, the length of the show | 11; 05, 09 | Not committed yet |
 
 What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
 

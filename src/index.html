@@ -21,12 +21,12 @@
 <header id="bar">
   <button id="bMenu" data-tt="menu">&#9776;</button>
   <span id="who"><b id="showName"></b><span id="status"></span></span>
-  <span class="grp">
+  <span class="grp ed">
     <span id="pens"></span>
     <button id="bErase" data-t="eraser" data-k="E"></button>
     <button id="bFinger" data-t="finger" data-tt="fingerTip" data-k="F"></button>
   </span>
-  <span class="grp">
+  <span class="grp ed">
     <button id="bUndo" data-tt="undo" data-k="Ctrl+Z">&#8630;</button>
     <button id="bRedo" data-tt="redo" data-k="Ctrl+Y">&#8631;</button>
   </span>
@@ -42,6 +42,7 @@
     <button id="bReview" data-k="R" hidden></button>
     <button id="bList" data-t="cueList" data-k="L"></button>
     <button id="bPrint" data-t="print" data-k="Ctrl+P"></button>
+    <button id="bShow" data-t="showMode" data-tt="showTip" data-k="S"></button>
   </span>
   <div id="menu" hidden></div>
 </header>
@@ -59,6 +60,27 @@
       <button id="bKeys" data-tt="keys" data-k="?">?</button>
     </div>
   </div>
+  <aside id="showside" hidden>
+    <div id="shClock"></div>
+    <div id="shCalls"></div>
+    <div id="shLearnBox" hidden>
+      <div><span id="shBlk"></span><button id="shDn" data-tt="shBlockTip">&minus;5 s</button><button id="shUp" data-tt="shBlockTip">+5 s</button></div>
+      <div><span id="shLast"></span><button id="shUndo" data-t="undo" hidden></button></div>
+      <div><span id="shShare"></span><button id="shRest" data-tt="shRestTip" hidden></button></div>
+    </div>
+    <div id="shCtl">
+      <button id="shPlay" data-tt="shPlay" data-k="Space"></button>
+      <span class="pace"><button id="shSlow" data-tt="shSlower" data-k="[">&minus;</button><span id="shWpm"></span><button id="shFast" data-tt="shFaster" data-k="]">+</button></span>
+      <button id="shUse" data-tt="shUseTip" hidden></button>
+      <button id="shBack" data-t="shBack" data-k="Enter" hidden></button>
+    </div>
+    <div id="shMore">
+      <button id="shLearn" data-t="shLearn" data-tt="shLearnTip"></button>
+      <button id="shNight" data-tt="night" data-k="N">&#9790;</button>
+      <button id="shLeave" data-tt="kShLeave" data-k="S"></button>
+    </div>
+  </aside>
+  <div id="shProg" data-tt="shMapTip" hidden></div>
   <aside id="drawer" hidden></aside>
 </div>
 <div id="pop" hidden></div>

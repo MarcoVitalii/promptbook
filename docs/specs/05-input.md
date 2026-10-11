@@ -40,6 +40,7 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 | INP-9 | The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. | as built | r1.6 | cue-move |
 | INP-10 | Escape cancels a drag and closes the open popover or menu. A system `pointercancel` ends a drag with no change. | as built | r1.6 | cue-move |
 | INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. The single-key shortcuts added in r1.8 are UI-9 (`09-workbench.md`); they are off while the cue pin is open, so the department letters keep their meaning. | as built | r0 | interact |
+| INP-12 | In show mode (`11-show.md`) none of the editing gestures above does anything: pen and finger scroll, a double tap on a word puts the running line there (SHW-2, SHW-9), and the keyboard has its own keys (Space, Enter, arrows, `[` `]`, S to enter and to leave; SHW-30). | request r1.11 `[LOCKED]` | r1.11 | show |
 
 ## 3. Consequences
 
