@@ -275,7 +275,7 @@ flowchart LR
   src["<b>src/</b><br/>core.js, view.js, io.js,<br/>style.css, index.html"]
   fonts["<b>fonts/</b><br/>Inter subset, three faces"]
   build["<b>build.py</b><br/>joins them, refuses a script<br/>close tag inside the JS"]
-  html["<b>promptbook.html</b><br/>the release, committed"]
+  html["<b>promptbook.html</b><br/>the release, built,<br/>not in the repository"]
   unit["<b>test/unit</b><br/>Node, no browser:<br/>core.js in a vm, DOM stubbed"]
   e2e["<b>test/*.test.js</b><br/>Playwright, Chromium:<br/>real clicks, simulated pen and touch"]
   check["<b>scripts/check.sh</b><br/>fast or full, skips when unchanged"]
@@ -300,7 +300,7 @@ What the architecture buys, and what it costs.
 
 | Consequence | Detail |
 |---|---|
-| One file to hand over | Copy `promptbook.html` and a show file to any machine with Chrome or Edge. Every git tag carries a usable tool. |
+| One file to hand over | Copy `promptbook.html` and a show file to any machine with Chrome or Edge. Every release on GitHub carries the file; tags up to r1.9 carry it in the repository. |
 | No back end to fail in rehearsal | Nothing to start, nothing to log into, nothing that needs the theatre's network. |
 | Hand-written infrastructure | About 90 lines of zip, 150 of git objects, 15 of IndexedDB, 10 of CSV. Each covers only what the tool needs: no zip64, no encrypted entries, no packed git objects, no git index. |
 | One scope, no modules | Any function can call any other. The four parts planned in the first design (parse, layout, interact, store) are conventions, not boundaries. Measured on r1.7: `core.js` calls up into `view.js` and `io.js` (`relayout`, `facingSig`, `closePop`, `markDirty`, `updUndo`) and `view.js` calls up into `io.js` (`markDirty`, `writeBlob`, `readFile`, `onDisk`, `buildZip`, `saveError`). The unit checks have to stub four of these to load `core.js`. |

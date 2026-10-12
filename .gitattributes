@@ -1,0 +1,5 @@
+# One line ending everywhere: build.py copies src/ into the release byte for byte.
+* text=auto eol=lf
+*.woff binary
+*.png binary
+*.zip binary

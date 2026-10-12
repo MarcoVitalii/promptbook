@@ -114,9 +114,9 @@ Rule for every release:
 2. Change `src/`, set `VERSION` in `src/core.js`.
 3. `npm test`: builds `promptbook.html` and runs every check; all pass.
 4. Add the entry to `CHANGELOG.md`, with "Compatibility". Add the release to `SPEC.md` §6 and its check record to `docs/verification.md` §3, saying what was not verified.
-5. Commit `src/` and `promptbook.html` together, tag `rX.Y`.
+5. Merge to `main`, tag `rX.Y` and push the tag. The release workflow builds `promptbook.html` and `promptbook-cast.html`, attaches them to a GitHub release and publishes them on GitHub Pages (`CONTRIBUTING.md`).
 
-The built file is committed so that checking out a tag gives a usable tool. The version shows on the start screen.
+Up to r1.10 the built file was committed, so that checking out a tag gives a usable tool. Since the repository is on GitHub it is not: each release carries the two built files, and a checkout builds them with `python3 build.py`. The version shows on the start screen.
 
 Going back: check out the older tag and open its `promptbook.html`. An older show opens in a newer release; the reverse holds only where the compatibility table says so (`docs/specs/07-storage.md` §2.4).
 

@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # The actions in .github/workflows are pinned to a commit; this keeps the pins current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
+
+  # Development tools only (Playwright, marked). A new Playwright brings a new Chromium: read the CI run before merging.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly

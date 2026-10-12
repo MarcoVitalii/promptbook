@@ -1,0 +1,27 @@
+name: Request
+description: Something the tool should do, or do differently
+labels: [enhancement]
+body:
+  - type: textarea
+    id: intent
+    attributes:
+      label: What you need, in your own words
+      description: Describe the moment in rehearsal or in the show where you need it. This text is quoted in the specification as the intent.
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Who needs it
+      options:
+        - Stage manager
+        - Director
+        - Actor
+        - Lighting, sound or another department
+        - Developer
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: What you do today instead

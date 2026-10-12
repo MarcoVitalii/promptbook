@@ -1,0 +1,72 @@
+name: CI
+
+# Builds promptbook.html from src/ and runs every check, on each pull request and each push to main.
+# The release workflow calls it too, and takes the built files from its artifacts.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install the pinned Playwright
+        run: npm ci
+
+      - name: Install Chromium, its system libraries and pdfinfo
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends poppler-utils
+
+      - name: Build and run every check
+        run: npm test
+
+      - name: Build the site
+        run: npm run site
+
+      - name: Keep the built tool
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: promptbook
+          path: |
+            promptbook.html
+            promptbook-cast.html
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Keep the site
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: _site
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Keep screenshots and PDFs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-output
+          path: .cache/out
+          include-hidden-files: true
+          retention-days: 7

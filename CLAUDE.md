@@ -5,6 +5,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 ## Rules that are easy to break
 
 - **Never edit `promptbook.html` or `promptbook-cast.html`.** They are the built releases (460 KB with base64 fonts; 100 KB). Edit `src/`, then run `python3 build.py`. Never Read or grep them either: search `src/`.
+- **Never commit them.** They are in `.gitignore`. CI builds them; a tag publishes them as a GitHub release and on GitHub Pages.
 - **Tests run against `promptbook.html`, not `src/`.** A test result is meaningless until the build has run after the last `src/` change.
 - **No libraries, no npm runtime packages, no network.** The zip reader/writer, IndexedDB wrapper and CSV export are hand-written on purpose.
 - `build.py` asserts that the JS contains no `</script`. Split such strings.
@@ -27,7 +28,8 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 | `build.py` | 24 | Joins `src/` and `fonts/` into `promptbook-cast.html`, then into `promptbook.html` |
 | `test/` | | Playwright checks, one plain Node script per area. `_util.js` holds `open()`, `ok()`, `serve()` and the pen helper. `run.js` is the runner |
 | `test/unit/` | | Checks that need no browser |
-| `scripts/` | | `check.sh` (build and test, skips when unchanged), `hooks/` (Claude Code), `githooks/pre-commit` |
+| `scripts/` | | `check.sh` (build and test, skips when unchanged), `hooks/` (Claude Code), `githooks/pre-commit`, `site.js` (the documents and the built files as a static site in `_site/`), `release-notes.sh` (the changelog entry of a tag, or why it cannot be released) |
+| `.github/` | | `workflows/ci.yml` (every pull request and push to `main`: build, every check, the site), `workflows/release.yml` (a tag `rX.Y`: GitHub release and GitHub Pages), issue and pull request templates, `dependabot.yml` |
 
 Sections inside the JS files are marked `/* ---------- name ---------- */`. Grep for a function name rather than reading a whole file.
 
@@ -45,6 +47,7 @@ Read only the part that is needed; do not load these whole. Each capability file
 - `docs/review-2026-10-09.md`: known defects (X), refactor opportunities (F), technical debt (T).
 - `CHANGELOG.md`: one entry per release, written for the user.
 - `PLAN.md`: next actions, backlog, risks.
+- `CONTRIBUTING.md`: how a collaborator sets up, sends a change and makes a release.
 - `docs/background/syntax-comparison.md`: background on the script syntax choice. Rarely needed.
 
 A change in behaviour starts in the capability file: quote the request under Intent, add or change the requirement rows (never renumber an ID), write the consequences. Then the code.
@@ -83,4 +86,5 @@ node test/x.test.js                 # one file, every PASS and FAIL line (after 
 1. Change `src/`, set `VERSION` in `src/core.js`.
 2. `npm test`: builds and runs every check; all pass.
 3. Add the entry to `CHANGELOG.md`. Update the capability file in `docs/specs/`, the release table in `SPEC.md` §6 and the record in `docs/verification.md` §3.
-4. Commit `src/`, `promptbook.html` and `promptbook-cast.html` together, tag `rX.Y`.
+4. Give the `CHANGELOG.md` entry its date in place of "not yet released". Merge to `main` through a pull request.
+5. Tag that commit `rX.Y` and push the tag. `.github/workflows/release.yml` checks the tag against `VERSION` and the changelog, runs every check, attaches the two built files to a GitHub release and publishes them with the documents on GitHub Pages. `sh scripts/release-notes.sh rX.Y` says beforehand whether the tag would be accepted.

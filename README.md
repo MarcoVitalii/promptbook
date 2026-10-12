@@ -1,9 +1,15 @@
 # Promptbook
 
+[![CI](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml/badge.svg)](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/MarcoVitalii/promptbook)](https://github.com/MarcoVitalii/promptbook/releases/latest)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
-- **Use it:** open `promptbook.html` in Chrome or Edge. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. A show folder from an early release no longer opens: zip the folder and open the zip.
-- **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`.
+- **Use it:** open <https://marcovitalii.github.io/promptbook/> in Chrome or Edge, or download `promptbook.html` from the [latest release](https://github.com/MarcoVitalii/promptbook/releases/latest) and open it from disk; it needs no network. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. A show folder from an early release no longer opens: zip the folder and open the zip.
+- **For the actors:** `promptbook-cast.html`, from the same places. "Send to cast…" in the tool writes a copy with a show inside.
+- **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`. The same documents are [on the site](https://marcovitalii.github.io/promptbook/).
+- **Pitch in:** `CONTRIBUTING.md`.
 
 ## Documents
 
@@ -12,25 +18,26 @@ The documentation is specification-driven. Every level answers three questions i
 | Path | What |
 |---|---|
 | `SPEC.md` | Entry point: goals, constraints, assumptions, open questions, releases |
-| `docs/specs/01` … `09` | Script text, cues, ink, boards, input, pages and print, storage, history, workbench |
+| `docs/specs/01` … `11` | Script text, cues, ink, boards, input, pages and print, storage, history, workbench, cast, show mode |
 | `docs/decisions.md` | Every decision and conflict, with its source and its consequences |
 | `docs/architecture.md` | C4 diagrams: system context, containers, components; how a change travels |
 | `docs/verification.md` | What was checked and how, release by release; what never was |
 | `docs/review-2026-10-09.md` | Criticalities, refactor opportunities, technical debt |
 | `PLAN.md` | Next actions, backlog, risks |
 | `CHANGELOG.md` | One entry per release, written for the user |
+| `CONTRIBUTING.md` | Setting up, sending a change, making a release |
 
 ## Layout of this repository
 
 | Path | What |
 |---|---|
-| `promptbook.html` | The release. Built file, committed so every tag carries a usable tool. |
-| `promptbook-cast.html` | The script for the actors, built from the same sources. "Send to cast…" in the tool writes a copy with a show inside; this one is empty and opens `.cast.json` files. |
 | `src/` | Source: `core.js` (parse, layout), `view.js` (rendering, input), `io.js` (storage, dialogs), `style.css`, `index.html`; for the actors `cast.js`, `cast.css`, `cast.html` |
-| `fonts/` | Inter, Latin subset, SIL Open Font License 1.1 |
+| `fonts/` | Inter, Latin subset, SIL Open Font License 1.1 (`fonts/OFL.txt`) |
 | `build.py` | Joins `src/` and `fonts/` into `promptbook.html` and `promptbook-cast.html`. Needs Python 3 only. |
+| `promptbook.html`, `promptbook-cast.html` | The release. Built, not in the repository: every [release](https://github.com/MarcoVitalii/promptbook/releases) carries the two files. Tags up to r1.9 also carry them in the tree. |
 | `test/` | Browser checks (Playwright, Chromium). `test/unit/` holds the checks that need no browser. |
-| `scripts/` | `check.sh` builds and tests; `hooks/` are run by Claude Code, `githooks/` by git. |
+| `scripts/` | `check.sh` builds and tests; `site.js` builds the static site; `release-notes.sh` reads a release out of the changelog; `hooks/` are run by Claude Code, `githooks/` by git. |
+| `.github/` | CI and release workflows, issue and pull request templates, Dependabot. |
 | `package.json` | Development tools only, pinned. The tool itself has no dependencies. |
 
 ## Setting up a machine
@@ -38,8 +45,9 @@ The documentation is specification-driven. Every level answers three questions i
 Needs Python 3 and Node 24 (the version is in `.node-version`; `fnm use` reads it).
 
 ```sh
-npm run setup                               # pinned Playwright, its Chromium, the git pre-commit hook
+npm run setup                               # pinned tools, Chromium for the checks, the git pre-commit hook
 sudo npx playwright install-deps chromium   # once per machine: system libraries Chromium needs
+npm run build                               # writes promptbook.html and promptbook-cast.html
 ```
 
 ## Checking a change
@@ -48,14 +56,20 @@ sudo npx playwright install-deps chromium   # once per machine: system libraries
 npm run check:fast   # build + syntax + test/unit, under a second
 npm run check        # the above + the browser checks, about 25 s
 npm test             # the same, even when nothing changed
+npm run site         # the documents and the built files as a site, in _site/
 ```
 
-`check` does nothing when no source or test has changed since the last green run. Failures print in a few lines; `test/KNOWN_FAILING` lists test files that fail for a known reason.
+`check` does nothing when no source or test has changed since the last green run. Failures print in a few lines; `test/KNOWN_FAILING` lists test files that fail for a known reason. CI runs `npm test` on every pull request and every push to `main`.
 
 ## Making a release
 
 1. Change `src/`, set `VERSION` in `src/core.js`.
 2. `npm test` — builds `promptbook.html` and runs every check; all must pass.
-3. Add the entry to `CHANGELOG.md`; update the capability file in `docs/specs/`, `SPEC.md` §6 and `docs/verification.md` §3; commit; tag (`r1.1`, `r1.2`, …).
+3. Add the dated entry to `CHANGELOG.md`; update the capability file in `docs/specs/`, `SPEC.md` §6 and `docs/verification.md` §3; merge to `main`.
+4. Tag that commit (`r1.1`, `r1.2`, …) and push the tag. The release workflow checks once more, attaches the two built files to a GitHub release and publishes them, with the documents, on the site.
 
-The file a show uses is whatever `promptbook.html` it opens. To go back, check out an older tag and use that file. A show written by a newer release is readable by an older one only where the compatibility table in `docs/specs/07-storage.md` says so.
+The file a show uses is whatever `promptbook.html` it opens. To go back, download that file from an older release (for r1.9 and earlier: check out the tag, the file is in it). A show written by a newer release is readable by an older one only where the compatibility table in `docs/specs/07-storage.md` says so.
+
+## Licence
+
+MIT, see `LICENSE`. The embedded font is Inter, under the SIL Open Font License 1.1 (`fonts/OFL.txt`).

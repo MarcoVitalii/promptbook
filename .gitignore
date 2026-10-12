@@ -2,3 +2,8 @@ node_modules/
 .cache/
 .claude/settings.local.json
 SANDBOX.local.md
+
+# Built by build.py and by scripts/site.js. Releases carry them: see CONTRIBUTING.md.
+/promptbook.html
+/promptbook-cast.html
+/_site/

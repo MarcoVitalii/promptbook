@@ -13,7 +13,7 @@ inputs='src fonts build.py package-lock.json scripts/check.sh test/run.js test/u
 [ $mode = full ] && inputs="$inputs test"
 hash=$(git ls-files -co --exclude-standard -- $inputs | sort -u | while read -r f; do [ -f "$f" ] && { echo "$f"; cat "$f"; }; done | sha256sum | cut -d' ' -f1)
 if [ -z "$force" ]; then
-  [ "$(cat .cache/$mode.ok 2>/dev/null)" = "$hash" ] && { echo "$mode: unchanged since the last green run"; exit 0; }
+  [ -f promptbook.html ] && [ -f promptbook-cast.html ] && [ "$(cat .cache/$mode.ok 2>/dev/null)" = "$hash" ] && { echo "$mode: unchanged since the last green run"; exit 0; }
   [ -n "$once" ] && [ "$(cat .cache/$mode.tried 2>/dev/null)" = "$hash" ] && exit 0
 fi
 echo "$hash" > .cache/$mode.tried

@@ -1,0 +1,42 @@
+name: Something does not work
+description: The tool did something other than what you expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw instead. A screenshot helps.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown on the start screen, under the name.
+      placeholder: r1.11
+    validations:
+      required: true
+  - type: dropdown
+    id: file
+    attributes:
+      label: Which file
+      options:
+        - promptbook.html (the prompt book)
+        - promptbook-cast.html (the script for the actors)
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Browser and device
+      description: Say whether you used a pen, touch, mouse or keyboard.
+      placeholder: Edge 141 on a Surface Pro, pen
+    validations:
+      required: true
+  - type: textarea
+    id: show
+    attributes:
+      label: A show that reproduces it
+      description: A few lines of script text are enough. Do not attach a real show unless you may share its text.
+      render: text
