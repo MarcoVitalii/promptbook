@@ -117,7 +117,17 @@ en: {
   shForget: 'Forget {0} timed blocks', shHint: 'Show mode. Space starts the line. Double tap a word to put the line there.', shBusy: 'Close the editor first.',
   paceL: 'Pace of blocks not timed (words per minute)', standbyL: 'Standby (seconds before the cue)', warningL: 'Warning (seconds before, 0 for none)',
   kShow: 'Show mode', kShLeave: 'Leave show mode (press twice)', kShHint: 'These are the keys of show mode. The editing keys are back when you leave it.',
-  kShPlay: 'Start or stop the line', kShBack: 'Back to the line', kShStep: 'Line to the next or previous block', kShPace: 'Pace of the night: slower, faster'
+  kShPlay: 'Start or stop the line', kShBack: 'Back to the line', kShStep: 'Line to the next or previous block', kShPace: 'Pace of the night: slower, faster',
+  guide: 'Guide to the buttons', guideB: 'Guide', gHint: 'Every number sits on a button you can see now. Press a number or a row to light the pair. Esc, H or a press outside closes the guide.',
+  gMenuD: 'The whole script as text, settings, templates, history, the files for the cast, backups, opening and saving a show file.',
+  gPens: 'Pens', gPensD: 'Pick the colour the pen writes in on the page.', gEraseD: 'Rub out strokes of ink. Press again to go back to the pen.',
+  gUndoD: 'Take back the last change.', gRedoD: 'Do again what Undo took back.', gJump: 'Acts and scenes', gFind: 'Find',
+  gFindD: 'Search the whole script. Enter goes to the next place, Shift+Enter to the one before.',
+  gBoardsD: 'Show or hide the facing page, where the boards are: drawings and plans beside the script.',
+  gReviewD: 'What the tool could not read or is not sure of. Each entry jumps to its place.', gListD: 'Every cue in order, to check, print or export.',
+  gPrintD: 'Print the whole book, or the script alone.', gNightD: 'A dark screen for a dark theatre.', gKeysD: 'The list of every key.',
+  gShPlayD: 'The line runs down the script as a clock, and the cues are called as it comes near them.', gShBackD: 'Return to where the line is, after looking elsewhere.',
+  gShUndoD: 'Take back the last time that was marked.', gShMap: 'Map of the show'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -226,7 +236,17 @@ it: {
   shForget: 'Dimentica {0} blocchi cronometrati', shHint: 'Modalità spettacolo. Spazio avvia la riga. Doppio tocco su una parola per portarci la riga.', shBusy: 'Chiudi prima l’editor.',
   paceL: 'Ritmo dei blocchi non cronometrati (parole al minuto)', standbyL: 'Pronti (secondi prima del cue)', warningL: 'Attenzione (secondi prima, 0 per nessuna)',
   kShow: 'Modalità spettacolo', kShLeave: 'Esci dalla modalità spettacolo (premi due volte)', kShHint: 'Questi sono i tasti della modalità spettacolo. I tasti di modifica tornano quando esci.',
-  kShPlay: 'Avvia o ferma la riga', kShBack: 'Torna alla riga', kShStep: 'Riga al blocco successivo o precedente', kShPace: 'Ritmo della serata: più lento, più veloce'
+  kShPlay: 'Avvia o ferma la riga', kShBack: 'Torna alla riga', kShStep: 'Riga al blocco successivo o precedente', kShPace: 'Ritmo della serata: più lento, più veloce',
+  guide: 'Guida ai pulsanti', guideB: 'Guida', gHint: 'Ogni numero è su un pulsante visibile adesso. Premi un numero o una riga per evidenziare la coppia. Esc, H o un tocco fuori chiudono la guida.',
+  gMenuD: 'Tutto il testo del copione, impostazioni, modelli, cronologia, i file per gli attori, backup, apertura e salvataggio di un file spettacolo.',
+  gPens: 'Penne', gPensD: 'Scegli il colore con cui la penna scrive sulla pagina.', gEraseD: 'Cancella i tratti di inchiostro. Premi ancora per tornare alla penna.',
+  gUndoD: 'Annulla l’ultima modifica.', gRedoD: 'Rifà ciò che Annulla ha tolto.', gJump: 'Atti e scene', gFind: 'Cerca',
+  gFindD: 'Cerca in tutto il copione. Invio va al punto successivo, Maiusc+Invio a quello precedente.',
+  gBoardsD: 'Mostra o nascondi la pagina a fronte, dove stanno le tavole: disegni e piante accanto al copione.',
+  gReviewD: 'Ciò che lo strumento non ha saputo leggere o di cui non è sicuro. Ogni voce porta al suo punto.', gListD: 'Tutti i cue in ordine, da controllare, stampare o esportare.',
+  gPrintD: 'Stampa tutto il libro, o il solo copione.', gNightD: 'Uno schermo scuro per un teatro al buio.', gKeysD: 'L’elenco di tutti i tasti.',
+  gShPlayD: 'La riga scorre sul copione come un orologio, e i cue vengono chiamati quando si avvicina.', gShBackD: 'Torna dove si trova la riga, dopo aver guardato altrove.',
+  gShUndoD: 'Annulla l’ultimo tempo segnato.', gShMap: 'Mappa dello spettacolo'
 }};
 let LANG = 'en';
 function t(k) {
@@ -261,7 +281,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.11';
+const VERSION = 'r1.12';
 const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
 /* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
 const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };

@@ -96,7 +96,7 @@ These bind every capability. Each restates a decision.
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 |
 | Storage: show file, autosave, data shapes, damaged files, compatibility | `docs/specs/07-storage.md` | STO | 25 |
 | History, variants and changes | `docs/specs/08-history.md` | HIS | 15 |
-| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 12 |
+| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 13 |
 | Cast: notes for the actors, the cast file, the script for the actors | `docs/specs/10-cast.md` | CST | 21 |
 | Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 25 |
 
@@ -154,6 +154,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | Release | Date | Content | Capability files |
 |---|---|---|---|
 | r1.11 | 2026-10-13 | The first release: everything the capability files describe | 01 to 11 |
+| r1.12 | not released | A guide to the buttons laid over the window (UI-13). The guide for whoever uses the tool, `docs/guide/`, in English and Italian | 09 |
 
 What a release holds for the user is in `CHANGELOG.md`. How it was checked is in `docs/verification.md`.
 

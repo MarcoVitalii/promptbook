@@ -136,5 +136,48 @@ const OUT = process.env.OUT;
   ok(ends.length === 1 && !ends[0].filled, 'the label of an end is not filled');
   ok(tags.every(x => x.h <= 22), 'a one-line tag is no taller than a line of script: ' + tags.map(x => x.h).join());
   if (OUT) await page.screenshot({ path: OUT + '/shortcuts-day.png' });
+
+  // the guide to the buttons (UI-13)
+  const guide = () => ev(() => {
+    const rows = [...document.querySelectorAll('#guide .gi')], rings = [...document.querySelectorAll('#guide .gring')];
+    return { open: !!document.querySelector('#guide'), rows: rows.map(r => r.dataset.g), rings: rings.map(r => r.dataset.g),
+      nums: rows.map(r => r.querySelector('.gnum').textContent).join() === rings.map(r => r.querySelector('.gnum').textContent).join(),
+      text: Object.fromEntries(rows.map(r => [r.dataset.g, r.textContent])), keys: Object.fromEntries(rows.map(r => [r.dataset.g, [...r.querySelectorAll('kbd')].map(k => k.textContent).join(' ')])) };
+  });
+  await ev(() => { document.activeElement.blur(); });
+  await key('h');
+  let G = await guide();
+  ok(G.open, 'H opens the guide to the buttons');
+  ok(G.rows.length >= 18 && G.rows.join() === G.rings.join() && G.nums, 'every row of the guide has a ring with the same number on its button: ' + G.rows.length);
+  ok(['#bMenu', '#pens', '#bErase', '#bUndo', '#search', '#bFacing', '#bCues', '#bInk', '#bList', '#bPrint', '#bShow', '#bNight', '#zFit', '#bGuide', '#bKeys'].every(s => G.rows.includes(s)), 'the guide covers the toolbar and the corner buttons');
+  ok(!G.rows.some(s => s.startsWith('#sh')), 'the guide leaves out the buttons that are not in sight');
+  ok(G.keys['#bFacing'] === 'B' && G.keys['#bUndo'] === 'Ctrl+Z' && G.keys['#pens'] === '1 2 3 4' && G.keys['#bMenu'] === '', 'a row names the key of its button, and none where there is none');
+  ok(G.text['#bErase'].includes('Eraser') && G.text['#bErase'].includes('Rub out'), 'a row has the name and what the button does: ' + G.text['#bErase']);
+  ok(await ev(() => { const g = document.querySelector('#guide .gring[data-g="#bCues"]').getBoundingClientRect(), b = document.querySelector('#bCues').getBoundingClientRect(); return Math.abs(g.left - b.left) < 4 && Math.abs(g.top - b.top) < 4; }), 'the ring is on its button');
+  if (OUT) await page.screenshot({ path: OUT + '/guide.png' });
+  const v0 = await view();
+  await key('c');
+  ok(await view() === v0 && (await guide()).open, 'under the guide a key does nothing');
+  await page.click('#guide .gi[data-g="#bInk"]');
+  ok(await ev(() => document.querySelector('#guide .gring[data-g="#bInk"]').classList.contains('on') && document.querySelectorAll('#guide .gring.on').length === 1), 'pressing a row lights its button');
+  await key('Escape');
+  ok(!(await guide()).open, 'Escape closes the guide');
+  await page.click('#bGuide');
+  ok((await guide()).open, 'the corner button opens the guide');
+  await page.mouse.click(4, await ev(() => innerHeight - 4));
+  ok(!(await guide()).open, 'a press outside the card closes it');
+  await page.click('#bMenu'); await page.click('#menu button:has-text("Guide to the buttons")');
+  ok((await guide()).open, 'the menu opens the guide');
+  await key('h');
+  ok(!(await guide()).open, 'H closes it again');
+  await key('?');
+  ok(await ev(() => [...document.querySelectorAll('#dlg .keys tr')].some(r => r.textContent.startsWith('H'))), 'the list of shortcuts names H');
+  await key('Escape');
+  await key('s'); await page.waitForTimeout(150); await key('h');
+  G = await guide();
+  ok(G.open && G.rows.includes('#shPlay') && G.rows.includes('#shLeave') && !G.rows.includes('#bMenu') && G.keys['#shPlay'] === 'Space', 'in show mode H shows the guide of the show buttons: ' + G.rows.join(' '));
+  ok(await ev(() => [...document.querySelectorAll('#guide .gring .gnum')].every(n => { const r = n.getBoundingClientRect(); return r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth; })), 'every number of the guide is inside the window');
+  if (OUT) await page.screenshot({ path: OUT + '/guide-show.png' });
+  await key('h');
   await done();
 })();
