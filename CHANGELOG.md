@@ -1,6 +1,6 @@
 # Changelog
 
-## r1.11 — not yet released
+## r1.11 — 2026-10-13
 
 The first release. What follows is the tool as it stands; the requirements behind each line are in `docs/specs/`.
 
