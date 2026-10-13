@@ -1,8 +1,8 @@
 # History, variants and changes — HIS
 
 **Covers:** revisions of a show, variants for venues, restoring, the list of changes between two revisions and what reaches each character.
-**Code:** `src/io.js` (HISTORY: `gPut`, `gTree`, `gSave`, `gCheckout`, `histSave`, `histVariant`, `histSwitch`, `histRestore`, `openHistory`, `openDiff`), `src/core.js` (compare: `lcs`, `diffBlocks`, `diffWords`, `diffFor`, `diffNames`).
-**Checks:** `test/history`, `test/unit/compare`.
+**Code:** `src/io.js` (HISTORY: `gGet`, `gHead`, `gLog`, `gPut`, `gTree`, `gSave`, `gCheckout`, `histSave`, `histVariant`, `histSwitch`, `histRestore`, `openHistory`, `openDiff`), `src/core.js` (compare: `lcs`, `diffBlocks`, `diffWords`, `diffFor`, `diffNames`).
+**Checks:** `test/history`, `test/damaged`, `test/unit/compare`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification". Locked page numbers are in `06-pages-print.md`.
 
 ---
@@ -18,6 +18,8 @@ Three needs are in it:
 3. **Each actor is told what changed for them**, and only that.
 
 The request names git, tags and branches. The intent is read as: use git's own format, so that what the tool writes is a repository git can read, and nothing has to be invented or installed (C1).
+
+A review of the code (`docs/review-2026-10-09.md`, T6) found that "the git reader assumes well-formed objects". The rule asked for: a damaged history never stops the show from opening or the script from being saved, never loops or throws uncaught, and is reported in words (HIS-13 to HIS-15).
 
 ## 2. Requirements
 
@@ -35,6 +37,9 @@ The request names git, tags and branches. The intent is read as: use git's own f
 | HIS-10 | "Changes" beside a revision compares it with the show now; any two revisions can be chosen. Lines are shown as on GitHub: cut words struck through in red, new words underlined in green, grouped by act and scene, with the page where known. "Show" narrows the list: "Text" leaves out cue changes; "Everything, cues too" includes them; a character's name shows what reaches that actor, with the count beside the name. The characters offered are those of the character list or, without one, every single speaker. "Print" prints the list as shown, for example one sheet per actor. | request `[LOCKED]`; presentation `[ASSUMED]` | r1.7 | history, unit/compare |
 | HIS-11 | For those who use git: unzip the show, run `git reset` once (the tool writes no index), then `git log`, `git diff main Teatro-Verdi`, `git merge` or `git push` work as usual. Zip the folder again, `.git` included, to open the result in the tool. | as built | r1.7 | history |
 | HIS-12 | The tool reads loose objects only. History that git has packed (`git gc`, a clone) cannot be read until it is unpacked (`git unpack-objects`); the tool says so. | subset of git `[ASSUMED]` | r1.7 | — |
+| HIS-13 | A damaged history never stops the show: the show file opens whole and with no question, and changes to the script are saved, whatever `HEAD`, a branch or an object of the history holds. | review T6 | r1.11 | damaged |
+| HIS-14 | An object of the history is used only when it is whole: it unpacks, states its kind and its length, is of the kind its place asks for (a commit names a tree, a tree lists files and trees), and its SHA-1 is the name it is kept under, which is the check git makes. Anything else is said in words, with the first letters of the object's name: "Part of this history is damaged and cannot be read (1a2b3c4). The show itself is not touched." The History box lists the revisions it can reach from the last one back and, where it has to stop, says "Earlier revisions cannot be shown" and why; it does not say "No revision yet". | review T6 | r1.11 | damaged |
+| HIS-15 | "Restore", "Changes" and a change of variant that meet a damaged part end at once with that message and change nothing: the show, its files and `HEAD` are as they were, and no "Before going to …" revision is made (HIS-5 applies only when the move takes place). A new revision can always be saved on top of a damaged history; saving writes again any object that is missing or damaged and that the show as it is still holds. A file of the history whose bytes fail the check of the archive is set aside with the other damaged parts (STO-24). | review T6 | r1.11 | damaged |
 
 ## 3. Consequences
 
@@ -56,6 +61,16 @@ The request names git, tags and branches. The intent is read as: use git's own f
 
 **Compatibility.** A show written by r1.6 opens unchanged and has no history until the first revision is saved. r1.6 opens a show written by r1.7 and keeps its history when it saves a show file, but shows plain page numbers, has no History menu, and drops the history when a show folder is saved as a show file.
 
-**Not built:** merging a correction into several variants inside the tool; reading packed git objects; a read-only view of an old revision; history for a show kept only in the browser; deleting or renaming a revision or a variant.
+**A damaged history is reported, not repaired (HIS-14).** The tool reads what is whole and says what is not; it does not guess. Nothing in the history is deleted or rewritten, except that an object is written again when the show as it is now gives exactly that object (HIS-15): a revision that lost the copy of a file that has not changed since becomes whole again at the next revision saved. A lost object that nothing gives again stays lost: the revisions that need it are listed when their own record can be read, and "Restore" and "Changes" on them say what is missing. Because every name is checked against the content, a tree or a commit cannot lead back to itself, so reading always ends.
+
+**When `HEAD` or the branch it names cannot be read, the next revision starts again from there.** If the branch names a commit that is missing or damaged, the new revision keeps it as its parent, so the chain is whole again once the object is put back. If `HEAD` itself is lost or is not a name the tool can follow (anything outside `refs/`), the new revision has no parent and `HEAD` names it directly; the branches and their revisions are still in the show file, are listed as variants, and can be reached with git. The tool does not choose a branch on the user's behalf.
+
+**The order of a restore changed with this (HIS-15).** Until r1.10 the "Before going to …" revision was made, and for a change of variant `HEAD` was moved, before the revision to go to was read; when that failed, the show was left on the new variant with the files of the old one. The revision is now read whole first.
+
+**What the checks cost.** Every object read is unpacked and its SHA-1 computed. Measured on 2026-10-13 in headless Chromium on the development machine, on a show of 100 MB (ten images of 10 MB): the first revision saved after the show is opened takes 5.6 s, of which 1.4 s is the check of the objects already there (4.2 s without it); a further revision in the same sitting takes 1.6 s, as before, because unchanged files are not looked at again; a restore takes about 4 s, with no difference that could be measured. Opening the History box reads commits only and is not slowed. Not measured on the laptop.
+
+**Not built:** merging a correction into several variants inside the tool; reading packed git objects; repairing a damaged history (git itself can: `git fsck` names what is lost); a read-only view of an old revision; history for a show kept only in the browser; deleting or renaming a revision or a variant.
+
+**Not verified (HIS-13 to HIS-15):** a history damaged by a real disk; the checks damage, one at a time, the objects, branches and `HEAD` of a history the tool wrote. A history written by git itself with damaged parts was not tried.
 
 **Not verified:** the history was read back with git itself in the checks. Not tried on the laptop: the real file dialogs, a show file with a long history, the printed change lists. The rows marked `[ASSUMED]` above have not been confirmed by the client.

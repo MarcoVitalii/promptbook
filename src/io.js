@@ -105,28 +105,43 @@ async function buildZip(files) {
   eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, n, true); eo.setUint16(10, n, true); eo.setUint32(12, csize, true); eo.setUint32(16, off, true);
   return new Blob([...parts, ...central, eo.buffer], { type: 'application/zip' });
 }
+/* An archive that cannot be followed (cut short, a size or an offset outside the file, a local header that is not the entry the directory
+   names) is refused. An entry that can be found but whose bytes do not unpack, or do not match the size and CRC recorded for them, is
+   read all the same and marked in zipBroken: zipAside moves it out of the show when the file is opened (STO-23, STO-24). */
+const zipBroken = new WeakMap();   // Blob of such an entry -> what to add to its name: '', or '.deflate' when the bytes kept are still packed
 async function readZip(file) {
-  const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer());
+  const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer()), bad = () => new Error(t('zipBad'));
   let e = tail.byteLength - 22;
   while (e >= 0 && tail.getUint32(e, true) !== 0x06054b50) e--;
-  if (e < 0) throw new Error(t('zipNot'));
+  if (e < 0) throw new Error(t(tail.byteLength > 3 && new DataView(await file.slice(0, 4).arrayBuffer()).getUint32(0, true) === 0x04034b50 ? 'zipBad' : 'zipNot'));   // a zip without its end: cut short
   const n = tail.getUint16(e + 10, true), cdSize = tail.getUint32(e + 12, true), cdOff = tail.getUint32(e + 16, true);
-  if (cdOff === 0xFFFFFFFF || n === 0xFFFF) throw new Error(t('zip64'));
+  if (cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF || n === 0xFFFF) throw new Error(t('zip64'));
+  if (cdOff + cdSize > file.size - tail.byteLength + e || n * 46 > cdSize) throw bad();
   const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
   let p = 0;
   for (let i = 0; i < n; i++) {
-    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error(t('zipBad'));
-    const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
+    if (p + 46 > cdSize || cd.getUint32(p, true) !== 0x02014b50) throw bad();
+    const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), crc = cd.getUint32(p + 16, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
     const nl = cd.getUint16(p + 28, true), xl = cd.getUint16(p + 30, true), cl = cd.getUint16(p + 32, true), lo = cd.getUint32(p + 42, true);
-    const name = dec.decode(new Uint8Array(cd.buffer, p + 46, nl)); p += 46 + nl + xl + cl;
-    if (name.endsWith('/') || (flags & 1)) continue;
-    const lh = new DataView(await file.slice(lo, lo + 30).arrayBuffer());
-    const start = lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), body = file.slice(start, start + csz);
+    if (p + 46 + nl + xl + cl > cdSize) throw bad();
+    const nb = new Uint8Array(cd.buffer, p + 46, nl), name = dec.decode(nb); p += 46 + nl + xl + cl;
+    if (flags & 1) throw new Error(t('zipCrypt'));
+    if (method !== 0 && method !== 8) throw new Error(t('zipMethod'));
+    if (csz === 0xFFFFFFFF || usz === 0xFFFFFFFF || lo === 0xFFFFFFFF) throw new Error(t('zip64'));
+    if (lo + 30 + nl > cdOff) throw bad();
+    const lh = new DataView(await file.slice(lo, lo + 30 + nl).arrayBuffer());
+    if (lh.getUint32(0, true) !== 0x04034b50 || lh.getUint16(8, true) !== method || lh.getUint16(26, true) !== nl || nb.some((x, k) => x !== lh.getUint8(30 + k))) throw bad();
+    const start = lo + 30 + nl + lh.getUint16(28, true);
+    if (start + csz > cdOff) throw bad();
+    if (name.endsWith('/')) continue;   // a folder; only after its header was found, so that a name damaged into one is not skipped
     // copied into memory: a slice of the file can no longer be read once the file is rewritten
-    if (method === 0) out.set(name, new Blob([await body.arrayBuffer()]));
-    else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error(t('zipBad')); out.set(name, new Blob([z])); }
-    else throw new Error(t('zipMethod'));
+    let data = new Uint8Array(await file.slice(start, start + csz).arrayBuffer()), broke = null;
+    if (method === 8) { try { data = await pipeBytes(data, new DecompressionStream('deflate-raw')); } catch (er) { broke = '.deflate'; } }
+    if (broke === null && (data.length !== usz || crc32(data) !== crc)) broke = '';
+    const blob = new Blob([data]); out.set(name, blob);
+    if (broke !== null) { console.warn('Damaged zip entry: ' + name); zipBroken.set(blob, broke); }
   }
+  if (p !== cdSize) throw bad();   // the directory holds more than the entries counted: a count that is wrong would drop the last ones without a word
   // a folder zipped by the operating system has everything inside one top-level folder; drop it, and drop its clutter
   for (const k of Array.from(out.keys())) if (/^__MACOSX\//.test(k) || /(^|\/)\.DS_Store$/.test(k)) out.delete(k);
   if (!out.has('script.md') && !out.has('config.json')) {
@@ -134,6 +149,18 @@ async function readZip(file) {
     if (tops.size === 1) { const pre = Array.from(tops)[0] + '/'; for (const [k, v] of Array.from(out)) { out.delete(k); out.set(k.slice(pre.length), v); } }
   }
   return out;
+}
+/* The entries readZip marked go to damaged/, as a part that cannot be read does (readJSON), so that none is taken for the script, the ink,
+   the settings, an image or the history. Returns their names for the banner; those of the history are named once, by their folder. */
+function zipAside(files) {
+  const bad = [];
+  for (const [k, f] of Array.from(files)) if (zipBroken.has(f)) {
+    const end = k + zipBroken.get(f), name = k.startsWith(GIT) ? GIT.slice(0, -1) : k;
+    let to = 'damaged/' + end; for (let n = 2; files.has(to); n++) to = 'damaged/' + n + '/' + end;
+    files.set(to, f); files.delete(k); zipBroken.delete(f);
+    if (!bad.includes(name)) bad.push(name);
+  }
+  return bad;
 }
 function pruneImages(files) {
   const refs = Array.from(files).filter(([k]) => /\.json$/.test(k)).map(([, b]) => b);
@@ -331,7 +358,7 @@ const showName = handle => handle.name.replace(/(\.promptbook)?\.zip$/i, '');
 async function loadStore(handle) {
   const s = S.store;
   try {
-    s.bad = [];
+    s.bad = zipAside(s.files);
     const cfg = await readJSON('config.json'), text = await readText('script.md'), ink = await readJSON('script.ink.json');
     S.boards = new Map(); S.templates = new Map(); S.urls = new Map();
     const bj = new Map(), bn = Array.from(boardNames(text || '')), from = new Map(), held = new Set();
@@ -365,7 +392,7 @@ async function loadStore(handle) {
     for (const key of imgs) { const blob = s.files.get(key); if (blob) setURL(key, blob); }
     loadShow(cfg, text || '', ink);
     idbSet('dir', handle);
-    if (text == null && !relNewer(S.cfg)) openTextDialog(true);   // the box would take the place of the warning
+    if (text == null && !relNewer(S.cfg) && !s.bad.includes('script.md')) openTextDialog(true);   // the box would take the place of the warning; a script set aside is not a show without a script
   } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); resetStore(); showStart(); return false; }
   return true;
 }
@@ -453,23 +480,32 @@ async function gRefs(prefix) {
   for (const n of names) { const b = await gRead(prefix + n); if (b) out.set(n, DEC.decode(b).trim()); }
   return out;
 }
-async function gRef(name) { const k = name.lastIndexOf('/') + 1; return (await gRefs(name.slice(0, k))).get(name.slice(k)) || null; }
+async function gRef(name) { const k = name.lastIndexOf('/') + 1, v = (await gRefs(name.slice(0, k))).get(name.slice(k)); return v === undefined ? null : v; }
+/* null: no history yet. sha is null on a branch with no commit yet. When HEAD or its branch holds anything but the name of a commit, sha is that
+   text, and reading it fails in gGet, in words; so does a history that has refs and has lost HEAD, or has objects and has lost its branch. */
 async function gHead() {
-  const b = await gRead('HEAD'); if (!b) return null;
-  const tx = DEC.decode(b).trim(), m = /^ref: (.+)$/.exec(tx);
-  return m ? { ref: m[1], sha: await gRef(m[1]) } : { ref: null, sha: tx };
+  const keys = Array.from(S.store.files.keys()), b = await gRead('HEAD'); if (!b && !keys.some(k => k.startsWith(GIT + 'refs/'))) return null;
+  const tx = b ? DEC.decode(b).trim() : '', m = /^ref: (refs\/\S+)$/.exec(tx.includes('..') ? '' : tx), sha = m ? await gRef(m[1]) : tx;
+  return { ref: m ? m[1] : null, sha: sha === null && keys.some(k => k.startsWith(GIT + 'objects/')) ? m[1] : sha };
 }
 async function gPut(type, body) {
   const raw = cat([ENC.encode(type + ' ' + body.length + '\0'), body]);
   const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))), path = 'objects/' + sha.slice(0, 2) + '/' + sha.slice(2);
-  if (!(await gRead(path))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));
+  if (!(await gGet(sha).catch(() => null))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));   // missing, or there and unreadable: written again
   return sha;
 }
-async function gGet(sha) {
+/* An object is taken only when it is whole: it unpacks, says its kind and its length, is of the kind asked for, and its SHA-1 is the name it is kept under.
+   Anything else is an error in words (hiBad), never a guess: so no tree or commit can lead back to itself, and what is read is what git would read. */
+const SHA = /^[0-9a-f]{40}$/;
+async function gGet(sha, kind) {
+  const bad = () => new Error(t('hiBad', String(sha).replace(/[^\x21-\x7e]+/g, ' ').trim().slice(0, SHA.test(sha) ? 7 : 40) || 'HEAD'));
+  if (!SHA.test(sha)) throw bad();
   const z = await gRead('objects/' + sha.slice(0, 2) + '/' + sha.slice(2));
-  if (!z) throw new Error(t('hiPacked'));
-  const raw = await pipeBytes(z, new DecompressionStream('deflate')), k = raw.indexOf(0);
-  return { type: DEC.decode(raw.subarray(0, k)).split(' ')[0], body: raw.subarray(k + 1) };
+  if (!z) throw Array.from(S.store.files.keys()).some(k => k.startsWith(GIT + 'objects/pack/')) ? new Error(t('hiPacked')) : bad();
+  const raw = await pipeBytes(z, new DecompressionStream('deflate')).catch(() => new Uint8Array(0)), k = raw.indexOf(0);
+  const m = k < 0 || k > 32 ? null : /^(blob|tree|commit|tag) (\d+)$/.exec(DEC.decode(raw.subarray(0, k)));
+  if (!m || +m[2] !== raw.length - k - 1 || (kind && m[1] !== kind) || hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))) !== sha) throw bad();
+  return { type: m[1], body: raw.subarray(k + 1) };
 }
 const blobSha = new WeakMap();   // Blob -> sha of the object already written for it
 async function gBlob(blob) {
@@ -491,9 +527,10 @@ async function gTree(files) {
 }
 /* every file under a tree: path -> sha of its blob */
 async function gFiles(tree, pre, out) {
-  const b = (await gGet(tree)).body; let i = 0;
+  const b = (await gGet(tree, 'tree')).body; let i = 0;
   while (i < b.length) {
     const sp = b.indexOf(32, i), z = b.indexOf(0, sp), mode = DEC.decode(b.subarray(i, sp)), name = pre + DEC.decode(b.subarray(sp + 1, z)), sha = hex(b.subarray(z + 1, z + 21));
+    if (sp < 0 || z < 0 || z + 21 > b.length) throw new Error(t('hiBad', tree.slice(0, 7)));   // an entry cut short
     i = z + 21;
     if (mode === '40000') await gFiles(sha, name + '/', out); else out.set(name, sha);
   }
@@ -501,18 +538,21 @@ async function gFiles(tree, pre, out) {
 }
 async function gCommitOf(sha) {
   const o = await gGet(sha), tx = DEC.decode(o.body), k = tx.indexOf('\n\n'), head = k < 0 ? tx : tx.slice(0, k);
+  const want = { tag: /^object [0-9a-f]{40}$/m, commit: /^tree [0-9a-f]{40}$/m }[o.type];
+  if (!want || !want.test(head)) throw new Error(t('hiBad', sha.slice(0, 7)));
   if (o.type === 'tag') return gCommitOf(/^object ([0-9a-f]{40})/m.exec(head)[1]);   // a tag made with "git tag -a"
   const m = /^committer .* (\d+) [+-]\d{4}$/m.exec(head);
   return { sha, tree: /^tree ([0-9a-f]{40})/m.exec(head)[1], parent: (/^parent ([0-9a-f]{40})/m.exec(head) || [])[1] || null, when: m ? new Date(+m[1] * 1000) : null, msg: k < 0 ? '' : tx.slice(k + 2).trim() };
 }
 async function gLog(sha, max) {
   const out = [];
-  while (sha && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; }
+  try { while (sha !== null && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; } }
+  catch (e) { console.warn(e); out.cut = e; }   // the history is read as far as it can be: what is before stays listed, "cut" says why it stops
   return out;
 }
 async function gText(commit, path) {
   const sha = (await gFiles(commit.tree, '', new Map())).get(path);
-  return sha ? DEC.decode((await gGet(sha)).body) : '';
+  return sha ? DEC.decode((await gGet(sha, 'blob')).body) : '';
 }
 async function settled() {
   const s = S.store;
@@ -535,21 +575,23 @@ async function gSave(msg, always) {
   await settled();
   const head = (await gHead()) || { ref: 'refs/heads/main', sha: null };
   const tree = await gTree(await workFiles());
-  if (!always && head.sha && (await gCommitOf(head.sha)).tree === tree) return head.sha;
+  if (!always && head.sha && (await gCommitOf(head.sha).catch(() => ({}))).tree === tree) return head.sha;   // a last commit that cannot be read is not equal to anything
   const d = new Date(), off = -d.getTimezoneOffset(), p2 = n => String(n).padStart(2, '0');
   const who = 'Promptbook <promptbook@localhost> ' + Math.floor(d / 1000) + ' ' + (off < 0 ? '-' : '+') + p2(Math.floor(Math.abs(off) / 60)) + p2(Math.abs(off) % 60);
-  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (head.sha ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
+  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (SHA.test(head.sha) ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
   if (!(await gRead('HEAD'))) { await gWrite('HEAD', 'ref: refs/heads/main\n'); await gWrite('config', '[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = false\n'); }
   await gWrite(head.ref || 'HEAD', sha + '\n');
   return sha;
 }
-/* Replace the show on disk with the files of a tree, then open it again. */
-async function gCheckout(tree) {
+/* Replace the show on disk with the files of a tree, then open it again. The whole tree is read first: when a part of it cannot be read
+   nothing has changed yet, and "before" (the commit of the show as it is, the move to another branch) has not run. */
+async function gCheckout(tree, before) {
   const s = S.store, blobs = new Map();
   for (const [path, sha] of await gFiles(tree, '', new Map())) {
     if (!SHOW_FILE.test(path)) continue;
-    const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
+    const b = new Blob([(await gGet(sha, 'blob')).body]); blobSha.set(b, sha); blobs.set(path, b);
   }
+  if (before) await before();
   s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT) || k.startsWith('damaged/')).concat(Array.from(blobs)));
   await flushZip();
   clearTimeout(saveT);
@@ -577,17 +619,14 @@ async function histVariant(name) {
 async function histSwitch(branch) {
   const ref = 'refs/heads/' + branch, sha = await gRef(ref);
   if (!sha) return false;
-  await gSave(t('hiBefore', refLabel(branch)), false);
-  await gWrite('HEAD', 'ref: ' + ref + '\n');
-  return gCheckout((await gCommitOf(sha)).tree);
+  return gCheckout((await gCommitOf(sha)).tree, async () => { await gSave(t('hiBefore', refLabel(branch)), false); await gWrite('HEAD', 'ref: ' + ref + '\n'); });
 }
 async function histRestore(sha) {
   const c = await gCommitOf(sha);
-  await gSave(t('hiBefore', c.msg), false);
-  return gCheckout(c.tree);
+  return gCheckout(c.tree, () => gSave(t('hiBefore', c.msg), false));
 }
 async function histState() {
-  const head = await gHead(), log = head && head.sha ? await gLog(head.sha) : [];
+  const head = await gHead(), log = head ? await gLog(head.sha) : [];
   return { branch: head && head.ref ? head.ref.replace('refs/heads/', '') : 'main', log, heads: await gRefs('refs/heads/'), tags: await gRefs('refs/tags/') };
 }
 const revName = c => c.msg.split('\n')[0] + (c.when ? '  ·  ' + c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -629,13 +668,14 @@ async function openHistory() {
       await histSave(nm, cb.checked); close(); toast(t('hiSaved', nm));
     }), 'pri'));
     rs.appendChild(sr);
-    if (!st.log.length) rs.appendChild(h('p', 'hint', t('hiNone')));
+    if (!st.log.length && !st.log.cut) rs.appendChild(h('p', 'hint', t('hiNone')));
     for (const c of st.log) {
       const r = h('div', 'rev'), nm = h('div', 'rn');
       nm.append(h('b', null, c.msg.split('\n')[0]), h('span', null, c.when ? c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''));
       r.append(nm, btn(t('hiChanges'), () => { close(); openDiff(c.sha); }), btn(t('hiRestore'), run(async () => { close(); await histRestore(c.sha); toast(t('hiRestored', c.msg.split('\n')[0])); })));
       rs.appendChild(r);
     }
+    if (st.log.cut) rs.appendChild(h('p', 'hint', t('hiCut', st.log.cut.message)));
     body.appendChild(rs);
     dlgBtn(foot, t('close'), '', close);
   });
@@ -661,7 +701,7 @@ async function openDiff(from, to) {
   const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
   let st;
   try { st = await histState(); } catch (e) { fail(e); return; }
-  if (!st.log.length) { toast(t('hiNone')); return; }
+  if (!st.log.length) { toast(st.log.cut ? t('hiErr', st.log.cut.message) : t('hiNone')); return; }
   openDlg(t('dfTitle'), (body, foot, close) => {
     const bar = h('div', 'hrow'), fs = h('select'), ts = h('select'), ws = h('select'), cnt = h('p', 'hint');
     const opt = (sel, v, label) => { const o = h('option', null, label); o.value = v; sel.appendChild(o); };
@@ -1038,7 +1078,7 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, zipAside, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
   showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo,
   openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();
