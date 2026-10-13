@@ -29,7 +29,7 @@ Which release ran in the rehearsal of 2026-10-08 is not recorded. The earlier qu
 In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-09.md`); the rest are carried from the plan as it stood.
 
 1. **Decide where the repository lives** (Q27) and put a copy there. Today it has no remote. `master` now holds everything up to r1.8. Still open: r1.7 has no tag, and the tag `r1.6` points at `a3d735b`, a commit after r1.7, not at the r1.6 release (`d0b53c0`); move it or leave it, but decide.
-2. **Fix the two ways of losing work found in the review:** two boards saved in one file (X1); a damaged settings or ink file opened as empty and then overwritten (X2).
+2. **Merge and release the fixes of the review.** The two ways of losing work it found are closed on the branch `fix/review-2026-10-09` (X1, X2), with X5, X7, X8, X10 to X13, T2, T6 to T8 and part of T5; each finding has its state in the review. The branch is not pushed. Before the release: the points waiting for the owner in `docs/review-2026-10-09-handoff.md`, and the date of the r1.11 entry in `CHANGELOG.md`.
 3. **Name the pointer thresholds in one place** (F7), so that they can be tuned during the trial below.
 4. **Try r1.6 on the laptop before a rehearsal relies on it.** Nothing of r1.6 has run there; the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only; nothing was printed on paper and the PDF was not opened. Device trial of the cue drag, with finger and pen, and of the grid:
    - Finger hold on a tag: does 0.3 s feel right, is the lift visible under the finger, does a real finger stay within 8 px during the hold (otherwise it scrolls).
@@ -56,7 +56,7 @@ In order. Items 1 to 3 come from the review of 2026-10-09 (`docs/review-2026-10-
 
 A call list built from the character list. Renumber command with an old-to-new log (must keep cue pairs together). Hint for out-of-order labels (CUE-5 already promises it). Clean-script export. Re-attach orphaned ink by hand. A `%%` span inside a speech. Highlighter, straight line and typed note tools. "Changed since last print" marks. Dragging board tags and reordering boards. Dropping a cue onto a line of its own. Anything further that rehearsals show.
 
-From the review, when there is room: undo of a board rename (X5); only `data:` images from a backup, and a content security policy (X8); a release marker in the show (X7); `core.js` free of the other two files, then the split of `io.js` and `view.js` (F1, F2).
+From the review, when there is room: `core.js` free of the other two files, then the split of `io.js` and `view.js` (F1, F2); the rest of T5 (checks that read internal state, files that mix areas, no check naming its requirement); F3 to F10 and T9 as the review lists them. Done in r1.11: X5, X7, X8.
 
 ## 5. R2 — later
 
@@ -79,7 +79,7 @@ Collected on 2026-10-08 and 09; the cast would mostly use a phone. Built in r1.1
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | The repository is lost | High until Q27 is answered | High | Action 1 |
-| Work is lost through a defect in saving | Low | High | Autosave; script and cues are plain text; backup export; revisions since r1.7. Two known ways remain open: review X1 and X2 (action 2) |
+| Work is lost through a defect in saving | Low | High | Autosave; script and cues are plain text; backup export; revisions since r1.7. The two ways the review found (X1, X2) are closed in r1.11, and a damaged show file is refused or opened with the damaged part set aside (STO-18, STO-23, STO-24); not released yet (action 2) |
 | Something works in the test browser but not on the real laptop | Medium | High | Device trials (actions 4 to 7); the "Finger" toggle lets the mouse or finger draw if the pen is not recognised |
 | The cue drag of r1.6 misbehaves under a real finger, pen or resting hand: it changed the pointer handling that also does palm rejection and finger scrolling | Medium | High | Simulated checks pass, including the older palm checks unchanged; device trial before a rehearsal relies on it; a wrong move is one undo; r1.5 stays available as a tag and opens r1.6 shows |
 | Pen is reported to the browser as touch or mouse, so pen and finger cannot be told apart | Low | High | Test on the real laptop; fallback is the "Finger" toggle |
@@ -89,7 +89,7 @@ Collected on 2026-10-08 and 09; the cast would mostly use a phone. Built in r1.1
 | Ink misaligned between devices or in print | Medium | Medium | Fixed measure, embedded font, line-count check per inked block; never compared on paper |
 | A change to a template spoils boards built on it earlier | Medium | Medium | That is what a live link means; make a new template based on the old one instead of editing it |
 | A release lands in the middle of rehearsals and unsettles a tool just learned | Medium | Medium | Releases add; older releases stay available as tags, as far as the compatibility table allows (`docs/specs/07-storage.md`) |
-| A show is opened with an older release after using a newer feature | Low | Medium | Version on the start screen; the compatibility table. No guard in the file itself (review X7) |
+| A show is opened with an older release after using a newer feature | Low | Medium | Version on the start screen; the compatibility table. From r1.11 the show names the oldest release that reads it, and a newer show opens with a warning (STO-15, STO-16, review X7); a release before r1.11 does not read that mark |
 | The show file grows with its history until saving is slow | Medium | Medium | Measure a real show (action 5); review X6 |
 | Laptop's only browser is not Chrome or Edge | Low | Medium | A7; the in-browser fallback and backup files |
 | "Block" in the template request was read wrongly (taken as a blocking board) | Low | Medium | Reading stated in `docs/specs/04-boards.md` |

@@ -45,7 +45,7 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | STO-6 | **Withdrawn in r1.10.** Until r1.9: older show folders still opened ("Open older show folder…") and "Save as show file…" converted one, images and history included. | D10 as amended | r1.2 to r1.9 | — |
 | STO-7 | The start screen offers to reopen the last show file with one click. A folder remembered by an older release is not offered. | as built | r0 | scale-folder |
 | STO-8 | A show that is not on disk is kept in the browser: a banner says so and offers "Save as show file…" and "Export backup". The start screen offers to continue that draft. "Export backup" and "Import backup…" move the whole show as one `.promptbook.json` file, images included. What the browser can keep has a limit: STO-26. | K6, as built | r0 | misc, templates |
-| STO-9 | Images no board or template uses are dropped from a show file on save. | r1.2 | r1.2 | — |
+| STO-9 | Images no board or template uses are dropped from a show file on save. An image that a board or a template of the open show names is never dropped, even when its drawing is not written yet (r1.11). | r1.2 | r1.2 | leaks |
 | STO-10 | Nothing generated is stored as a source. Cue lists are computed on screen and exported on demand (C7). | D9 | r0 | — |
 
 ### 2.2 Changes made outside the tool

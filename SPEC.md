@@ -93,13 +93,13 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | Capability | File | Prefix | Requirements | First release |
 |---|---|---|---|---|
 | Script text: format, editing, undo, frontmatter, comments | `docs/specs/01-script-text.md` | TXT | 27 | r0 |
-| Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 41 | r0 |
+| Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 43 | r0 |
 | Ink over the script | `docs/specs/03-ink.md` | INK | 11 | r0 |
-| Boards and templates | `docs/specs/04-boards.md` | BRD | 27 | r0 |
+| Boards and templates | `docs/specs/04-boards.md` | BRD | 30 | r0 |
 | Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 12 | r0 |
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
-| Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 14 | r0 |
-| History, variants and changes | `docs/specs/08-history.md` | HIS | 12 | r1.7 |
+| Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 27 (2 withdrawn) | r0 |
+| History, variants and changes | `docs/specs/08-history.md` | HIS | 15 | r1.7 |
 | Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 11 | r0 |
 | Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 30 (5 withdrawn) | r1.11 |
 
@@ -169,7 +169,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
 | r1.9 | 2026-10-10 | Blocks moved by dragging a grip, name asked before a board is made, "Delete" as the one word with the Delete key, cursor in the margin text of a new cue, Esc leaves Find | 01, 02, 04, 05, 09 | Tag `r1.9`, branch `master` |
 | r1.10 | 2026-10-10 | Notes for the cast, "Send to cast…", the script for the actors as a second file | 10; 02, 07, 09 | Not committed yet |
-| r1.11 | not released | Show mode: read only, focus, a line running through blocks timed in rehearsal, the page in steps, warnings and standbys, the length of the show | 11; 05, 09 | Not committed yet |
+| r1.11 | not released | Show mode: read only, focus, a line running through blocks timed in rehearsal, the page in steps, warnings and standbys, the length of the show. The fixes of the review of 2026-10-09: a file per board, a part that cannot be read is said and kept, a damaged show file or history is refused or reported, the release mark, no request to a host, quiet losses said, cue numbers out of order marked | 11; 02, 04, 05, 06, 07, 08, 09 | Show mode on `main`; the fixes on the branch `fix/review-2026-10-09`, not merged |
 
 What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
 
