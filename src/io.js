@@ -6,20 +6,41 @@
 const onDisk = () => S.store.mode === 'zip';
 function resetStore() {
   const s = S.store;
-  s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
+  s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false; s.bad = [];
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
+  s.bfiles = new Map();   // every drawing in boards/: file name -> the board name written in it, null when it has none
+  s.gone = [];            // templates the settings name that had no file when the show was opened (STO-27)
+  s.draft = 0;            // what the last draft in the browser lacks: 0 nothing, 1 the images of the boards, 2 it was not written (STO-26)
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
-async function readJSON(name, sub) {
-  const tx = await readText(name, sub); if (tx == null) return null;
-  try { return JSON.parse(tx); } catch (e) { console.warn('Unreadable JSON: ' + name); return null; }
+/* Missing is null. There but unreadable (not JSON, not an object, or without the list "need") is null too, but the part is
+   moved, bytes untouched, to damaged/ in the show file and named in s.bad: nothing is saved until the user has chosen (showDamaged). */
+async function readJSON(name, sub, need) {
+  const s = S.store, key = sub ? sub + '/' + name : name, f = s.files.get(key); if (!f) return null;
+  let j = null;
+  try { j = JSON.parse(await f.text()); } catch (e) { /* handled below */ }
+  if (j && typeof j === 'object' && !Array.isArray(j) && (!need || Array.isArray(j[need]))) return j;
+  console.warn('Unreadable JSON: ' + key);
+  let to = 'damaged/' + key; for (let k = 2; s.files.has(to); k++) to = 'damaged/' + k + '/' + key;
+  s.files.set(to, f); s.files.delete(key); s.bad.push(key);
+  return null;
 }
 function writeBlob(sub, name, blob) { S.store.files.set(sub ? sub + '/' + name : name, blob instanceof Blob ? blob : new Blob([blob])); }
 function cfgFile() {
   const c = JSON.parse(JSON.stringify(S.cfg));
   if (onDisk() && c.defaultBoard) delete c.defaultBoard.imageData;
+  c.templates = c.templates.concat(tplGone());
   return c;
+}
+/* Templates the settings name whose file is not in the show. The names stay in the saved list, after the others, so that a file put
+   back by hand is a template again; a name is let go when a template takes it or its file name, or the user drops it (STO-27). */
+function tplGone() { const s = S.store; return s.gone.filter(n => !tplTaken(n) && !s.files.has('templates/' + slug(n) + '.json')); }
+/* the configuration says which release saves it and which is needed to read it; true when that is news (STO-15) */
+function relStamp() { const o = relOf(S.cfg), m = S.cfg.release = relMark(S.cfg); return o.made !== m.made || o.needs !== m.needs; }
+function relWarn() {
+  const n = relNewer(S.cfg); if (!n) return;
+  openDlg(t('relTitle'), (body, foot, close) => { body.appendChild(h('p', null, t('relWarn', n, VERSION))); dlgBtn(foot, t('close'), 'pri', close); }, true);
 }
 function boardFile(B, withData) {
   const o = { name: B.name, image: B.image || null, w: BOARD_W, h: B.h, strokes: B.strokes };
@@ -31,6 +52,18 @@ function boardNames(text) {
   const out = new Set(), re = /\{BOARD[ \t]+([^{}|]+?)[ \t]*(?:\|[^{}]*)?\}/gi; let m;
   while ((m = re.exec(text))) out.add(m[1].trim());
   return out;
+}
+/* The file of a board's drawing. It is named after the board (slug), and the exact name is written inside. Several names can
+   give one slug ("Sala A" and "sala-a"; every name with no Latin letter or digit), so a board is found by the name in the file,
+   and a file that holds another name is never taken: the board gets the next numbered one (sala-a-2.json).
+   Without "make", null when the board has no file yet. */
+function boardFileOf(name, make) {
+  const m = S.store.bfiles, base = slug(name); let f = base + '.json', n = 2;
+  if (m.get(f) === name) return f;
+  for (const [k, v] of m) if (v === name) return k;
+  if (!make) return null;
+  while (m.has(f)) f = base + '-' + n++ + '.json';
+  m.set(f, name); return f;
 }
 /* ---------- zip: just enough of the format to read and write a show file ---------- */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -67,33 +100,48 @@ async function buildZip(files) {
     off += 30 + nb.length + e.data.length;
   }
   const csize = central.reduce((a, b) => a + b.byteLength, 0), n = files.size;
-  if (n > 65534 || off + csize > 0xFFFFFFF0) throw new Error('show too large for a zip file');
+  if (n > 65534 || off + csize > 0xFFFFFFF0) throw new Error(t('zipBig'));
   const eo = new DataView(new ArrayBuffer(22));
   eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, n, true); eo.setUint16(10, n, true); eo.setUint32(12, csize, true); eo.setUint32(16, off, true);
   return new Blob([...parts, ...central, eo.buffer], { type: 'application/zip' });
 }
+/* An archive that cannot be followed (cut short, a size or an offset outside the file, a local header that is not the entry the directory
+   names) is refused. An entry that can be found but whose bytes do not unpack, or do not match the size and CRC recorded for them, is
+   read all the same and marked in zipBroken: zipAside moves it out of the show when the file is opened (STO-23, STO-24). */
+const zipBroken = new WeakMap();   // Blob of such an entry -> what to add to its name: '', or '.deflate' when the bytes kept are still packed
 async function readZip(file) {
-  const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer());
+  const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer()), bad = () => new Error(t('zipBad'));
   let e = tail.byteLength - 22;
   while (e >= 0 && tail.getUint32(e, true) !== 0x06054b50) e--;
-  if (e < 0) throw new Error('not a zip file');
+  if (e < 0) throw new Error(t(tail.byteLength > 3 && new DataView(await file.slice(0, 4).arrayBuffer()).getUint32(0, true) === 0x04034b50 ? 'zipBad' : 'zipNot'));   // a zip without its end: cut short
   const n = tail.getUint16(e + 10, true), cdSize = tail.getUint32(e + 12, true), cdOff = tail.getUint32(e + 16, true);
-  if (cdOff === 0xFFFFFFFF || n === 0xFFFF) throw new Error('zip64 is not supported');
+  if (cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF || n === 0xFFFF) throw new Error(t('zip64'));
+  if (cdOff + cdSize > file.size - tail.byteLength + e || n * 46 > cdSize) throw bad();
   const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
   let p = 0;
   for (let i = 0; i < n; i++) {
-    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('damaged zip file');
-    const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
+    if (p + 46 > cdSize || cd.getUint32(p, true) !== 0x02014b50) throw bad();
+    const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), crc = cd.getUint32(p + 16, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
     const nl = cd.getUint16(p + 28, true), xl = cd.getUint16(p + 30, true), cl = cd.getUint16(p + 32, true), lo = cd.getUint32(p + 42, true);
-    const name = dec.decode(new Uint8Array(cd.buffer, p + 46, nl)); p += 46 + nl + xl + cl;
-    if (name.endsWith('/') || (flags & 1)) continue;
-    const lh = new DataView(await file.slice(lo, lo + 30).arrayBuffer());
-    const start = lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), body = file.slice(start, start + csz);
+    if (p + 46 + nl + xl + cl > cdSize) throw bad();
+    const nb = new Uint8Array(cd.buffer, p + 46, nl), name = dec.decode(nb); p += 46 + nl + xl + cl;
+    if (flags & 1) throw new Error(t('zipCrypt'));
+    if (method !== 0 && method !== 8) throw new Error(t('zipMethod'));
+    if (csz === 0xFFFFFFFF || usz === 0xFFFFFFFF || lo === 0xFFFFFFFF) throw new Error(t('zip64'));
+    if (lo + 30 + nl > cdOff) throw bad();
+    const lh = new DataView(await file.slice(lo, lo + 30 + nl).arrayBuffer());
+    if (lh.getUint32(0, true) !== 0x04034b50 || lh.getUint16(8, true) !== method || lh.getUint16(26, true) !== nl || nb.some((x, k) => x !== lh.getUint8(30 + k))) throw bad();
+    const start = lo + 30 + nl + lh.getUint16(28, true);
+    if (start + csz > cdOff) throw bad();
+    if (name.endsWith('/')) continue;   // a folder; only after its header was found, so that a name damaged into one is not skipped
     // copied into memory: a slice of the file can no longer be read once the file is rewritten
-    if (method === 0) out.set(name, new Blob([await body.arrayBuffer()]));
-    else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error('damaged zip file'); out.set(name, new Blob([z])); }
-    else throw new Error('unsupported zip compression');
+    let data = new Uint8Array(await file.slice(start, start + csz).arrayBuffer()), broke = null;
+    if (method === 8) { try { data = await pipeBytes(data, new DecompressionStream('deflate-raw')); } catch (er) { broke = '.deflate'; } }
+    if (broke === null && (data.length !== usz || crc32(data) !== crc)) broke = '';
+    const blob = new Blob([data]); out.set(name, blob);
+    if (broke !== null) { console.warn('Damaged zip entry: ' + name); zipBroken.set(blob, broke); }
   }
+  if (p !== cdSize) throw bad();   // the directory holds more than the entries counted: a count that is wrong would drop the last ones without a word
   // a folder zipped by the operating system has everything inside one top-level folder; drop it, and drop its clutter
   for (const k of Array.from(out.keys())) if (/^__MACOSX\//.test(k) || /(^|\/)\.DS_Store$/.test(k)) out.delete(k);
   if (!out.has('script.md') && !out.has('config.json')) {
@@ -102,11 +150,27 @@ async function readZip(file) {
   }
   return out;
 }
+/* The entries readZip marked go to damaged/, as a part that cannot be read does (readJSON), so that none is taken for the script, the ink,
+   the settings, an image or the history. Returns their names for the banner; those of the history are named once, by their folder. */
+function zipAside(files) {
+  const bad = [];
+  for (const [k, f] of Array.from(files)) if (zipBroken.has(f)) {
+    const end = k + zipBroken.get(f), name = k.startsWith(GIT) ? GIT.slice(0, -1) : k;
+    let to = 'damaged/' + end; for (let n = 2; files.has(to); n++) to = 'damaged/' + n + '/' + end;
+    files.set(to, f); files.delete(k); zipBroken.delete(f);
+    if (!bad.includes(name)) bad.push(name);
+  }
+  return bad;
+}
+/* An image leaves the show file when nothing names it. Reading the drawings takes a moment, and an image can be put on a board meanwhile, or
+   just before, with its drawing not yet written: so only the images that were there before the wait are judged, and one that a board or a
+   template of the open show names is kept whatever the files say. */
 function pruneImages(files) {
   const refs = Array.from(files).filter(([k]) => /\.json$/.test(k)).map(([, b]) => b);
+  const had = Array.from(files.keys()).filter(k => /^(boards|templates)\/[^/]+$/.test(k) && !/\.json$/.test(k));
   return Promise.all(refs.map(b => b.text())).then(texts => {
-    const all = texts.join('\n');
-    for (const k of Array.from(files.keys())) if (/^(boards|templates)\/[^/]+$/.test(k) && !/\.json$/.test(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
+    const all = texts.join('\n'), live = new Set(Array.from(S.boards.values()).concat(Array.from(S.templates.values())).map(B => imgKey(B)));
+    for (const k of had) if (!live.has(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
   });
 }
 async function flushZip() {
@@ -129,7 +193,9 @@ function markDirty(what, name) {
   setStatus();
   clearTimeout(saveT); saveT = setTimeout(saveNow, 700);
 }
-function saveError(e) { S.store.err = e; console.error(e); setStatus(); }
+/* a failed save says why once: the same reason is not shown again until a save has gone through */
+const errText = e => String((e && e.message) || e);
+function saveError(e) { const s = S.store; if (!s.err || errText(s.err) !== errText(e)) toast(t('errSave', errText(e))); s.err = e; console.error(e); setStatus(); }
 async function saveNow(force) {
   const s = S.store, d = s.dirty;
   if (s.saving) { s.again = true; return; }
@@ -140,34 +206,43 @@ async function saveNow(force) {
     if (onDisk()) {
       const any = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
       if (any && force !== true) {
+        if (s.bad.length) { s.saving = false; setStatus(); return; }   // an unreadable part: nothing is written until the user has chosen
         if (!s.conflict && await zipChanged()) { s.conflict = true; showConflict(); }
         if (s.conflict) { s.saving = false; setStatus(); return; }
       }
+      if (any && relStamp()) d.cfg = true;   // the first save by this release marks the show
       if (d.script) { d.script = false; writeBlob(null, 'script.md', serialize()); }
       if (d.ink) { d.ink = false; writeBlob(null, 'script.ink.json', JSON.stringify(inkFile())); }
       if (d.cfg) { d.cfg = false; writeBlob(null, 'config.json', JSON.stringify(cfgFile(), null, 2)); }
-      for (const n of d.boards) { const B = S.boards.get(n); if (B) writeBlob('boards', slug(B.name) + '.json', JSON.stringify(boardFile(B))); }
+      for (const n of d.boards) { const B = S.boards.get(n); if (B) writeBlob('boards', boardFileOf(B.name, true), JSON.stringify(boardFile(B))); }
       d.boards.clear();
       for (const n of d.tpls) { const T = S.templates.get(n); if (T) writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); }
       d.tpls.clear();
-      if (any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); }
+      if (any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); sweepURLs(); }
       s.lastSave = new Date(); s.err = null;
     } else {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
-      saveDraft();
+      saveDraft(); s.err = null;
     }
-  } catch (e) { s.err = e; console.error(e); }
+  } catch (e) { saveError(e); }
   s.saving = false; setStatus();
   if (s.again) { s.again = false; saveNow(); }
 }
 function bundle(withImages) {
-  return { format: 'promptbook', version: 1, when: new Date().toISOString(), config: JSON.parse(JSON.stringify(S.cfg)), script: serialize(), ink: inkFile(),
+  if (!onDisk()) relStamp();   // in the browser the backup is the show; a show file is marked when it is saved
+  return { format: 'promptbook', version: 1, when: new Date().toISOString(), config: Object.assign(JSON.parse(JSON.stringify(S.cfg)), { release: relMark(S.cfg) }), script: serialize(), ink: inkFile(),
     boards: Array.from(S.boards.values()).map(B => boardFile(B, withImages)),
     templates: S.cfg.templates.map(n => S.templates.get(n)).filter(Boolean).map(T => boardFile(T, withImages)) };
 }
+/* The draft is the whole show in one value of localStorage, which has a quota. Over it the draft is written without the images
+   of the boards; when that fails too nothing is written, and the save has failed (STO-3). Either is said when it starts, in a message
+   and in the banner, not at every save (STO-26). */
 function saveDraft() {
-  try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); }
-  catch (e) { try { const b = bundle(false); if (b.config.defaultBoard) delete b.config.defaultBoard.imageData; localStorage.setItem('promptbook:draft', JSON.stringify(b)); } catch (e2) { /* storage full or blocked */ } }
+  const s = S.store, was = s.draft;
+  try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); s.draft = 0; }
+  catch (e) { try { const b = bundle(false); if (b.config.defaultBoard) delete b.config.defaultBoard.imageData; localStorage.setItem('promptbook:draft', JSON.stringify(b)); s.draft = 1; } catch (e2) { s.draft = 2; } }
+  if (s.draft !== was) { showMemBanner(); if (s.draft === 1) toast(t('draftNoImg')); }
+  if (s.draft === 2) throw new Error(t('draftNone'));
 }
 function loadDraft() { try { const d = JSON.parse(localStorage.getItem('promptbook:draft') || 'null'); return d && d.format === 'promptbook' ? d : null; } catch (e) { return null; } }
 function setStatus() {
@@ -187,11 +262,19 @@ function showBanner(text, actions) {
 function showMemBanner() {
   const s = S.store;
   if (s.conflict) return;
+  if (s.bad.length) { showDamaged(); return; }
   if (s.mode === 'memory') {
     const acts = [[t('mExport'), exportBundle]];
     if (window.showSaveFilePicker) acts.unshift([t('mSaveTo'), saveToZip]);
-    showBanner(t('memBanner'), acts);
+    showBanner(s.draft === 1 ? t('draftNoImg') : s.draft ? t('errSave', t('draftNone')) : t('memBanner'), acts);
   } else if (!$('#banner').hidden) { $('#banner').hidden = true; if (S.loaded) { sizeWrap(); renderVisible(); } }
+}
+function showDamaged() {
+  const s = S.store;
+  showBanner(t('damaged', s.bad.join(', ')), [
+    [t('damagedGo'), () => { const ink = s.bad.includes('script.ink.json'); s.bad = []; showMemBanner(); markDirty('cfg'); if (ink) markDirty('ink'); toast(t('damagedKept')); return saveNow(); }],
+    [t('damagedClose'), () => { clearTimeout(saveT); resetStore(); $('#banner').hidden = true; S.loaded = false; showStart(); }]
+  ]);
 }
 function showConflict() {
   showBanner(t('extChanged'), [
@@ -215,7 +298,7 @@ document.addEventListener('visibilitychange', checkExternal);
 window.addEventListener('focus', checkExternal);
 window.addEventListener('beforeunload', e => {
   const s = S.store, d = s.dirty;
-  if (onDisk() && (s.err || d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) { e.preventDefault(); e.returnValue = ''; }
+  if (s.err || (onDisk() && (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size))) { e.preventDefault(); e.returnValue = ''; }   // s.err without a show file: the draft could not be written
 });
 
 function idb() {
@@ -225,13 +308,18 @@ function idb() {
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
+/* a connection lives for one read or one write: close() waits for the transaction, and a closed connection holds up no other tab */
 async function idbGet(k) {
-  try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error); }); }
+  let db;
+  try { db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error); }); }
   catch (e) { return null; }
+  finally { if (db) db.close(); }
 }
 async function idbSet(k, v) {
-  try { const db = await idb(); await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+  let db;
+  try { db = await idb(); await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
   catch (e) { /* not available */ }
+  finally { if (db) db.close(); }
 }
 
 function loadShow(cfg, text, inkF) {
@@ -245,11 +333,11 @@ function loadShow(cfg, text, inkF) {
   S.blocks = []; S.byId = new Map(); S.groups = []; S.nextId = 1; S.hist = []; S.redo = []; S.meas = new Map();
   S.sel = null; S.findAt = null; S.cueFilter = null;
   for (const E of S.els) E.sp.remove();
-  S.els = [];
+  S.els = []; sweepURLs();   // the pages that showed the images of the show before are gone
   reparse(text || ''); attachInk(inkF);
   S.loaded = true; $('#start').hidden = true;
   relayout(true); desk.scrollTop = 0; renderVisible();
-  updUndo(); setStatus(); showMemBanner();
+  updUndo(); setStatus(); showMemBanner(); relWarn();
 }
 async function grant(handle) {
   if (!handle.queryPermission) return true;
@@ -260,7 +348,7 @@ async function grant(handle) {
 async function openZipFile(handle) {
   try {
     if (!handle) [handle] = await window.showOpenFilePicker({ id: 'promptbook', types: ZIP_TYPES });
-    if (!(await grant(handle))) throw new Error('permission denied');
+    if (!(await grant(handle))) throw new Error(t('errPerm'));
   } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
   let files, file;
   try { file = await handle.getFile(); files = await readZip(file); } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); return false; }
@@ -274,25 +362,41 @@ const showName = handle => handle.name.replace(/(\.promptbook)?\.zip$/i, '');
 async function loadStore(handle) {
   const s = S.store;
   try {
+    s.bad = zipAside(s.files);
     const cfg = await readJSON('config.json'), text = await readText('script.md'), ink = await readJSON('script.ink.json');
     S.boards = new Map(); S.templates = new Map(); S.urls = new Map();
-    for (const n of boardNames(text || '')) {
-      const j = await readJSON(slug(n) + '.json', 'boards');
+    const bj = new Map(), bn = Array.from(boardNames(text || '')), from = new Map(), held = new Set();
+    for (const k of Array.from(s.files.keys()).sort()) if (/^boards\/[^/]+\.json$/.test(k)) { const j = await readJSON(k, '', 'strokes'); if (j) bj.set(k.slice(7), j); }
+    s.bfiles = new Map(Array.from(bj, ([f, j]) => [f, j && typeof j.name === 'string' ? j.name : null]));
+    for (const n of bn) { const f = boardFileOf(n); if (f) { from.set(n, f); held.add(f); } }
+    /* No file holds this name: the name was retyped by hand in script.md, or the file was made by hand. The board takes the file
+       its slug names, as every release did, unless a board of the script holds it; the name in the file follows at the next save.
+       One file, one board: in a show of an older release where two names shared a file, the name saved last has the drawing. */
+    for (const n of bn) {
+      const f = slug(n) + '.json', j = bj.get(f);
+      if (from.has(n) || held.has(f) || !j || !Array.isArray(j.strokes)) continue;
+      from.set(n, f); held.add(f); s.bfiles.set(f, n); j.name = n; writeBlob('boards', f, JSON.stringify(j));
+    }
+    for (const n of bn) {
+      const j = bj.get(from.get(n));
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.boards.set(n, mkBoard(n, j)); }
     }
+    s.gone = [];
     for (const n of (cfg && Array.isArray(cfg.templates) ? cfg.templates : [])) {
       if (typeof n !== 'string' || !n) continue;
-      const j = await readJSON(slug(n) + '.json', 'templates');
+      const j = await readJSON(slug(n) + '.json', 'templates', 'strokes');
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.templates.set(n, mkBoard(n, j, true)); }
+      else if (!s.gone.includes(n) && !s.bad.includes('templates/' + slug(n) + '.json')) s.gone.push(n);   // no file, as against unreadable: the name is kept (STO-27)
     }
+    if (tplGone().length) toast(t('tplGone', tplGone().join(', ')));
     const imgs = new Set();
     S.boards.forEach(B => { if (B.image) imgs.add('boards/' + B.image); });
     S.templates.forEach(T => { if (T.image) imgs.add('templates/' + T.image); });
     if (cfg && cfg.defaultBoard && cfg.defaultBoard.image) imgs.add('boards/' + cfg.defaultBoard.image);
-    for (const key of imgs) { const blob = s.files.get(key); if (blob) S.urls.set(key, URL.createObjectURL(blob)); }
+    for (const key of imgs) { const blob = s.files.get(key); if (blob) setURL(key, blob); }
     loadShow(cfg, text || '', ink);
     idbSet('dir', handle);
-    if (text == null) openTextDialog(true);
+    if (text == null && !relNewer(S.cfg) && !s.bad.includes('script.md')) openTextDialog(true);   // the box would take the place of the warning; a script set aside is not a show without a script
   } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); resetStore(); showStart(); return false; }
   return true;
 }
@@ -311,14 +415,14 @@ async function saveToZip() {
   catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
   const s = S.store;
   const files = new Map(s.mode === 'zip' ? s.files : []);   // keeps the images already in the show file, and the history
-  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
+  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false; s.bad = [];   // a new file is a choice: it gets the show as it is, and damaged/
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
       const blob = await dataURLBlob(B.imageData); writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
-      S.urls.set(imgKey(B), URL.createObjectURL(blob)); B.imageData = null;
+      setURL(imgKey(B), blob); B.imageData = null;
     }
     const db = S.cfg.defaultBoard;
-    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); writeBlob('boards', db.image, blob); S.urls.set('boards/' + db.image, URL.createObjectURL(blob)); } delete db.imageData; }
+    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); writeBlob('boards', db.image, blob); setURL('boards/' + db.image, blob); } delete db.imageData; }
   } catch (e) { saveError(e); }
   s.dirty.script = s.dirty.ink = s.dirty.cfg = true; S.boards.forEach(B => s.dirty.boards.add(B.name)); S.templates.forEach(T => s.dirty.tpls.add(T.name));
   await saveNow(true);
@@ -380,23 +484,32 @@ async function gRefs(prefix) {
   for (const n of names) { const b = await gRead(prefix + n); if (b) out.set(n, DEC.decode(b).trim()); }
   return out;
 }
-async function gRef(name) { const k = name.lastIndexOf('/') + 1; return (await gRefs(name.slice(0, k))).get(name.slice(k)) || null; }
+async function gRef(name) { const k = name.lastIndexOf('/') + 1, v = (await gRefs(name.slice(0, k))).get(name.slice(k)); return v === undefined ? null : v; }
+/* null: no history yet. sha is null on a branch with no commit yet. When HEAD or its branch holds anything but the name of a commit, sha is that
+   text, and reading it fails in gGet, in words; so does a history that has refs and has lost HEAD, or has objects and has lost its branch. */
 async function gHead() {
-  const b = await gRead('HEAD'); if (!b) return null;
-  const tx = DEC.decode(b).trim(), m = /^ref: (.+)$/.exec(tx);
-  return m ? { ref: m[1], sha: await gRef(m[1]) } : { ref: null, sha: tx };
+  const keys = Array.from(S.store.files.keys()), b = await gRead('HEAD'); if (!b && !keys.some(k => k.startsWith(GIT + 'refs/'))) return null;
+  const tx = b ? DEC.decode(b).trim() : '', m = /^ref: (refs\/\S+)$/.exec(tx.includes('..') ? '' : tx), sha = m ? await gRef(m[1]) : tx;
+  return { ref: m ? m[1] : null, sha: sha === null && keys.some(k => k.startsWith(GIT + 'objects/')) ? m[1] : sha };
 }
 async function gPut(type, body) {
   const raw = cat([ENC.encode(type + ' ' + body.length + '\0'), body]);
   const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))), path = 'objects/' + sha.slice(0, 2) + '/' + sha.slice(2);
-  if (!(await gRead(path))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));
+  if (!(await gGet(sha).catch(() => null))) await gWrite(path, await pipeBytes(raw, new CompressionStream('deflate')));   // missing, or there and unreadable: written again
   return sha;
 }
-async function gGet(sha) {
+/* An object is taken only when it is whole: it unpacks, says its kind and its length, is of the kind asked for, and its SHA-1 is the name it is kept under.
+   Anything else is an error in words (hiBad), never a guess: so no tree or commit can lead back to itself, and what is read is what git would read. */
+const SHA = /^[0-9a-f]{40}$/;
+async function gGet(sha, kind) {
+  const bad = () => new Error(t('hiBad', String(sha).replace(/[^\x21-\x7e]+/g, ' ').trim().slice(0, SHA.test(sha) ? 7 : 40) || 'HEAD'));
+  if (!SHA.test(sha)) throw bad();
   const z = await gRead('objects/' + sha.slice(0, 2) + '/' + sha.slice(2));
-  if (!z) throw new Error(t('hiPacked'));
-  const raw = await pipeBytes(z, new DecompressionStream('deflate')), k = raw.indexOf(0);
-  return { type: DEC.decode(raw.subarray(0, k)).split(' ')[0], body: raw.subarray(k + 1) };
+  if (!z) throw Array.from(S.store.files.keys()).some(k => k.startsWith(GIT + 'objects/pack/')) ? new Error(t('hiPacked')) : bad();
+  const raw = await pipeBytes(z, new DecompressionStream('deflate')).catch(() => new Uint8Array(0)), k = raw.indexOf(0);
+  const m = k < 0 || k > 32 ? null : /^(blob|tree|commit|tag) (\d+)$/.exec(DEC.decode(raw.subarray(0, k)));
+  if (!m || +m[2] !== raw.length - k - 1 || (kind && m[1] !== kind) || hex(new Uint8Array(await crypto.subtle.digest('SHA-1', raw))) !== sha) throw bad();
+  return { type: m[1], body: raw.subarray(k + 1) };
 }
 const blobSha = new WeakMap();   // Blob -> sha of the object already written for it
 async function gBlob(blob) {
@@ -418,9 +531,10 @@ async function gTree(files) {
 }
 /* every file under a tree: path -> sha of its blob */
 async function gFiles(tree, pre, out) {
-  const b = (await gGet(tree)).body; let i = 0;
+  const b = (await gGet(tree, 'tree')).body; let i = 0;
   while (i < b.length) {
     const sp = b.indexOf(32, i), z = b.indexOf(0, sp), mode = DEC.decode(b.subarray(i, sp)), name = pre + DEC.decode(b.subarray(sp + 1, z)), sha = hex(b.subarray(z + 1, z + 21));
+    if (sp < 0 || z < 0 || z + 21 > b.length) throw new Error(t('hiBad', tree.slice(0, 7)));   // an entry cut short
     i = z + 21;
     if (mode === '40000') await gFiles(sha, name + '/', out); else out.set(name, sha);
   }
@@ -428,21 +542,25 @@ async function gFiles(tree, pre, out) {
 }
 async function gCommitOf(sha) {
   const o = await gGet(sha), tx = DEC.decode(o.body), k = tx.indexOf('\n\n'), head = k < 0 ? tx : tx.slice(0, k);
+  const want = { tag: /^object [0-9a-f]{40}$/m, commit: /^tree [0-9a-f]{40}$/m }[o.type];
+  if (!want || !want.test(head)) throw new Error(t('hiBad', sha.slice(0, 7)));
   if (o.type === 'tag') return gCommitOf(/^object ([0-9a-f]{40})/m.exec(head)[1]);   // a tag made with "git tag -a"
   const m = /^committer .* (\d+) [+-]\d{4}$/m.exec(head);
   return { sha, tree: /^tree ([0-9a-f]{40})/m.exec(head)[1], parent: (/^parent ([0-9a-f]{40})/m.exec(head) || [])[1] || null, when: m ? new Date(+m[1] * 1000) : null, msg: k < 0 ? '' : tx.slice(k + 2).trim() };
 }
 async function gLog(sha, max) {
   const out = [];
-  while (sha && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; }
+  try { while (sha !== null && out.length < (max || 300)) { const c = await gCommitOf(sha); out.push(c); sha = c.parent; } }
+  catch (e) { console.warn(e); out.cut = e; }   // the history is read as far as it can be: what is before stays listed, "cut" says why it stops
   return out;
 }
 async function gText(commit, path) {
   const sha = (await gFiles(commit.tree, '', new Map())).get(path);
-  return sha ? DEC.decode((await gGet(sha)).body) : '';
+  return sha ? DEC.decode((await gGet(sha, 'blob')).body) : '';
 }
 async function settled() {
   const s = S.store;
+  if (s.bad.length) throw new Error(t('damagedFirst'));
   for (let k = 0; k < 100; k++) {
     await saveNow();
     const d = s.dirty;
@@ -461,22 +579,24 @@ async function gSave(msg, always) {
   await settled();
   const head = (await gHead()) || { ref: 'refs/heads/main', sha: null };
   const tree = await gTree(await workFiles());
-  if (!always && head.sha && (await gCommitOf(head.sha)).tree === tree) return head.sha;
+  if (!always && head.sha && (await gCommitOf(head.sha).catch(() => ({}))).tree === tree) return head.sha;   // a last commit that cannot be read is not equal to anything
   const d = new Date(), off = -d.getTimezoneOffset(), p2 = n => String(n).padStart(2, '0');
   const who = 'Promptbook <promptbook@localhost> ' + Math.floor(d / 1000) + ' ' + (off < 0 ? '-' : '+') + p2(Math.floor(Math.abs(off) / 60)) + p2(Math.abs(off) % 60);
-  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (head.sha ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
+  const sha = await gPut('commit', ENC.encode('tree ' + tree + '\n' + (SHA.test(head.sha) ? 'parent ' + head.sha + '\n' : '') + 'author ' + who + '\ncommitter ' + who + '\n\n' + msg + '\n'));
   if (!(await gRead('HEAD'))) { await gWrite('HEAD', 'ref: refs/heads/main\n'); await gWrite('config', '[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = false\n'); }
   await gWrite(head.ref || 'HEAD', sha + '\n');
   return sha;
 }
-/* Replace the show on disk with the files of a tree, then open it again. */
-async function gCheckout(tree) {
+/* Replace the show on disk with the files of a tree, then open it again. The whole tree is read first: when a part of it cannot be read
+   nothing has changed yet, and "before" (the commit of the show as it is, the move to another branch) has not run. */
+async function gCheckout(tree, before) {
   const s = S.store, blobs = new Map();
   for (const [path, sha] of await gFiles(tree, '', new Map())) {
     if (!SHOW_FILE.test(path)) continue;
-    const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
+    const b = new Blob([(await gGet(sha, 'blob')).body]); blobSha.set(b, sha); blobs.set(path, b);
   }
-  s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
+  if (before) await before();
+  s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT) || k.startsWith('damaged/')).concat(Array.from(blobs)));
   await flushZip();
   clearTimeout(saveT);
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; s.conflict = false;
@@ -503,23 +623,21 @@ async function histVariant(name) {
 async function histSwitch(branch) {
   const ref = 'refs/heads/' + branch, sha = await gRef(ref);
   if (!sha) return false;
-  await gSave(t('hiBefore', refLabel(branch)), false);
-  await gWrite('HEAD', 'ref: ' + ref + '\n');
-  return gCheckout((await gCommitOf(sha)).tree);
+  return gCheckout((await gCommitOf(sha)).tree, async () => { await gSave(t('hiBefore', refLabel(branch)), false); await gWrite('HEAD', 'ref: ' + ref + '\n'); });
 }
 async function histRestore(sha) {
   const c = await gCommitOf(sha);
-  await gSave(t('hiBefore', c.msg), false);
-  return gCheckout(c.tree);
+  return gCheckout(c.tree, () => gSave(t('hiBefore', c.msg), false));
 }
 async function histState() {
-  const head = await gHead(), log = head && head.sha ? await gLog(head.sha) : [];
+  const head = await gHead(), log = head ? await gLog(head.sha) : [];
   return { branch: head && head.ref ? head.ref.replace('refs/heads/', '') : 'main', log, heads: await gRefs('refs/heads/'), tags: await gRefs('refs/tags/') };
 }
 const revName = c => c.msg.split('\n')[0] + (c.when ? '  ·  ' + c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '');
 function unlockPages() { S.cfg.lock = null; markDirty('cfg'); relayout(true); }
 async function openHistory() {
   if (!onDisk()) { toast(t('hiNeedFile')); return; }
+  if (S.store.bad.length) { toast(t('damagedFirst')); return; }
   const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
   let st;
   try { st = await histState(); } catch (e) { fail(e); return; }
@@ -554,13 +672,14 @@ async function openHistory() {
       await histSave(nm, cb.checked); close(); toast(t('hiSaved', nm));
     }), 'pri'));
     rs.appendChild(sr);
-    if (!st.log.length) rs.appendChild(h('p', 'hint', t('hiNone')));
+    if (!st.log.length && !st.log.cut) rs.appendChild(h('p', 'hint', t('hiNone')));
     for (const c of st.log) {
       const r = h('div', 'rev'), nm = h('div', 'rn');
       nm.append(h('b', null, c.msg.split('\n')[0]), h('span', null, c.when ? c.when.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''));
       r.append(nm, btn(t('hiChanges'), () => { close(); openDiff(c.sha); }), btn(t('hiRestore'), run(async () => { close(); await histRestore(c.sha); toast(t('hiRestored', c.msg.split('\n')[0])); })));
       rs.appendChild(r);
     }
+    if (st.log.cut) rs.appendChild(h('p', 'hint', t('hiCut', st.log.cut.message)));
     body.appendChild(rs);
     dlgBtn(foot, t('close'), '', close);
   });
@@ -586,7 +705,7 @@ async function openDiff(from, to) {
   const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
   let st;
   try { st = await histState(); } catch (e) { fail(e); return; }
-  if (!st.log.length) { toast(t('hiNone')); return; }
+  if (!st.log.length) { toast(st.log.cut ? t('hiErr', st.log.cut.message) : t('hiNone')); return; }
   openDlg(t('dfTitle'), (body, foot, close) => {
     const bar = h('div', 'hrow'), fs = h('select'), ts = h('select'), ws = h('select'), cnt = h('p', 'hint');
     const opt = (sel, v, label) => { const o = h('option', null, label); o.value = v; sel.appendChild(o); };
@@ -668,16 +787,16 @@ function openSettings() {
       c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
       cb.type = 'checkbox'; cb.checked = !!d.review; rv.append(cb, t('deptReview')); rv.title = t('deptReviewTip');
       cc.type = 'checkbox'; cc.checked = !!d.cast; cl.append(cc, t('deptCast')); cl.title = t('deptCastTip');
-      x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); list.appendChild(r);
+      x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); r.dept = d; list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
     const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
     body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return Object.assign({}, r.dept, { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }); });   // with the fields this release does not know
       const paperChanged = ps.value !== S.cfg.paper;
-      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value, show: { wpm: sw.value, standby: ss.value, warning: sg.value, times } }));
+      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value, show: Object.assign({}, S.cfg.show, { wpm: sw.value, standby: ss.value, warning: sg.value, times }) }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
       close();
       if (paperChanged) S.meas = new Map();
@@ -963,7 +1082,7 @@ async function init() {
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, zipAside, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
   showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo,
   openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();

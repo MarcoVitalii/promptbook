@@ -1,10 +1,11 @@
 'use strict';
 /* =====================================================================
-   Promptbook R0
-   parse  : text -> blocks, cues, board tokens
-   layout : blocks -> fixed-measure pages
-   view   : rendering, pins, pen, editing, boards
-   store  : show file (.zip, File System Access) | in-browser fallback
+   Promptbook
+   core.js : strings, state, parse (text -> blocks, cues, board tokens),
+             text edits, undo, compare, layout (blocks -> fixed-measure pages)
+   view.js : rendering, ink, boards, pen and touch, editing, cue lists, show mode, print
+   io.js   : show file (.zip, File System Access), draft in the browser, history, dialogs, keys
+   cast.js : the script for the actors, a second file built from core.js and cast.js
    ===================================================================== */
 
 /* ---------- strings ---------- */
@@ -29,7 +30,7 @@ en: {
   editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
-  contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…', bDefault: 'Use as default',
+  contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…',
   bClear: 'Clear ink', bRename: 'Rename', bCreate: 'Add board', bMore: 'Board actions', bName: 'Board name', facingEmpty: 'No board on this page', boardsFull: 'A page holds {0} boards at most',
   checkInk: 'The text under this ink has changed', inkKeep: 'Ink is fine', inkClear: 'Clear ink on this block',
   rvNone: 'Nothing to review.', rvPara: 'Lines not recognised',
@@ -38,16 +39,24 @@ en: {
   rvCharsHint: 'A name that appears once may be a typo or a misread line.',
   rvNoChar: 'Not in the character list', rvNoCharHint: 'Speakers missing from “characters” at the top of the script. ALL, OTHERS, ALL BUT… are not checked.',
   rvSilent: 'Listed but never speaks', titleInScript: 'Set by “title” at the top of the script',
-  all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Margin', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character',
-  csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
+  all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Margin', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character', thAct: 'Act', thScene: 'Scene',
+  csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once', outOrder: 'This number is out of order',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
   deptHint: 'Changing a code does not rewrite cues already in the script.',
   extChanged: 'This show was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
   reloaded: 'Show reloaded, it was changed outside',
+  damaged: 'This show file has parts that cannot be read: {0}. The show is open without them, and nothing is saved until you choose.',
+  damagedGo: 'Go on without', damagedClose: 'Close the show', damagedFirst: 'Choose first what to do with the parts that cannot be read.',
+  damagedKept: 'What could not be read is kept in the show file, in the folder “damaged”.',
   memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
-  errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.',
-  pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', defSet: 'Default board background set',
-  afterWord: 'after', between: 'between lines', untitled: 'Untitled show',
+  draftNoImg: 'The images of the boards no longer fit in the browser: its copy of this show is kept without them. Save as a show file or export a backup: neither has this limit.',
+  draftNone: 'the browser cannot keep this show, its storage is full or blocked. Save it as a show file or export a backup now.',
+  errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.', errPerm: 'permission to write to the file was denied',
+  zipNot: 'not a zip file', zipBad: 'damaged zip file', zip64: 'zip64 is not supported', zipMethod: 'unsupported zip compression', zipBig: 'show too large for a zip file',
+  zipCrypt: 'the zip file is protected by a password',
+  relTitle: 'This show comes from a newer release',
+  relWarn: 'This show asks for Promptbook {0} or later; this is {1}. It is open all the same, but this release may show wrongly what it does not know, and may drop it when it saves. Get the newer promptbook.html and open the show with that; until then, change as little as you can here.',
+  pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
   moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
   moveBlock: 'Drag to move this block', blockUnpaired: 'Moved. A cue and its end no longer match: check the order.', kDel: 'Delete the cue or the board whose box is open',
@@ -61,6 +70,8 @@ en: {
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
+  tplGone: 'Templates named in the settings but missing from the show file: {0}. See Menu → Templates.',
+  tplGoneHint: 'Named in the settings of this show, but with no file in it: {0}. The names are kept, so a template returns when its file is put back in the show file.', tplForget: 'Forget these names',
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
   gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse',
   mHistory: 'History…', hiTitle: 'History', hiNeedFile: 'History is kept inside the show file. Use “Save as show file…” first.',
@@ -71,6 +82,7 @@ en: {
   hiRestored: 'Back to “{0}”. What you had was kept as a revision.', hiSaved: 'Revision “{0}” saved', hiSwitched: 'Now on variant “{0}”',
   hiBefore: 'Before going to “{0}”', hiTaken: 'That name is taken.', hiPacked: 'Part of this history was packed by git (gc or clone) and cannot be read here.',
   hiErr: 'History: {0}',
+  hiBad: 'Part of this history is damaged and cannot be read ({0}). The show itself is not touched.', hiCut: 'Earlier revisions cannot be shown. {0}',
   lkOff: 'Page numbers are free: they move when text is added or cut.', lkOn: 'Page numbers are locked at “{0}”.',
   lkChanged: 'Changed pages: {0}', lkGone: 'Pages now empty: {0}', lkNone: 'No page has changed.',
   lkUnlock: 'Unlock', lkPrint: 'Print changed pages', lkMark: 'changed since “{0}”',
@@ -127,7 +139,7 @@ it: {
   editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
-  contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…', bDefault: 'Usa come predefinita',
+  contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…',
   bClear: 'Cancella inchiostro', bRename: 'Rinomina', bCreate: 'Aggiungi tavola', bMore: 'Azioni della tavola', bName: 'Nome della tavola', facingEmpty: 'Nessuna tavola in questa pagina', boardsFull: 'Una pagina contiene al massimo {0} tavole',
   checkInk: 'Il testo sotto questo inchiostro è cambiato', inkKeep: 'L’inchiostro va bene', inkClear: 'Cancella l’inchiostro del blocco',
   rvNone: 'Niente da rivedere.', rvPara: 'Righe non riconosciute',
@@ -136,16 +148,24 @@ it: {
   rvCharsHint: 'Un nome che compare una sola volta può essere un refuso o una riga letta male.',
   rvNoChar: 'Non nell’elenco dei personaggi', rvNoCharHint: 'Nomi che mancano da «personaggi» in testa al copione. TUTTI, GLI ALTRI, TUTTI TRANNE… non sono controllati.',
   rvSilent: 'In elenco ma senza battute', titleInScript: 'Impostato da «titolo» in testa al copione',
-  all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Margine', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio',
-  csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
+  all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Margine', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio', thAct: 'Atto', thScene: 'Scena',
+  csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte', outOrder: 'Questo numero è fuori ordine',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
   deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
   extChanged: 'Questo spettacolo è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
   reloaded: 'Spettacolo ricaricato, era stato modificato altrove',
+  damaged: 'Questo file spettacolo ha parti illeggibili: {0}. Lo spettacolo è aperto senza, e non viene salvato nulla finché non scegli.',
+  damagedGo: 'Continua senza', damagedClose: 'Chiudi lo spettacolo', damagedFirst: 'Scegli prima che cosa fare delle parti illeggibili.',
+  damagedKept: 'Ciò che era illeggibile resta nel file spettacolo, nella cartella «damaged».',
   memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
-  errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.',
-  pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', defSet: 'Sfondo predefinito delle tavole impostato',
-  afterWord: 'dopo', between: 'tra le righe', untitled: 'Spettacolo senza titolo',
+  draftNoImg: 'Le immagini delle tavole non entrano più nel browser: la sua copia di questo spettacolo è conservata senza. Salva come file spettacolo o esporta un backup: nessuno dei due ha questo limite.',
+  draftNone: 'il browser non può conservare questo spettacolo, il suo spazio è pieno o bloccato. Salvalo subito come file spettacolo o esporta un backup.',
+  errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.', errPerm: 'permesso di scrittura sul file negato',
+  zipNot: 'non è un file zip', zipBad: 'file zip danneggiato', zip64: 'il formato zip64 non è supportato', zipMethod: 'compressione zip non supportata', zipBig: 'spettacolo troppo grande per un file zip',
+  zipCrypt: 'il file zip è protetto da una password',
+  relTitle: 'Questo spettacolo viene da una versione più recente',
+  relWarn: 'Questo spettacolo chiede Promptbook {0} o successivo; questo è {1}. È aperto lo stesso, ma questa versione può mostrare male ciò che non conosce, e può perderlo quando salva. Procurati il promptbook.html più recente e apri lo spettacolo con quello; fino ad allora, cambia qui il meno possibile.',
+  pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
   moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
   moveBlock: 'Trascina per spostare il blocco', blockUnpaired: 'Spostato. Un cue e la sua fine non corrispondono più: controlla l’ordine.', kDel: 'Elimina il cue o la tavola del riquadro aperto',
@@ -159,6 +179,8 @@ it: {
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
+  tplGone: 'Modelli indicati nelle impostazioni ma assenti dal file spettacolo: {0}. Vedi Menu → Modelli.',
+  tplGoneHint: 'Indicati nelle impostazioni di questo spettacolo, ma senza file al suo interno: {0}. I nomi restano, così un modello torna quando il suo file viene rimesso nel file spettacolo.', tplForget: 'Dimentica questi nomi',
   pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
   gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga',
   mHistory: 'Cronologia…', hiTitle: 'Cronologia', hiNeedFile: 'La cronologia sta dentro il file dello spettacolo. Usa prima «Salva come file spettacolo…».',
@@ -169,6 +191,7 @@ it: {
   hiRestored: 'Tornato a «{0}». Quello che avevi è stato tenuto come revisione.', hiSaved: 'Revisione «{0}» salvata', hiSwitched: 'Ora sei nella variante «{0}»',
   hiBefore: 'Prima di passare a «{0}»', hiTaken: 'Questo nome è già usato.', hiPacked: 'Una parte di questa cronologia è stata compressa da git (gc o clone) e qui non si può leggere.',
   hiErr: 'Cronologia: {0}',
+  hiBad: 'Una parte di questa cronologia è danneggiata e non si può leggere ({0}). Lo spettacolo in sé non è toccato.', hiCut: 'Le revisioni precedenti non si possono mostrare. {0}',
   lkOff: 'I numeri di pagina sono liberi: si spostano quando si aggiunge o si taglia testo.', lkOn: 'I numeri di pagina sono bloccati a «{0}».',
   lkChanged: 'Pagine cambiate: {0}', lkGone: 'Pagine ora vuote: {0}', lkNone: 'Nessuna pagina è cambiata.',
   lkUnlock: 'Sblocca', lkPrint: 'Stampa le pagine cambiate', lkMark: 'cambiata dopo «{0}»',
@@ -239,6 +262,18 @@ const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: butt
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
 const VERSION = 'r1.11';
+const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
+/* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
+const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };
+function relCmp(a, b) {
+  const x = relParts(a), y = relParts(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; }
+  return 0;
+}
+/* the mark a show carries in config.json: the release that saved it last and the oldest that reads it without loss. What a newer release asked for stays asked */
+const relOf = c => c && c.release && typeof c.release === 'object' ? c.release : {};
+function relMark(c) { const r = relOf(c); return Object.assign({}, r, { made: VERSION, needs: relCmp(r.needs, READABLE_FROM) > 0 ? r.needs : READABLE_FROM }); }
+const relNewer = c => relCmp(relOf(c).needs, VERSION) > 0 ? relOf(c).needs : '';   // the release a show asks for when this one is older, or ''
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -249,12 +284,15 @@ function defaultConfig() {
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
     templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null, castId: '', show: { wpm: 130, standby: 30, warning: 120, times: {} } };
 }
+/* A board image that comes with a show is a picture held in the file itself. Any other address (http, file) is dropped: the tool never asks a host for anything (C2). */
+const dataImg = v => typeof v === 'string' && /^data:image\//i.test(v) ? v : null;
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
+  if (o.defaultBoard && o.defaultBoard.imageData != null && !dataImg(o.defaultBoard.imageData)) o.defaultBoard = Object.assign({}, o.defaultBoard, { imageData: null });
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast };
+    return Object.assign({}, x, { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast });   // a field a later release added is carried through (STO-17)
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -266,7 +304,7 @@ function normCfg(c) {
   o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
   o.castId = typeof o.castId === 'string' ? o.castId : '';   // names the show to the actors' files, whatever its title becomes
   const sw = o.show || {}, num = (v, d, lo, hi) => clamp(v == null || v === '' || !Number.isFinite(+v) ? d : Math.round(+v), lo, hi);   // show mode: pace and lead times
-  o.show = { wpm: num(sw.wpm, 130, 40, 300), standby: num(sw.standby, 30, 5, 300), warning: num(sw.warning, 120, 0, 900), times: {} };
+  o.show = Object.assign({}, typeof sw === 'object' && !Array.isArray(sw) ? sw : null, { wpm: num(sw.wpm, 130, 40, 300), standby: num(sw.standby, 30, 5, 300), warning: num(sw.warning, 120, 0, 900), times: {} }); delete o.show.scenes;   // what a later release added is carried through (STO-17); the scene paces of a build that was never released are not
   for (const [k, v] of Object.entries(sw.times && typeof sw.times === 'object' ? sw.times : {})) if (Number.isFinite(+v) && +v > 0) o.show.times[k] = clamp(Math.round(+v * 10) / 10, 0.1, 3600);   // seconds a timed block takes, by its words
   const lk = o.lock;   // locked page numbers, see makeLock
   o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
@@ -667,6 +705,46 @@ function pairCues() {
     lanes[k] = s.endRef.ord; s.lane = Math.min(k, 5);
   }
   S.pairs = pairs;
+}
+/* Labels out of order (CUE-5): a hint in the cue list, never a change. A label has a place in the order only
+   if it has a digit. It is read as its runs of digits and of letters; anything else only separates them.
+   Labels are judged within one act, one department and one leading word (A12 against A13, never against 12).
+   In order are the cues of the longest run, in script order, in which no label is lower than one before it;
+   of two runs equally long, the one that keeps the earlier cue. Every other numbered cue is out of order. */
+function labelKey(label) {
+  const r = /\d/.test(label) ? label.toLowerCase().match(/\d+|\p{L}+/gu) : null;
+  if (!r) return null;
+  const pre = /\d/.test(r[0]) ? '' : r.shift();
+  return { pre, runs: r.map(x => /\d/.test(x) ? +x : x) };
+}
+function cmpRuns(a, b) {   // 12 < 12.5 < 12.10 < 12A < 13: digits as whole numbers, digits before letters, the shorter label first
+  for (let i = 0; i < a.length && i < b.length; i++) {
+    const x = a[i], y = b[i];
+    if (typeof x !== typeof y) return typeof x === 'number' ? -1 : 1;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return a.length - b.length;
+}
+function cuesOutOfOrder(cues) {
+  const acts = new Map(), groups = new Map(), odd = new Set(); let a = 0;
+  for (const b of S.blocks) { if (b.type === 'h' && b.level === 1) a++; acts.set(b, a); }
+  for (const c of cues) {
+    const k = c.board || c.end || !c.label ? null : labelKey(c.label); if (!k) continue;
+    const g = acts.get(c.b) + '\u0001' + c.dept + '\u0001' + k.pre; let q = groups.get(g); if (!q) groups.set(g, q = []);
+    q.push({ c, k: k.runs });
+  }
+  for (const q of groups.values()) {
+    if (q.every((x, i) => !i || cmpRuns(q[i - 1].k, x.k) <= 0)) continue;   // the usual case: nothing out of order
+    const n = q.length, len = new Array(n).fill(1); let need = 1, last = null;
+    for (let i = n - 2; i >= 0; i--) {   // len[i]: the longest run in order that starts at cue i
+      for (let j = i + 1; j < n; j++) if (len[j] >= len[i] && cmpRuns(q[i].k, q[j].k) <= 0) len[i] = len[j] + 1;
+      if (len[i] > need) need = len[i];
+    }
+    for (let i = 0; i < n; i++) {
+      if (len[i] === need && (!last || cmpRuns(last.k, q[i].k) <= 0)) { last = q[i]; need--; } else odd.add(q[i].c);
+    }
+  }
+  return odd;
 }
 function groupBlocks() {
   const gs = []; let last = null;
@@ -1330,9 +1408,9 @@ function buildRow(g, fr) {
     if (fr.part === 'front') for (const l of b.meta.lines) tx.appendChild(h('div', l.big ? 'ft' : 'fl', l.text));
     else {
       tx.classList.add('cast'); if (b.meta.chars.length > 30) tx.classList.add('two');
-      tx.appendChild(h('div', 'ch', b.meta.charsKey));
+      if (!fr.from) tx.appendChild(h('div', 'ch', b.meta.charsKey));   // a page the list runs on to has no heading (PAG-8)
       const list = h('div', 'cl2');
-      for (const c of b.meta.chars) {
+      for (const c of b.meta.chars.slice(fr.from, fr.to)) {
         const e = h('div', 'ce'); e.appendChild(h('b', null, c.name));
         if (c.aliases.length) e.appendChild(h('span', 'ca', ' / ' + c.aliases.join(' / ')));
         if (c.desc) e.appendChild(h('span', 'cd', ' — ' + c.desc));
@@ -1396,6 +1474,26 @@ function lineStarts(b) {
   M.textContent = '';
   return (m.ls = starts);
 }
+/* the character list as pages: [from, to) of the list on each. One page while it fits; a longer list runs on to as many
+   pages as it needs, filled column by column as the browser fills them (PAG-8) */
+function castPages(g, H) {
+  const m = g.m, n = g.b.meta.chars.length;
+  if (m.cp) return m.cp;
+  const M = $('#measure'), row = buildRow(g, { h: H, part: 'cast', from: 0, to: n, off: 0 });
+  M.appendChild(row);
+  const list = row.querySelector('.cl2'), top = row.getBoundingClientRect().top, cols = row.querySelector('.two') ? 2 : 1;
+  const hs = Array.from(list.children, e => e.getBoundingClientRect().height);
+  const roomN = H - (row.querySelector('.ch').getBoundingClientRect().top - top) - 1;   // on a page without the heading
+  let room = H - (list.getBoundingClientRect().top - top) - 1, from = 0, col = 0, y = 0;
+  M.textContent = '';
+  const out = [];
+  hs.forEach((eh, i) => {
+    if (y && y + eh > room) { y = 0; if (++col === cols) { out.push([from, i]); from = i; col = 0; room = roomN; } }
+    y += eh;
+  });
+  out.push([from, n]);
+  return (m.cp = out);
+}
 /* boards on a facing page: one column up to two boards, then two columns filled row by row.
    hs: height of each board for a width of 1. Returns the columns and the one width all boards get. */
 function facingLayout(hs, availW, availH) {
@@ -1409,7 +1507,8 @@ function paginate() {
   const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
   let cur = null, y = 0, act = '', scene = '';
   const isHead = g => g.kind === 'single' && g.b.type === 'h';
-  const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
+  const g0 = S.meta && S.meta.chars.length ? S.groups.find(g => g.kind === 'single' && g.b.type === 'meta') : null;
+  const parts0 = (S.meta && S.meta.lines.length ? [['front', 0, 0]] : []).concat(g0 ? castPages(g0, H).map(r => ['cast', r[0], r[1]]) : []);
   const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
   const lk = lockPlan();   // null while page numbers are free
   let li = -1, sub = 0, tail = 0;   // the locked page being filled, pages inserted after it, pages past the last locked one
@@ -1443,9 +1542,9 @@ function paginate() {
   for (const g of S.groups) {
     const m = g.m, b = g.kind === 'single' ? g.b : null;
     if (b && b.type === 'meta') {
-      parts0.forEach((part, k) => {
+      parts0.forEach(([part, from, to], k) => {
         if (cur.items.length) newPage();
-        push({ g, h: H, whole: false, part, from: 0, to: 0, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
+        push({ g, h: H, whole: false, part, from, to, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
       });
       if (!off) push({ g, h: 0, whole: true });
       continue;

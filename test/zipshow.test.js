@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
 (async () => {
   // private browser files are refused on file://, so the page is served over http
   const { srv, url } = await serve();
-  const { page, errs, done } = await open({ url });
+  const { page, errs, done, pen } = await open({ url });
   const ev = (fn, a) => page.evaluate(fn, a);
   const settle = () => page.waitForFunction(() => !PB.S.store.saving && !PB.S.store.dirty.script && !PB.S.store.dirty.cfg && !PB.S.store.dirty.boards.size);
   const bytes = name => ev(async n => Array.from(new Uint8Array(await (await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile()).arrayBuffer())), name).then(a => Buffer.from(a));
@@ -69,8 +69,182 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   // 6. garbage is refused, current show stays
   await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip', { create: true }); const w = await fh.createWritable(); await w.write('not a zip at all'); await w.close(); window.showOpenFilePicker = async () => [fh]; });
   ok(await ev(() => PB.openZipFile()) === false && await ev(() => PB.S.loaded && PB.serialize().includes('Da cartella')), 'a file that is not a zip is refused and the open show stays open');
+  ok(await page.locator('#toast').textContent() === 'Could not open the show: not a zip file' && await ev(() => PB.t('errOpen', PB.t('zipNot'))) === 'Could not open the show: not a zip file', 'the refusal says why, in words from the string table');
   // the refusal is logged to the console on purpose; anything else there is still a failure
   ok(errs.length === 1 && /not a zip file/.test(errs[0]), 'the refused file is the only error logged');
+  errs.length = 0;
+
+  // 7. the release mark: written at the first save, and a show that asks for a newer release opens with a warning
+  const cfgIn = name => ev(async n => JSON.parse(await (await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile())).get('config.json').text()), name);
+  const ver = await ev(() => PB.VERSION);
+  ok(await ev(() => document.querySelector('#dlg').hidden && !('release' in PB.S.cfg)) && !('release' in await cfgIn('odd.zip')), 'a show with no release mark, as older releases wrote it, opens with no message and is not rewritten for that');
+  ok(await ev(() => PB.bundle(false).config.release.made === PB.VERSION && !('release' in PB.S.cfg)), 'a backup taken from it is marked; the show file waits for its next save');
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Ancora.\n'));
+  await settle(); await page.waitForTimeout(100);
+  const mark = await cfgIn('odd.zip');
+  ok(mark.release && mark.release.made === ver && /^r\d+\.\d+$/.test(mark.release.needs) && mark.title === 'Vecchio', 'the first save, here of the script alone, writes into config.json the release that saved and the oldest that can read it: ' + JSON.stringify(mark.release));
+  const openNewer = () => ev(async () => {
+    const root = await navigator.storage.getDirectory(); let fh;
+    try { fh = await root.getFileHandle('newer.zip'); } catch (e) {
+      fh = await root.getFileHandle('newer.zip', { create: true });
+      const cfg = { title: 'Domani', release: { made: 'r99.1', needs: 'r99.0' }, departments: [{ code: 'LX', name: 'Luci', colour: '#c98a00', desk: 'Ion' }], show: { wpm: 120, hold: 3 } };
+      const w = await fh.createWritable(); await w.write(await PB.buildZip(new Map([['script.md', new Blob(['ANNA: Da domani {LX 1}.\n'])], ['config.json', new Blob([JSON.stringify(cfg)])]]))); await w.close();
+    }
+    window.showOpenFilePicker = async () => [fh];
+    return await PB.openZipFile();
+  });
+  ok(await openNewer() === true && await ev(() => PB.S.loaded && PB.S.store.mode === 'zip' && PB.serialize().includes('Da domani') && PB.S.cfg.title === 'Domani'), 'a show that asks for a newer release is opened all the same');
+  const saidRel = await page.locator('#dlg:not([hidden]) .dbox').textContent();
+  ok(/newer release/.test(saidRel) && saidRel.includes('r99.0') && saidRel.includes(ver) && /may drop/.test(saidRel) && /Get the newer promptbook\.html/.test(saidRel), 'and a box says which release it asks for, which this one is, what may be lost and what to do: ' + saidRel);
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  ok(await ev(() => document.querySelector('#dlg').hidden && PB.S.loaded), 'the box closes and the show stays open');
+  await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+  await page.locator('#dlg .drow input').nth(1).fill('Lights');
+  await page.locator('#dlg .btn', { hasText: 'Save' }).click();
+  await settle(); await page.waitForTimeout(100);
+  const kept = await cfgIn('newer.zip');
+  ok(kept.departments[0].name === 'Lights' && kept.departments[0].desk === 'Ion' && kept.show.hold === 3 && kept.show.wpm === 120, 'saving the settings keeps the fields of a department and of show mode that this release does not know: ' + JSON.stringify([kept.departments[0], kept.show]));
+  ok(kept.release.made === ver && kept.release.needs === 'r99.0', 'the mark then names this release as the last to save, and still asks for the newer one: ' + JSON.stringify(kept.release));
+  ok(await openNewer() === true && await page.locator('#dlg:not([hidden]) .dbox').textContent().then(x => x.includes('r99.0')), 'so the warning comes again the next time the show is opened');
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  const bk = await ev(() => PB.bundle(false).config.release);
+  ok(bk.made === ver && bk.needs === 'r99.0', 'a backup carries the same mark');
+  ok(await ev(() => { PB.loadBundle({ format: 'promptbook', script: 'ANNA: Dal backup.\n', config: { release: { made: 'r99.1', needs: 'r99.0' } } }); return !document.querySelector('#dlg').hidden && PB.serialize().includes('Dal backup'); }), 'a backup that asks for a newer release warns and opens too');
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  ok(await ev(() => { PB.startMemory('ANNA: Nuovo.\n', {}); return document.querySelector('#dlg').hidden && PB.bundle(false).config.release.made === PB.VERSION; }), 'a new show opens with no message and its backup is marked');
+
+  // back to the show file of 5, for the checks that need a file to save to
+  ok(await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('odd.zip'); window.showOpenFilePicker = async () => [fh]; return await PB.openZipFile(); }) === true, 'the earlier show file opens again');
+
+  // 8. a save that fails says why, once
+  const toastNow = () => ev(() => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; });
+  const hush = () => ev(() => { document.querySelector('#toast').hidden = true; });
+  const failed = n => page.waitForFunction(k => window.__tries >= k && !PB.S.store.saving && !!PB.S.store.err, n);
+  await settle(); await hush();
+  await ev(() => { const real = PB.S.store.handle; window.__real = real; window.__tries = 0; PB.S.store.handle = { name: real.name, getFile: () => real.getFile(), createWritable: async () => { window.__tries++; throw new Error('the disk is full'); } }; });
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Uno.\n')); await failed(1);
+  ok(await toastNow() === 'Could not save: the disk is full' && await page.locator('#status').textContent() === 'Save failed', 'a failed save says why in a message, and the status says "Save failed": ' + await toastNow());
+  await hush();
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Due.\n')); await failed(2);
+  ok(await toastNow() === '' && await page.locator('#status').getAttribute('title') === 'the disk is full', 'the same failure on the next try is not announced again; the reason stays on the status');
+  await ev(() => { PB.S.store.handle = window.__real; return PB.saveNow(); }); await settle();
+  ok(await ev(() => !PB.S.store.err) && (await ev(async () => (await PB.readZip(await PB.S.store.handle.getFile())).get('script.md').text())).includes('ANNA: Due.'), 'once the file can be written again, what was waiting is saved');
+  ok(errs.length === 2 && errs.every(x => /the disk is full/.test(x)), 'the two failed saves are the only errors logged');
+  errs.length = 0;
+
+  // 9. a part that is missing is not a damaged part: no settings, no ink, no file for the board, and no message
+  const put = (name, parts) => ev(async ([n, ps]) => {
+    const fh = await (await navigator.storage.getDirectory()).getFileHandle(n, { create: true });
+    const w = await fh.createWritable(); await w.write(await PB.buildZip(new Map(ps.map(([k, v]) => [k, new Blob([v])])))); await w.close();
+    window.showOpenFilePicker = async () => [fh];
+    return await PB.openZipFile();
+  }, [name, parts]);
+  const inZip = name => ev(async n => { const m = await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile()), o = {}; for (const [k, b] of m) o[k] = await b.text(); return o; }, name);
+  const allSaved = () => page.waitForFunction(() => { const s = PB.S.store, d = s.dirty; return !s.saving && !d.script && !d.ink && !d.cfg && !d.boards.size && !d.tpls.size; });
+  const script = '# ATTO\n\nANNA: Ciao a tutti quanti.\n{BOARD Pianta}\nMARCO: Ecco.\n';
+  ok(await put('bare.zip', [['script.md', script]]) === true && await page.locator('#banner').isHidden() && await ev(() => PB.S.store.bad.length === 0 && PB.inkFile().blocks.length === 0), 'a show file with only the script opens with no message');
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Ancora.\n'));
+  await allSaved(); await page.waitForTimeout(100);
+  ok(!Object.keys(await inZip('bare.zip')).some(k => k.startsWith('damaged/')), 'and nothing is set aside when it is saved');
+
+  // 10. the settings, the ink and a board cut short: said in words, nothing written until the user chooses, the bytes kept
+  const cut = { 'config.json': '{"title":"Rotto","paper":"Let', 'script.ink.json': '{"version":1,"blocks":[{"text":"ANNA: Ciao a tutti quanti.","lines":1,"strokes":[{"colour":"#c00","wid', 'boards/pianta.json': '{"name":"Pianta","image":null,"w":1000,"h":500,"strokes":[{"colour":"#000"' };
+  const broken = [['script.md', script]].concat(Object.entries(cut));
+  ok(await put('cut.zip', broken) === true && await ev(() => PB.S.loaded && PB.S.cfg.title === '' && PB.inkFile().blocks.length === 0 && !(PB.S.boards.get('Pianta') || { strokes: [] }).strokes.length), 'a show file with unreadable parts still opens, without them');
+  const said = await page.locator('#banner').textContent();
+  ok(await page.locator('#banner').isVisible() && Object.keys(cut).every(k => said.includes(k)) && /nothing is saved until you choose/.test(said) && await page.locator('#banner button').count() === 2, 'a banner names each unreadable part and asks: ' + said);
+  const before = await bytes('cut.zip');
+  const bb = await page.locator('.w', { hasText: 'tutti' }).boundingBox();
+  await pen([[bb.x, bb.y + 20], [bb.x + 40, bb.y + 24], [bb.x + 90, bb.y + 20]]);
+  await page.waitForFunction(() => PB.S.store.dirty.ink);
+  await page.waitForTimeout(1200); await ev(() => PB.saveNow());
+  ok(await ev(() => PB.S.store.dirty.ink && PB.inkFile().blocks.length === 1) && before.equals(await bytes('cut.zip')), 'a pen stroke is not written to the show file while the question is open');
+  ok(await ev(() => PB.histSave('Prova').then(() => 'saved', e => e.message)) === 'Choose first what to do with the parts that cannot be read.' && before.equals(await bytes('cut.zip')), 'and a revision cannot be saved meanwhile');
+  await page.locator('#banner .btn', { hasText: 'Go on without' }).click();
+  await allSaved(); await page.waitForTimeout(100);
+  let z = await inZip('cut.zip');
+  ok(Object.keys(cut).every(k => z['damaged/' + k] === cut[k]), '"Go on without" keeps every unreadable part, byte for byte, under damaged/');
+  ok(JSON.parse(z['script.ink.json']).blocks[0].strokes.length === 1 && JSON.parse(z['config.json']).paper === 'A4' && !('boards/pianta.json' in z) && await page.locator('#banner').isHidden(), 'and saves the show as it is on screen: the new stroke, the default settings');
+  ok(await ev(() => PB.openZipFile()) === true && await page.locator('#banner').isHidden() && await ev(() => PB.inkFile().blocks.length === 1), 'the show file then opens with no question');
+  await ev(async () => { const sha = await PB.histSave('Prima'); await PB.histRestore(sha); });
+  z = await inZip('cut.zip');
+  ok(Object.keys(cut).every(k => z['damaged/' + k] === cut[k]), 'restoring a revision keeps what is under damaged/');
+  // damaged a second time: the first copy is not replaced
+  z['config.json'] = '{"title":"Rotto di nuovo"';
+  ok(await put('cut.zip', Object.entries(z)) === true && /config\.json/.test(await page.locator('#banner').textContent()), 'settings damaged again are reported again');
+  await page.locator('#banner .btn', { hasText: 'Go on without' }).click();
+  await allSaved(); await page.waitForTimeout(100);
+  z = await inZip('cut.zip');
+  ok(z['damaged/config.json'] === cut['config.json'] && z['damaged/2/config.json'] === '{"title":"Rotto di nuovo"', 'a second unreadable file of the same name is kept beside the first');
+  // "Close the show" leaves the file as it was
+  ok(await put('cut2.zip', broken) === true && await page.locator('#banner').isVisible(), 'another damaged show file asks too');
+  const before2 = await bytes('cut2.zip');
+  await ev(() => { PB.commitText(PB.serialize() + '\nANNA: Persa.\n'); });
+  await page.locator('#banner .btn', { hasText: 'Close the show' }).click();
+  await page.waitForSelector('#start .card'); await page.waitForTimeout(1000);
+  ok(await ev(() => PB.S.store.mode === 'none') && before2.equals(await bytes('cut2.zip')), '"Close the show" returns to the start page and leaves the show file as it was');
+  // a drawing no board of the script uses is looked at too: the name of its board is inside the file
+  ok(await put('orphan.zip', [['script.md', 'ANNA: Ciao.\n'], ['boards/vecchia.json', '{"name":"Vecch']]) === true && /boards\/vecchia\.json/.test(await page.locator('#banner').textContent()), 'an unreadable drawing is reported even when no board of the script is known to use it');
+  await page.locator('#banner .btn', { hasText: 'Close the show' }).click();
+  await page.waitForSelector('#start .card');
+  ok(errs.length === 0, 'an unreadable part is not logged as an error: ' + errs.join(' | '));
+
+  // 11. boards whose names give one file name ("Sala A" and "sala-a"; every name with no Latin letter) keep a file and a drawing each
+  const st = n => Array.from({ length: n }, (_, k) => ({ colour: '#000', width: 2, points: [[100, 100 + 40 * k], [400, 140 + 40 * k]] }));
+  const counts = ns => ev(ns => ns.map(n => { const B = PB.S.boards.get(n); return B ? B.strokes.length : 0; }).join(), ns);
+  const CLASH = ['Sala A', 'sala-a', 'Сцена', 'Кухня'];
+  // every drawing in the show file on disk: file, the name written in it, its strokes
+  const boardsIn = f => ev(async f => {
+    const m = await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(f)).getFile()), out = [];
+    for (const [k, b] of m) if (/^boards\/.*\.json$/.test(k)) { const j = JSON.parse(await b.text()); out.push(k.slice(7) + ' ' + j.name + ' ' + j.strokes.length); }
+    return out.sort().join(', ');
+  }, f);
+  const reopen = f => ev(async f => { const fh = await (await navigator.storage.getDirectory()).getFileHandle(f); window.showOpenFilePicker = async () => [fh]; return PB.openZipFile(); }, f);
+  const figs = page.locator('.page.facing .board');
+  await ev(b => PB.startMemory('## Scena\n\nANNA: Ciao.\n{BOARD Sala A}\n{BOARD sala-a}\n{BOARD Сцена}\n{BOARD Кухня}\n', {}, null, b), CLASH.map((name, k) => ({ name, strokes: st([1, 4, 2, 3][k]) })));
+  await ev(async () => { const root = await navigator.storage.getDirectory(); window.showSaveFilePicker = async () => root.getFileHandle('clash.promptbook.zip', { create: true }); });
+  await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Save as show file' }).click();
+  await page.waitForFunction(() => PB.S.store.mode === 'zip' && !PB.S.store.saving && PB.S.store.lastSave);
+  let bz = await boardsIn('clash.promptbook.zip');
+  ok(bz === 'board-2.json Кухня 3, board.json Сцена 2, sala-a-2.json sala-a 4, sala-a.json Sala A 1', 'four boards whose names give two file names are saved in four files, the second of each numbered: ' + bz);
+  ok(await reopen('clash.promptbook.zip') === true && await counts(CLASH) === '1,4,2,3', 'opened again, each of them has its own drawing: ' + await counts(CLASH));
+  const rev = await ev(() => PB.histSave('Prima'));
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 4);
+  await figs.nth(1).locator('.bcap button').click();
+  await page.locator('#pop .btn', { hasText: 'Clear ink' }).click();
+  await settle(); await page.waitForTimeout(100);
+  bz = await boardsIn('clash.promptbook.zip');
+  ok(/sala-a-2\.json sala-a 0, sala-a\.json Sala A 1$/.test(bz), 'a change to one of them after reopening is written to its own file and leaves the other alone: ' + bz);
+  ok(await reopen('clash.promptbook.zip') === true && await counts(CLASH) === '1,0,2,3', 'and is the only change when the show is opened again: ' + await counts(CLASH));
+  ok(await ev(sha => PB.histRestore(sha), rev) === true && await counts(CLASH) === '1,4,2,3', 'a revision restored from the history gives each of them its drawing back: ' + await counts(CLASH));
+  await ev(() => PB.loadBundle(JSON.parse(JSON.stringify(PB.bundle(true)))));
+  ok(await ev(() => PB.S.store.mode === 'memory') && await counts(CLASH) === '1,4,2,3', 'the backup and the draft carry each of them too: ' + await counts(CLASH));
+
+  // 12. a show as an older release wrote it: one file per slug, named after the board. "Sala A" and "sala-a" shared sala-a.json
+  //    (the one saved last is in it), and "salotto" was retyped by hand in script.md after its file was written as "Salotto"
+  const OLD = ['Sala A', 'sala-a', 'Pianta', 'salotto'];
+  await ev(async a => {
+    const m = new Map([['script.md', new Blob(['## Scena\n\nANNA: Ciao.\n{BOARD Sala A}\n{BOARD sala-a}\n{BOARD Pianta}\n{BOARD salotto}\n'])], ['config.json', new Blob(['{"title":"Vecchio"}'])]]);
+    for (const [f, name, strokes] of a) m.set('boards/' + f, new Blob([JSON.stringify({ name, image: null, w: 1000, h: 750, strokes })]));
+    const fh = await (await navigator.storage.getDirectory()).getFileHandle('old.promptbook.zip', { create: true });
+    const w = await fh.createWritable(); await w.write(await PB.buildZip(m)); await w.close();
+  }, [['sala-a.json', 'sala-a', st(4)], ['pianta.json', 'Pianta', st(3)], ['salotto.json', 'Salotto', st(2)]]);
+  ok(await reopen('old.promptbook.zip') === true && await counts(OLD) === '0,4,3,2', 'a show of an older release opens with its drawings; of two names that shared a file, the one saved last has the drawing and the other is empty: ' + await counts(OLD));
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 4);
+  const sb = await figs.nth(0).locator('svg').boundingBox();
+  await pen([[sb.x + sb.width * 0.25, sb.y + sb.height * 0.5], [sb.x + sb.width * 0.5, sb.y + sb.height * 0.6], [sb.x + sb.width * 0.75, sb.y + sb.height * 0.5]]);
+  await settle(); await page.waitForTimeout(100);
+  bz = await boardsIn('old.promptbook.zip');
+  ok(bz === 'pianta.json Pianta 3, sala-a-2.json Sala A 1, sala-a.json sala-a 4, salotto.json salotto 2', 'drawing on the empty one gives it a file of its own; the shared file keeps the other drawing: ' + bz);
+  ok(await reopen('old.promptbook.zip') === true && await counts(OLD) === '1,4,3,2', 'and both drawings are there when the show is opened again: ' + await counts(OLD));
+  ok(errs.length === 0, 'none of this logs an error');
+
+  // 13. in Italian the refusal of a file is in Italian
+  await ev(() => localStorage.setItem('promptbook:view', JSON.stringify({ lang: 'it' })));
+  await page.reload(); await page.waitForSelector('#start .card');
+  await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip'); window.showOpenFilePicker = async () => [fh]; });
+  ok(await ev(() => PB.openZipFile()) === false && await page.locator('#toast').textContent() === 'Impossibile aprire lo spettacolo: non è un file zip', 'with the interface in Italian, the reason a file is refused is in Italian: ' + await page.locator('#toast').textContent());
+  ok(errs.length === 1 && /non è un file zip/.test(errs[0]), 'the refused file is again the only error logged');
   errs.length = 0;
   await done(); srv.close();
 })();

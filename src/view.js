@@ -210,7 +210,7 @@ function near(pts, x, y, r) {
 /* ---------- facing page and boards ---------- */
 function mkBoard(name, j, tpl) {
   j = j || {};
-  return { tpl: !!tpl, name, w: BOARD_W, h: +j.h || 750, image: j.image || null, imageData: j.imageData || null,
+  return { tpl: !!tpl, name, w: BOARD_W, h: +j.h || 750, image: j.image || null, imageData: dataImg(j.imageData),
     strokes: Array.isArray(j.strokes) ? j.strokes : [], base: typeof j.base === 'string' && j.base ? j.base : null };
 }
 function ensureBoard(name) {
@@ -220,6 +220,19 @@ function ensureBoard(name) {
 }
 const imgKey = (B, file) => (B.tpl ? 'templates/' : 'boards/') + (file || B.image);
 function boardURL(B) { return B.imageData || (B.image && S.urls.get(imgKey(B))) || null; }
+/* The object URLs of the images in the show file. S.urls holds them under the path of the file, one for a Blob however many paths
+   show it. setURL is the only place that makes one, sweepURLs the only place that revokes one. */
+const blobURL = new Map();   // Blob -> its object URL
+function setURL(key, blob) { let u = blobURL.get(blob); if (!u) blobURL.set(blob, u = URL.createObjectURL(blob)); S.urls.set(key, u); }
+/* Run when a show has taken the place of another (loadShow) and after a save. A path leaves S.urls when its file has left the
+   show file (an image replaced on its board is dropped by the save) and no board names it; a URL is revoked when no path
+   holds it and no figure drawn on the page still shows it. */
+function sweepURLs() {
+  const f = S.store.files, named = new Set(Array.from(S.boards.values()).concat(Array.from(S.templates.values()), S.cfg.defaultBoard || []).map(B => imgKey(B)));
+  for (const k of S.urls.keys()) if (!(f && f.has(k)) && !named.has(k)) S.urls.delete(k);
+  const keep = new Set(S.urls.values()); for (const im of $$('.board image')) keep.add(im.getAttribute('href'));
+  for (const [b, u] of blobURL) if (!keep.has(u)) { URL.revokeObjectURL(u); blobURL.delete(b); }
+}
 /* the templates a board is drawn on top of, root first; stops at a loop */
 function chainOf(B) {
   const out = [], seen = new Set([B]);
@@ -318,6 +331,13 @@ function uniqueBoardName() {
   do { nm = t('board') + ' ' + n++; } while (names.has(nm));
   return nm;
 }
+/* a board takes another name and its drawing goes with it; a board already kept under that name takes the first one, so none is lost */
+function moveBoard(from, to) {
+  const A = S.boards.get(from), Z = S.boards.get(to);
+  S.boards.delete(from); S.boards.delete(to);
+  if (A) { A.name = to; S.boards.set(to, A); markDirty('board', to); }
+  if (Z) { Z.name = from; S.boards.set(from, Z); markDirty('board', from); }
+}
 function boardNameTaken(nm) { return S.boards.has(nm) || S.blocks.some(b => b.cues.some(c => c.board && c.label === nm)); }
 /* name: the one typed when the board was added; the next free "Board n" when it is empty or already taken */
 function newBoard(mkText, init, name) {
@@ -370,7 +390,7 @@ async function setBoardImage(B, file) {
   B.image = fname;
   if (onDisk()) {
     try { await writeBlob(B.tpl ? 'templates' : 'boards', fname, im.blob); } catch (e) { saveError(e); }
-    S.urls.set(imgKey(B), URL.createObjectURL(im.blob)); B.imageData = null;
+    setURL(imgKey(B), im.blob); B.imageData = null;
   } else B.imageData = await blobToDataURL(im.blob);
   dirtyB(B); shapeChanged();
 }
@@ -450,7 +470,7 @@ function newTemplate(base) {
 async function copyToTemplates(B) {
   const T = mkBoard(uniqueTplName(B.name), { h: B.h, image: B.image, imageData: B.imageData, base: B.base, strokes: JSON.parse(JSON.stringify(B.strokes)) }, true);
   if (B.image && onDisk()) {
-    try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); S.urls.set(imgKey(T), URL.createObjectURL(f)); } }
+    try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); setURL(imgKey(T), f); } }
     catch (e) { saveError(e); }
   }
   addTemplate(T); refreshFacing(); toast(t('tplMade', T.name));
@@ -566,6 +586,12 @@ function renderTemplates() {
   host.appendChild(h('p', 'tplhint', t('tplHint')));
   const list = S.cfg.templates.map(n => S.templates.get(n)).filter(Boolean);
   if (!list.length) host.appendChild(h('p', 'tplhint', t('tplEmpty')));
+  const gone = tplGone();
+  if (gone.length) {   // named in the settings, no file in the show: said here until the file is back or the user lets the names go (STO-27)
+    const p = h('p', 'tplhint tplgone', t('tplGoneHint', gone.map(n => n + ' (templates/' + slug(n) + '.json)').join(', ')) + ' '), fb = h('button', 'btn sm', t('tplForget'));
+    fb.type = 'button'; fb.onclick = () => { S.store.gone = []; markDirty('cfg'); renderTemplates(); };
+    p.appendChild(fb); host.appendChild(p);
+  }
   const w = clamp(desk.clientWidth - 90, 360, 940);
   for (const T of list) {
     const sheet = h('div', 'page tsheet');
@@ -1443,9 +1469,11 @@ function openBoardPop(b, c, x, y) {
       const nm = cleanField(ni.value);
       if (!nm || nm === oldName || S.boards.has(nm)) return;
       const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
-      const B = S.boards.get(oldName);
-      if (B) { S.boards.delete(oldName); B.name = nm; S.boards.set(nm, B); markDirty('board', nm); }
-      commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)));
+      moveBoard(oldName, nm);
+      if (!commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)))) { moveBoard(nm, oldName); return; }
+      /* one undo step for the token and the drawing: the step commitText just made also carries the board back and forth */
+      const op = S.hist[S.hist.length - 1], un = op.undo, re = op.redo;
+      op.undo = () => { moveBoard(nm, oldName); un(); }; op.redo = () => { moveBoard(oldName, nm); re(); };
     };
     const row = h('div', 'prow');
     const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };
@@ -1557,6 +1585,8 @@ function collectCues(review) {
   const seen = new Map();
   for (const o of out) if (o.c.label && !o.loose) { const k = o.c.dept + '\u0001' + o.c.label; seen.set(k, (seen.get(k) || 0) + 1); }
   for (const o of out) o.dup = !o.loose && !!o.c.label && seen.get(o.c.dept + '\u0001' + o.c.label) > 1;
+  const odd = review ? new Set() : cuesOutOfOrder(out.map(o => o.c));
+  for (const o of out) o.outOrder = odd.has(o.c);
   return out;
 }
 function reviewData() {
@@ -1622,7 +1652,7 @@ function cueTable(list, clickable) {
   for (const o of list) {
     const tr = h('tr', clickable ? 'cr' : ''), d = h('td', 'dp', o.c.dept);
     d.style.setProperty('--c', cueColour(o.c)); tr.appendChild(d);
-    const n = h('td', o.dup || o.loose ? 'dupe' : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup) n.title = t('dup'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
+    const n = h('td', o.dup || o.loose || o.outOrder ? 'dupe' + (o.outOrder ? ' outord' : '') : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup || o.outOrder) n.title = [o.dup && t('dup'), o.outOrder && t('outOrder')].filter(Boolean).join('\n'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
     const dc = h('td', null, o.c.desc);
     if (o.c.links.length) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsCue', o.c.links.map(cueName).join(', '))));
     if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.endedBy ? ' ' + t('endedBy', cueName(o.endedBy)) : '') + (o.end.c.desc && !o.endedBy ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));
@@ -1725,7 +1755,7 @@ function renderDrawer() {
 function csvText(list) {
   const sep = (1.1).toLocaleString().includes(',') ? ';' : ',';
   const q = v => { v = String(v == null ? '' : v); return /["\n\r;,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
+  const rows = [[t('thDept'), t('thNo'), t('thDesc'), t('thAct'), t('thScene'), t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
   for (const o of list) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
     o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc + (o.endedBy || !o.end.c.notes ? '' : (o.end.c.desc ? ' — ' : '') + o.end.c.notes) : '',
     o.endedBy ? cueName(o.endedBy) : '', o.c.links.map(cueName).join('; '), o.c.notes]);

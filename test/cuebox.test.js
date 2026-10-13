@@ -1,4 +1,4 @@
-const { chromium } = require('./_pw');
+const { chromium } = require('playwright');
 const path = require('path');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);

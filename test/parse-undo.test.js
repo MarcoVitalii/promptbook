@@ -1,4 +1,4 @@
-const { chromium } = require('./_pw');
+const { chromium } = require('playwright');
 const { nameBox, popGone } = require('./_util');
 const path = require('path');
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);

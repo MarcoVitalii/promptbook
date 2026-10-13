@@ -14,9 +14,9 @@ const released = !new RegExp('^## ' + VERSION.replace(/\./g, '\\.') + '\\b.*not 
 /* ---------- pages ---------- */
 const list = dir => fs.readdirSync(path.join(root, dir)).filter(f => f.endsWith('.md')).sort().map(f => dir + '/' + f);
 const GROUPS = [
-  ['Start here', ['SPEC.md', 'CHANGELOG.md', 'PLAN.md', 'CONTRIBUTING.md']],
+  ['Start here', ['SPEC.md', 'CHANGELOG.md', 'CONTRIBUTING.md']],
   ['Capabilities', list('docs/specs')],
-  ['Reference', list('docs').concat(list('docs/background'))]
+  ['Reference', list('docs')]
 ];
 const PAGES = new Map();   // source path → { title, href }
 for (const [, files] of GROUPS) for (const f of files) {

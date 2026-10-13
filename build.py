@@ -4,7 +4,10 @@ import base64, json, pathlib
 root = pathlib.Path(__file__).parent
 src = lambda f: (root / 'src' / f).read_text(encoding='utf-8')
 faces = [('Regular', 'normal', 400), ('Italic', 'italic', 400), ('Bold', 'normal', 700)]
-fonts = ''
+# The licence of the embedded font goes with it, in full. A CSS comment: its rules of hyphens are not valid in an HTML one.
+ofl = (root / 'fonts' / 'OFL.txt').read_text(encoding='utf-8')
+assert '*/' not in ofl and '</style' not in ofl
+fonts = '/* The embedded font is Inter, a subset. Its licence:\n\n%s*/\n' % ofl
 for name, style, weight in faces:
     b64 = base64.b64encode((root / 'fonts' / f'pb-{name}.woff').read_bytes()).decode()
     fonts += ('@font-face{font-family:"PB";font-style:%s;font-weight:%d;font-display:block;'

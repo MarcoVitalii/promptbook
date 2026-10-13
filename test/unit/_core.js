@@ -8,6 +8,8 @@ vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../src/core.js'), 'u
 const NAMES = ['S', 'VERSION', 'STR', 't', 'defaultConfig', 'normCfg', 'stripTokens', 'parseMeta', 'fullName', 'castCheck', 'parseScript', 'analyze', 'reparse', 'pairCues', 'serialize', 'applyText', 'commitText', 'textMoveCue', 'textCueOwn', 'textMoveBlocks', 'undo', 'redo', 'facingLayout', 'FIG_EXTRA', 'FIG_GAP', 'MAX_BOARDS', 'lcs', 'parseBlocks', 'diffBlocks', 'diffWords', 'diffFor', 'diffNames', 'insLabel', 'castPack', 'castTo', 'castSpeaker',
   'showWeight', 'showTimeline', 'showTl', 'showT', 'showP', 'showPlace', 'showCues', 'showNow', 'showSet', 'showPlay', 'showTempo', 'showHere', 'showLearn', 'showUnlearn', 'showNudge', 'showStats', 'showRest', 'showMeasured', 'showStepPlace', 'showCalls', 'showClock', 'showSeg'];
 module.exports = vm.runInContext('({' + NAMES.join(',') + '})', ctx);
+module.exports.cuesOutOfOrder = vm.runInContext('cuesOutOfOrder', ctx);
+Object.assign(module.exports, vm.runInContext('({ READABLE_FROM, relCmp, relMark, relNewer })', ctx));   // the release mark of a show
 // Replaces the show with this text, as opening it would.
 module.exports.load = text => vm.runInContext('(text => { S.hist = []; S.redo = []; S.blocks = []; S.byId = new Map(); applyText(text); })', ctx)(text);
 module.exports.ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);

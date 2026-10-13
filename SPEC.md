@@ -1,8 +1,7 @@
 # Promptbook — Specification
 
-**Specification:** v2.0, 2026-10-09. Restructured by capability; the content of v1.0 (git `953336a`) is carried over and the behaviour it describes is unchanged.
-**Tool described:** r1.11 (`VERSION` in `src/core.js`).
-**State:** r1.6 to r1.9 are built and committed on branch `master`; r1.8 and r1.9 are tagged, r1.7 is not, and the tag `r1.6` sits on a later commit than the release (§6). r1.6 to r1.8 were checked in a simulated browser only; the r1.9 features were tried by the client on a real show and reported as working (2026-10-10). Nothing has been printed on paper (`docs/verification.md`).
+**Tool described:** r1.11, the first release (`VERSION` in `src/core.js`), 2026-10-13.
+**State:** every requirement with a check passes in a simulated browser. The client has used part of it on a real show (`docs/verification.md` §4). Nothing has been tried on the rehearsal laptop under a recorded trial, on a phone or on paper.
 
 ---
 
@@ -18,23 +17,20 @@ A change starts at the top: a request is recorded as intent, turned into require
 
 **Tags.** `[LOCKED]` = decided by the client's answers. `[ASSUMED]` = the builder's reading; it stands unless vetoed. `[OPEN]` = still blocks something.
 
-**Requirement tables.** *Basis* is where the requirement comes from: a decision (`D`), a conflict (`K`), a request, or "as built" when it was settled while building with no recorded client decision. *Since* is the release that first had it. *Checked by* names the test files with a check for it (`test/<name>.test.js`, `unit/` for `test/unit/`); "—" means no automated check was found.
+**Requirement tables.** *Basis* is where the requirement comes from: a decision (`D`), a conflict (`K`), a request, "original scope" for what the first agreed scope listed, "code review" for the review of 2026-10-09, or "as built" when it was settled while building with no recorded client decision. *Checked by* names the test files with a check for it (`test/<name>.test.js`, `unit/` for `test/unit/`); "—" means no automated check was found.
 
-**IDs.** `G` goal, `C` constraint, `A` assumption, `Q` question (all in this file). `D` decision, `K` conflict (`docs/decisions.md`). Requirements carry the prefix of their capability: `TXT-8`, `CUE-25`. IDs are never reused or renumbered. The tier IDs used until v1.0 (`R0.1` to `R1.15`) are mapped in `docs/verification.md` §5.
+**IDs.** `G` goal, `C` constraint, `A` assumption, `Q` question (all in this file). `D` decision, `K` conflict (`docs/decisions.md`). Requirements carry the prefix of their capability: `TXT-8`, `CUE-25`. IDs are never reused or renumbered; an ID that is not in use is named under the tables of its capability file.
 
 **Documents.**
 
 | File | Answers |
 |---|---|
 | `SPEC.md` | Why the product exists, what binds it as a whole, what is assumed and still open |
-| `docs/specs/01` … `10` | Intent, requirements and consequences of each capability |
+| `docs/specs/01` … `11` | Intent, requirements and consequences of each capability |
 | `docs/decisions.md` | Every decision and conflict, with its source and what follows from it |
 | `docs/architecture.md` | How it is built: C4 context, containers, components |
 | `docs/verification.md` | What was checked, how, and what never was |
-| `docs/review-2026-10-09.md` | Criticalities, refactor opportunities, technical debt |
-| `PLAN.md` | What happens next: actions, backlog, risks |
-| `CHANGELOG.md` | What changed in each release, written for the user |
-| `docs/background/syntax-comparison.md` | Why the script format was kept instead of Fountain or Downstage |
+| `CHANGELOG.md` | One entry per release, written for the user |
 
 ---
 
@@ -62,17 +58,17 @@ The script is plain text in Word (`CHARACTER: dialogue`, actions in parentheses)
 | Stage manager | Yes: the one user it is built and tested for | The prompt book: script, cues, ink, boards, history |
 | Writer or director | Edits the text, never at the same time as the stage manager (D15) | A script whose edits cost nobody a re-alignment |
 | Operators (lights, sound, video) | No | Cue lists on paper and as CSV, one per department |
-| Cast | Since r1.10, a file of their own (`promptbook-cast.html`, `docs/specs/10-cast.md`): they read, they never edit the script | The text on a phone, their own lines covered for practice, their own notes, the notes sent to them; on paper, script pages, replaced pages after a change, the changes that reach each character |
+| Cast | A file of their own (`promptbook-cast.html`, `docs/specs/10-cast.md`): they read, they never edit the script | The text on a phone, their own lines covered for practice, their own notes, the notes sent to them; on paper, script pages, replaced pages after a change, the changes that reach each character |
 
 ### 1.4 What it is not
 
-Not a show-control system: no console or playback export (D9), no timing data (D4). Not a co-editing tool (D15). Since r1.11 a calling aid for the stage manager alone (D11, D5 as amended; `docs/specs/11-show.md`): the line that marks the place is a clock that goes through each block in the time learned for it in rehearsal, and does not know what happens on stage. Not planned at all: score or bar-number cueing, handwriting recognition, any server.
+Not a show-control system: no console or playback export (D9), no timing data (D4). Not a co-editing tool (D15). It is a calling aid for the stage manager alone (D11, D5; `docs/specs/11-show.md`): the line that marks the place is a clock that goes through each block in the time learned for it in rehearsal, and does not know what happens on stage. Not planned at all: score or bar-number cueing, handwriting recognition, any server.
 
 ## 2. Requirements
 
 ### 2.1 Constraints
 
-These bind every capability. Each restates a decision; the numbering is new in v2.0.
+These bind every capability. Each restates a decision.
 
 | # | Constraint | Basis |
 |---|---|---|
@@ -81,27 +77,28 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | C3 | It is built and tested for Chrome or Edge on a laptop with touchscreen and pen. Elsewhere it still works, with the show kept in the browser and moved by backup files. | D13 `[LOCKED]`, K6, A7 |
 | C4 | One editor at a time. No merge, no co-editing. | D15 `[LOCKED]` |
 | C5 | The script format is the convention already in use, plus `#` headings, one cue token and an optional frontmatter. No new markup inside the script body. | D3, D19 `[LOCKED]` |
-| C6 | A show is a set of plain files the user owns, readable and hand-editable without the tool. | D10 `[LOCKED]`, as amended |
+| C6 | A show is a set of plain files the user owns, readable and hand-editable without the tool. | D10 `[LOCKED]` |
 | C7 | Nothing generated is stored as a source. Cue lists, pages and page numbers are computed. | D8, D9 |
-| C8 | A show written by an older release must still open. Every exception is stated under "Compatibility" in `CHANGELOG.md`. | release rule since r1.0 |
-| C9 | The interface is in English and Italian. Every user-facing text exists in both. | as built, r0 |
+| C8 | A show written by an older release must still open. Every exception is stated under "Compatibility" in `CHANGELOG.md`. | release rule |
+| C9 | The interface is in English and Italian. Every user-facing text exists in both. | as built |
 | C10 | Hints, not errors. The tool lists what looks wrong and never refuses, drops or silently corrects what the stage manager or the writer typed. | D7, K7, K8 |
 | C11 | Cue lists are documentation only. A cue is a position in the text, with no timing data. | D4, D9 `[LOCKED]` |
 
 ### 2.2 Capabilities
 
-| Capability | File | Prefix | Requirements | First release |
-|---|---|---|---|---|
-| Script text: format, editing, undo, frontmatter, comments | `docs/specs/01-script-text.md` | TXT | 27 | r0 |
-| Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 41 | r0 |
-| Ink over the script | `docs/specs/03-ink.md` | INK | 11 | r0 |
-| Boards and templates | `docs/specs/04-boards.md` | BRD | 27 | r0 |
-| Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 12 | r0 |
-| Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
-| Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 14 | r0 |
-| History, variants and changes | `docs/specs/08-history.md` | HIS | 12 | r1.7 |
-| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 11 | r0 |
-| Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 30 (5 withdrawn) | r1.11 |
+| Capability | File | Prefix | Requirements |
+|---|---|---|---|
+| Script text: format, editing, moving blocks, undo, frontmatter, comments | `docs/specs/01-script-text.md` | TXT | 31 |
+| Cues: tokens, pin, ends, to-do notes, numbers, moving, cue list | `docs/specs/02-cues.md` | CUE | 43 |
+| Ink over the script | `docs/specs/03-ink.md` | INK | 11 |
+| Boards and templates | `docs/specs/04-boards.md` | BRD | 30 |
+| Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 12 |
+| Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 |
+| Storage: show file, autosave, data shapes, damaged files, compatibility | `docs/specs/07-storage.md` | STO | 25 |
+| History, variants and changes | `docs/specs/08-history.md` | HIS | 15 |
+| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 12 |
+| Cast: notes for the actors, the cast file, the script for the actors | `docs/specs/10-cast.md` | CST | 21 |
+| Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 25 |
 
 ## 3. Consequences
 
@@ -115,11 +112,11 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | Any browser | Saving to disk needs Chrome or Edge. | K6 |
 | Collaboration as in Word | One editor at a time. | K2 |
 
-**Everything is hand-written and lives in one file.** Zip, git objects, CSV, storage, pen, layout. Each covers only what the tool needs. How it is put together, and what that costs, is in `docs/architecture.md`.
+**Everything is hand-written and lives in one file** (two, with the script for the actors). Zip, git objects, CSV, storage, pen, layout. Each covers only what the tool needs. How it is put together, and what that costs, is in `docs/architecture.md`.
 
 **The page is frozen so that ink can hold.** Fixed geometry, one embedded font, no reflow. Several things a writer might want (emphasis, a manual page break) are absent for that reason.
 
-**The tool can only be fully verified on the device.** Pen, finger and palm behaviour, the real file dialogs and paper are outside what the automated checks reach. Until a device trial is recorded, every release since r1.5 is checked in simulation only.
+**The tool can only be fully verified on the device.** Pen, finger and palm behaviour, the real file dialogs and paper are outside what the automated checks reach. Until a device trial is recorded, the tool is checked in simulation only.
 
 **The tool reports and never blocks (C10).** A mistake does not stop a rehearsal. It also does not stop a wrong page from being printed: the Review badge is the only signal.
 
@@ -139,44 +136,30 @@ These bind every capability. Each restates a decision; the numbering is new in v
 
 | # | Question | Blocks |
 |---|---|---|
-| **Q27** | **Where should the git repository of this project live so that it outlasts one machine: a second folder, a GitHub repository, or only a downloadable archive?** Observed on 2026-10-09: the repository has no remote; it exists in one folder on one machine. | **Losing the project; `PLAN.md` — active** |
 | Q21 | Answered "yes". Read as: pen draws without scrolling, resting hand stays quiet, eraser end erases, print lines up. The answer does not say which were tried. | A3: correct this if any of the four was not checked |
 | Q19 | Answered "yes" to a two-part question. Still unknown: paper size, and single- or double-sided printing. A4 and the built print order stand. | PAG, low priority |
 | Q25 | Cue ends were built as assumed (`{/SND 5}`, one list row per cue). Not explicitly confirmed. | CUE-9 to CUE-19 |
 
 Readings shown to the client, or built on, that were neither confirmed nor vetoed:
 
-- The five `[ASSUMED]` decisions of r1.6: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30, CUE-32). The client saw them and did not object.
-- The `[ASSUMED]` rows of r1.7 in `docs/specs/08-history.md` and PAG-14 to PAG-17.
-- r1.8: which keys do what (UI-9), and the reading of "more modern", "less taxing on the eyes" and "less crowded" as the colours, the tag labels and the corner dock that were built (`docs/specs/09-workbench.md`). The client has not seen them.
+- Five `[ASSUMED]` decisions about boards and moving a cue: the limit of 8 boards (BRD-8), the "⋯" button (BRD-10), the grid as a show setting (BRD-12), the 0.3 s finger hold (CUE-26), a cue always lands after a word (CUE-30, CUE-32). The client saw them and did not object.
+- The `[ASSUMED]` rows of `docs/specs/08-history.md` and PAG-14 to PAG-17.
+- Which keys do what (UI-9), and the reading of "more modern", "less taxing on the eyes" and "less crowded" as the colours, the tag labels and the corner dock that were built (`docs/specs/09-workbench.md`). The client has not seen them.
 - "Live in configurations" read as "part of the show's settings", not as strokes inside `config.json` (`docs/specs/04-boards.md`, Consequences).
+- The `[ASSUMED]` readings of `docs/specs/10-cast.md` §1 and `docs/specs/11-show.md` §1.
 - Silence on the `[ASSUMED]` decisions and conflicts of `docs/decisions.md` has been treated as acceptance since the first day.
 
 ## 6. Releases
 
-| Release | Date | Content | Capability files | In git |
-|---|---|---|---|---|
-| r0 | 2026-10-06 | Script view, tolerant parser, cue pins, ink, boards, cue list, print, show folder | 01 to 07, 09 | Not in this repository |
-| r0.1 | 2026-10-06 | Cue words boxed instead of underlined | 02 | Not in this repository |
-| r1.0 | 2026-10-06 | Cue ends, board templates | 02, 04 | Commit `33118d4`, the first; no tag |
-| r1.1 | 2026-10-07 | Frontmatter, front page, character list | 01, 06 | Tag `r1.1` |
-| r1.2 | 2026-10-07 | A show is one `.zip` file | 07 | Tag `r1.2` |
-| r1.3 | 2026-10-07 | Linking cues, descriptions, exports per department; "runs" removed | 02 | Tag `r1.3` |
-| r1.4 | 2026-10-07 | `%%` comments, to-do notes, cue list columns, automatic numbers | 01, 02 | Tag `r1.4` |
-| r1.5 | 2026-10-08 | Fix: a reopened show file saved only its first change; development tooling | 07 | Tag `r1.5`, branch `master` |
-| r1.6 | 2026-10-08 | Boards in two columns, board names, grid, moving a cue | 02, 04, 05 | Commit `d0b53c0`. The tag `r1.6` and the branch `r1.6` both point at `a3d735b`, which is later and contains r1.7 |
-| r1.7 | 2026-10-09 | History, variants, locked page numbers, changes per character; Eraser and Finger no longer lit together | 05, 06, 08 | Commits `3fe9a16`, `ad08c1e`, on `master`; no tag |
-| r1.8 | 2026-10-10 | Calmer colours, filled cue labels, toolbar in groups with a corner dock, keyboard shortcuts, Ctrl+P taken over | 02, 05, 09 | Tag `r1.8`, branch `master` |
-| r1.9 | 2026-10-10 | Blocks moved by dragging a grip, name asked before a board is made, "Delete" as the one word with the Delete key, cursor in the margin text of a new cue, Esc leaves Find | 01, 02, 04, 05, 09 | Tag `r1.9`, branch `master` |
-| r1.10 | 2026-10-10 | Notes for the cast, "Send to cast…", the script for the actors as a second file | 10; 02, 07, 09 | Not committed yet |
-| r1.11 | not released | Show mode: read only, focus, a line running through blocks timed in rehearsal, the page in steps, warnings and standbys, the length of the show | 11; 05, 09 | Not committed yet |
+| Release | Date | Content | Capability files |
+|---|---|---|---|
+| r1.11 | 2026-10-13 | The first release: everything the capability files describe | 01 to 11 |
 
-What each release changed for the user is in `CHANGELOG.md`. How each was checked is in `docs/verification.md`.
+What a release holds for the user is in `CHANGELOG.md`. How it was checked is in `docs/verification.md`.
 
 ## 7. Sources
 
 - Obsidian licence: https://obsidian.md/license
 - Folder access browser support: https://web.dev/articles/files/open-a-directory
 - Prompt book conventions: https://theatrecrafts.com/pages/home/topics/stage-management/the-prompt-book/
-- Tools surveyed in v0.1 and dropped: Excalidraw plugin, obsidian-fountain, Downstage, DigiScript, Pandoc. DigiScript (https://github.com/dreamteamprod/DigiScript) stays relevant as a reference for a follow-along view.
-- Earlier forms of this specification: v0.1 to v1.0, the last at git `953336a`, organised by release.
+- Tools surveyed and not adopted: Excalidraw plugin, obsidian-fountain, Downstage, DigiScript, Pandoc. DigiScript (https://github.com/dreamteamprod/DigiScript) stays relevant as a reference for a follow-along view.
