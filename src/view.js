@@ -220,6 +220,19 @@ function ensureBoard(name) {
 }
 const imgKey = (B, file) => (B.tpl ? 'templates/' : 'boards/') + (file || B.image);
 function boardURL(B) { return B.imageData || (B.image && S.urls.get(imgKey(B))) || null; }
+/* The object URLs of the images in the show file. S.urls holds them under the path of the file, one for a Blob however many paths
+   show it. setURL is the only place that makes one, sweepURLs the only place that revokes one. */
+const blobURL = new Map();   // Blob -> its object URL
+function setURL(key, blob) { let u = blobURL.get(blob); if (!u) blobURL.set(blob, u = URL.createObjectURL(blob)); S.urls.set(key, u); }
+/* Run when a show has taken the place of another (loadShow) and after a save. A path leaves S.urls when its file has left the
+   show file (an image replaced on its board is dropped by the save) and no board names it; a URL is revoked when no path
+   holds it and no figure drawn on the page still shows it. */
+function sweepURLs() {
+  const f = S.store.files, named = new Set(Array.from(S.boards.values()).concat(Array.from(S.templates.values()), S.cfg.defaultBoard || []).map(B => imgKey(B)));
+  for (const k of S.urls.keys()) if (!(f && f.has(k)) && !named.has(k)) S.urls.delete(k);
+  const keep = new Set(S.urls.values()); for (const im of $$('.board image')) keep.add(im.getAttribute('href'));
+  for (const [b, u] of blobURL) if (!keep.has(u)) { URL.revokeObjectURL(u); blobURL.delete(b); }
+}
 /* the templates a board is drawn on top of, root first; stops at a loop */
 function chainOf(B) {
   const out = [], seen = new Set([B]);
@@ -377,7 +390,7 @@ async function setBoardImage(B, file) {
   B.image = fname;
   if (onDisk()) {
     try { await writeBlob(B.tpl ? 'templates' : 'boards', fname, im.blob); } catch (e) { saveError(e); }
-    S.urls.set(imgKey(B), URL.createObjectURL(im.blob)); B.imageData = null;
+    setURL(imgKey(B), im.blob); B.imageData = null;
   } else B.imageData = await blobToDataURL(im.blob);
   dirtyB(B); shapeChanged();
 }
@@ -457,7 +470,7 @@ function newTemplate(base) {
 async function copyToTemplates(B) {
   const T = mkBoard(uniqueTplName(B.name), { h: B.h, image: B.image, imageData: B.imageData, base: B.base, strokes: JSON.parse(JSON.stringify(B.strokes)) }, true);
   if (B.image && onDisk()) {
-    try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); S.urls.set(imgKey(T), URL.createObjectURL(f)); } }
+    try { const f = await readFile(B.image, 'boards'); if (f) { await writeBlob('templates', B.image, f); setURL(imgKey(T), f); } }
     catch (e) { saveError(e); }
   }
   addTemplate(T); refreshFacing(); toast(t('tplMade', T.name));

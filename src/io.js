@@ -181,7 +181,7 @@ async function saveNow(force) {
       d.boards.clear();
       for (const n of d.tpls) { const T = S.templates.get(n); if (T) writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); }
       d.tpls.clear();
-      if (any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); }
+      if (any) { try { await flushZip(); } catch (e) { d.script = true; throw e; } s.conflict = false; showMemBanner(); sweepURLs(); }
       s.lastSave = new Date(); s.err = null;
     } else {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
@@ -265,13 +265,18 @@ function idb() {
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
+/* a connection lives for one read or one write: close() waits for the transaction, and a closed connection holds up no other tab */
 async function idbGet(k) {
-  try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error); }); }
+  let db;
+  try { db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error); }); }
   catch (e) { return null; }
+  finally { if (db) db.close(); }
 }
 async function idbSet(k, v) {
-  try { const db = await idb(); await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+  let db;
+  try { db = await idb(); await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
   catch (e) { /* not available */ }
+  finally { if (db) db.close(); }
 }
 
 function loadShow(cfg, text, inkF) {
@@ -285,7 +290,7 @@ function loadShow(cfg, text, inkF) {
   S.blocks = []; S.byId = new Map(); S.groups = []; S.nextId = 1; S.hist = []; S.redo = []; S.meas = new Map();
   S.sel = null; S.findAt = null; S.cueFilter = null;
   for (const E of S.els) E.sp.remove();
-  S.els = [];
+  S.els = []; sweepURLs();   // the pages that showed the images of the show before are gone
   reparse(text || ''); attachInk(inkF);
   S.loaded = true; $('#start').hidden = true;
   relayout(true); desk.scrollTop = 0; renderVisible();
@@ -342,7 +347,7 @@ async function loadStore(handle) {
     S.boards.forEach(B => { if (B.image) imgs.add('boards/' + B.image); });
     S.templates.forEach(T => { if (T.image) imgs.add('templates/' + T.image); });
     if (cfg && cfg.defaultBoard && cfg.defaultBoard.image) imgs.add('boards/' + cfg.defaultBoard.image);
-    for (const key of imgs) { const blob = s.files.get(key); if (blob) S.urls.set(key, URL.createObjectURL(blob)); }
+    for (const key of imgs) { const blob = s.files.get(key); if (blob) setURL(key, blob); }
     loadShow(cfg, text || '', ink);
     idbSet('dir', handle);
     if (text == null && !relNewer(S.cfg)) openTextDialog(true);   // the box would take the place of the warning
@@ -368,10 +373,10 @@ async function saveToZip() {
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
       const blob = await dataURLBlob(B.imageData); writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
-      S.urls.set(imgKey(B), URL.createObjectURL(blob)); B.imageData = null;
+      setURL(imgKey(B), blob); B.imageData = null;
     }
     const db = S.cfg.defaultBoard;
-    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); writeBlob('boards', db.image, blob); S.urls.set('boards/' + db.image, URL.createObjectURL(blob)); } delete db.imageData; }
+    if (db && db.imageData && db.image) { if (!S.urls.has('boards/' + db.image)) { const blob = await dataURLBlob(db.imageData); writeBlob('boards', db.image, blob); setURL('boards/' + db.image, blob); } delete db.imageData; }
   } catch (e) { saveError(e); }
   s.dirty.script = s.dirty.ink = s.dirty.cfg = true; S.boards.forEach(B => s.dirty.boards.add(B.name)); S.templates.forEach(T => s.dirty.tpls.add(T.name));
   await saveNow(true);
