@@ -76,7 +76,7 @@ const OUT = process.env.OUT || '.';
   await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
   const nbx = await nameBox();
   ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v + ' (' + nbx.why + ', ' + await ev(() => PB.S.pages[0].boards.length) + ' boards)');
-  if (!nbx.all) for (const l of (await ev(() => window.__tr.join('; '))).match(/.{1,270}/g).slice(1, 4)) console.log('FAIL trace ' + l);   // TEMPORARY
+  if (!nbx.all) for (const l of (await ev(() => window.__tr.join('; '))).match(/.{1,270}/g).slice(0, 3)) console.log('FAIL trace ' + l);   // TEMPORARY
   await page.keyboard.press('Escape');
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'Escape closes the box and no board is added');
   await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
