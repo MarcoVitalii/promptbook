@@ -1204,7 +1204,9 @@ let POP = null;
 function closePop() {
   if (!POP) return;
   const p = POP; POP = null;
-  $('#pop').hidden = true;
+  const el = $('#pop'), a = document.activeElement;
+  el.hidden = true;
+  if (a && el.contains(a)) a.blur();   // a field of a closed box kept the focus for a moment, and the keys with it: Ctrl+Z right after Enter did nothing
   if (p.onclose) p.onclose();
 }
 function openPop(x, y, build) {

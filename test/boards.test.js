@@ -67,9 +67,15 @@ const OUT = process.env.OUT || '.';
   L = await set(7);
   const nameBox = () => ev(() => { const i = document.querySelector('#pop input'); return i ? { v: i.value, all: document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length, why: (document.activeElement === i ? 'focused' : 'focus on ' + document.activeElement.tagName) + ', selected ' + i.selectionStart + ' to ' + i.selectionEnd } : { v: 'none' }; });
   const steps = await ev(() => PB.S.hist.length);
+  await ev(() => {   // TEMPORARY: what happens around the click, for a failure seen on the CI runner only
+    const tr = window.__tr = [], t0 = performance.now(), log = s => tr.push(Math.round(performance.now() - t0) + ' ' + s);
+    for (const k of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click', 'focusin', 'keydown', 'pointercancel']) addEventListener(k, e => log(k + ' ' + (e.target.tagName || 'window') + '.' + String(e.target.className || '').split(' ')[0]), true);
+    new MutationObserver(() => log('pop ' + (document.querySelector('#pop').hidden ? 'hidden' : 'shown, inputs ' + document.querySelectorAll('#pop input').length))).observe(document.querySelector('#pop'), { childList: true, attributes: true });
+    new MutationObserver(m => log('desk changed ' + m.length)).observe(document.querySelector('#desk'), { childList: true, subtree: true });
+  });
   await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
   const nbx = await nameBox();
-  ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v + ' (' + nbx.why + ', ' + await ev(() => PB.S.pages[0].boards.length) + ' boards)');
+  ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v + ' (' + nbx.why + ', ' + await ev(() => PB.S.pages[0].boards.length) + ' boards)' + (nbx.all ? '' : ' TRACE ' + await ev(() => window.__tr.join('; '))));
   await page.keyboard.press('Escape');
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'Escape closes the box and no board is added');
   await page.locator('.page.facing .addboard').first().click(); await nameBox(page);

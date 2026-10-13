@@ -14,6 +14,7 @@
 - The screen is kept awake in show mode where the browser allows it.
 - Checked in a simulated browser only: not yet on the laptop with pen and touch, and neither the pace of 130 nor the timing has been tried in a real rehearsal.
 - A cue can be dragged between two lines again, as a block can: carry its tag to the space between two blocks, and release where the line in the cue's colour shows. The cue gets a line of its own there. Released on a word it goes after that word, as before. Checked in a simulated browser with the mouse; not tried with a finger, for which the space between two blocks may be narrow.
+- Ctrl+Z pressed right after closing a box with Enter (the name of a board, the number of a cue) is no longer lost: the closed box held the keyboard for an instant.
 
 **Compatibility.** Show files written by r1.10 open unchanged. `config.json` gains `show` (pace, standby and warning times, the timed blocks); an older release keeps it and ignores it.
 
