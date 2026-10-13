@@ -92,6 +92,16 @@ body.show .tag,body.show .w{cursor:default}
 #shLearnBox div[hidden]{display:none}
 #shLearnBox span{flex:1;min-width:0}
 #shLearnBox button{min-height:30px;min-width:0;padding:0 8px}
+#shLearnBox .mode button{flex:1;padding:0 4px;font-size:12px}
+#shNext{background:var(--acc)!important;color:var(--ui)!important;border-color:var(--acc)!important;font-weight:700!important;min-height:38px!important;padding:0 16px!important}
+#shLast.no{color:var(--acc)}
+/* while timing: the time of every block at the right edge of the page, pressed to type it; the blocks of the last chunk carry a bar */
+#showTimes i{position:absolute;z-index:2;box-sizing:border-box;padding-left:5px;font-style:normal;font-size:10.5px;line-height:15px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;cursor:pointer;border-left:3px solid transparent}
+#showTimes input{position:absolute;z-index:4;box-sizing:border-box;width:58px;height:22px;margin-top:-4px;padding:0 4px;border:1.5px solid var(--acc);border-radius:4px;background:var(--paper);color:var(--tx);font:600 12px/1 inherit;font-variant-numeric:tabular-nums}
+#showTimes input.bad{border-color:#c0392b;background:color-mix(in srgb,#c0392b 12%,var(--paper))}
+#showTimes i.own{color:var(--tx);font-weight:650}
+#showTimes i.pin{color:var(--acc);font-weight:650}
+#showTimes i.hit{border-left-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
 #shCtl,#shMore{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 #showside .pace{display:flex;align-items:center;gap:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #shPlay{min-width:56px!important;font-size:18px!important}
@@ -354,7 +364,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#showside,#shProg,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #bar,#banner,#showside,#shProg,#showTimes,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
   #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}

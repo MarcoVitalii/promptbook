@@ -917,7 +917,8 @@ function bindUI() {
   const pace = d => () => { showTempo(S.show.tempo + d); showTick(); };   // of the night: the line against the times
   $('#shSlow').onclick = pace(-0.05); $('#shFast').onclick = pace(0.05);
   $('#shUse').onclick = () => { showTempo(showMeasured()); S.show.cal = { want: 0, ms: 0 }; showTick(); };
-  $('#shLearn').onclick = () => { S.show.learn = !S.show.learn; S.show.last = null; showTick(); };
+  $('#shLearn').onclick = () => { showSet(showNow()); S.show.learn = !S.show.learn; showMode(S.show.opt.mode); };
+  $('#shMRough').onclick = () => showMode('rough'); $('#shMLine').onclick = () => showMode('line'); $('#shNext').onclick = () => showStep(1);
   $('#shDn').onclick = () => { showNudge(-5); showTick(); }; $('#shUp').onclick = () => { showNudge(5); showTick(); };
   $('#shUndo').onclick = () => { showUnlearn(); showTick(); };
   $('#shRest').onclick = () => { showRest(showStats().wpm); showTick(); };
@@ -1083,6 +1084,6 @@ async function init() {
   showStart();
 }
 window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, zipAside, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
-  showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo,
+  showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo, showMode, showSince,
   openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();

@@ -150,3 +150,74 @@ S.show.on = true; C.undo();
 ok(C.serialize() !== t0, 'in show mode undo does nothing');
 S.show.on = false; C.undo();
 ok(C.serialize() === t0, 'outside show mode undo works again');
+
+// The ways of sharing a chunk, the reason a mark timed nothing, Arrow from the mark, a time typed, timing line by line
+{
+  const N = [10, 40, 5, 20, 25], w = (n, p) => Array.from({ length: n }, (_, i) => p + i).join(' ');
+  const TX = ['# ATTO', '', ...N.map((n, i) => (i % 2 ? 'MARCO: ' : 'ANNA: ') + w(n, 'abcde'[i])), '(Lottano a lungo.)', 'ANNA: ' + w(30, 'z'), ''].join('\n');
+  const fresh = share => { C.load(TX); S.cfg = C.normCfg({}); S.cfg.show.wpm = 120; reset(); Object.assign(S.show, { on: true, learn: true, fine: {}, marks: [], why: '', opt: { mode: 'rough', share, step: 'line' } }); };
+  const go = now => { C.showPlay(true, now); S.show.anchor = { pos: S.show.base, played: S.show.played }; };
+  const L = () => C.showTl().list, row = () => L().slice(0, 5).map(e => e.d / 1000).join();
+  // speeches 1 and 2 timed one by one, speech 3 set by hand, then one mark over all five after 120 s
+  const twoRuns = share => {
+    fresh(share); go(0); C.showHere(L()[1].at, 4000); C.showHere(L()[2].at, 35000); C.showPlay(false, 35000);
+    C.showNudge(5, 35000); C.showNudge(5, 35000);
+    C.showSet(0, 35000); go(35000); C.showHere(L()[5].at, 155000); return row();
+  };
+  const sum = s => Math.round(s.split(',').reduce((n, v) => n + +v, 0));
+  let r = twoRuns('sofar');
+  ok(r === '6.6,51,22.2,18.1,22.2' && sum(r) === 120, 'sharing by the times so far stretches every block of the chunk alike: ' + r);
+  r = twoRuns('length');
+  ok(r === '13.1,45.8,7.6,24,29.5', 'sharing by length gives each block its share of the chunk by its weight, whatever its time was: ' + r);
+  r = twoRuns('finer');
+  ok(r.split(',')[2] === '13.5' && Math.abs(+r.split(',')[1] / +r.split(',')[0] - 31 / 4) < 0.2 && Math.abs(+r.split(',')[3] / +r.split(',')[4] - 22 / 27) < 0.02 && sum(r) === 120, 'with "finer wins" a block set by hand keeps its time, blocks timed in a smaller chunk keep their proportion, the others share the rest by length: ' + r);
+  C.showUnlearn(155000);
+  ok(row() === '4,31,13.5,11,13.5' && S.show.fine[L()[2].key] === 0 && !(L()[3].key in S.show.fine), '"Undo" also takes back how the blocks were timed: ' + row());
+  // the reason a mark timed nothing
+  fresh('sofar'); C.showHere(L()[2].at, 1000);
+  ok(S.show.why === 'stop' && !S.show.last, 'a mark while the line is stopped says so');
+  C.showSet(0, 1000); go(1000); C.showHere(L()[5].at, 9000);
+  ok(S.show.why === 'fast', 'a mark far too fast says so: ' + S.show.why);
+  C.showHere(L()[1].at, 20000);
+  ok(S.show.why === 'back', 'a mark behind the one before says so: ' + S.show.why);
+  C.showHere(L()[2].at, 20500);
+  ok(S.show.why === 'short', 'a mark after less than a second says so: ' + S.show.why);
+  C.showHere(L()[3].at, 30000);
+  ok(S.show.why === '' && S.show.last && S.show.marks.length === 5 && S.show.marks.filter(m => m.ok).length === 1, 'a mark that times a chunk gives no reason, and every mark of the rehearsal is remembered');
+  // Arrow down from the mark
+  fresh('sofar'); go(0);
+  ok(near(C.showStepPlace(1, 14000), L()[2].at), 'Arrow down goes to the block after the one the clock has taken the line into');
+  S.show.opt.step = 'mark';
+  ok(near(C.showStepPlace(1, 14000), L()[1].at), 'from the mark, Arrow down goes to the block after the last mark');
+  C.showHere(C.showStepPlace(1, 14000), 14000);
+  ok(L()[0].d === 14000 && !L()[1].own, 'and the first speech alone takes the time: ' + row());
+  // a time typed for a block, wherever the line is
+  fresh('finer'); C.showFix(L()[2].key, 7.46, 0);
+  ok(row() === '6,21,7.5,11,13.5' && S.show.fine[L()[2].key] === 0 && C.showNow(0) === 0, 'a time typed for a block sets it by hand, in tenths of a second, wherever the line is: ' + row());
+  go(0); C.showHere(L()[5].at, 120000);
+  ok(L()[2].d === 7500 && sum(row()) === 120, 'and a chunk that covers it leaves it alone: ' + row());
+  C.showFix(L()[2].key, null, 120000);
+  ok(!L()[2].own && L()[2].d === 3500 && !(L()[2].key in S.show.fine), 'nothing typed forgets its time: it is inferred from its words again');
+  C.showFix(L()[2].key, 0.1, 120000); C.showFix('none', 5, 120000);
+  ok(L()[2].d === 500 && !('none' in S.cfg.show.times), 'a block is never under half a second, and a key that is no block is not kept');
+  ok(C.showSecsOf('12') === 12 && C.showSecsOf(' 12,5 s') === 12.5 && C.showSecsOf('1:05') === 65 && C.showSecsOf('') === null && Number.isNaN(C.showSecsOf('abc')) && Number.isNaN(C.showSecsOf('-3')), 'a time is typed as seconds, with a comma or a point, or as minutes and seconds');
+  // from time to time: the mark can be behind the line or ahead of it
+  fresh('finer'); go(0);
+  const drift = C.showNow(60000);
+  C.showHere(L()[3].at, 60000);
+  ok(drift > L()[5].at && S.show.last && near(L().slice(0, 3).reduce((n, e) => n + e.d, 0), 60000, 150), 'a mark behind the line, the actors being slower, times the blocks since the mark before: ' + row());
+  const here = C.showNow(62000);
+  C.showHere(L()[5].at, 66000);
+  ok(here < L()[4].at && S.show.last && near(L()[3].d + L()[4].d, 6000, 150), 'and a mark ahead of the line, the actors being faster, does the same: ' + row());
+  // line by line: the line waits on each block, "Next" gives it exactly its time
+  fresh('finer'); S.show.opt.mode = 'line'; S.show.opt.step = 'mark'; C.showSet(L()[1].at + 5, 0); C.showSnap(0);
+  ok(C.showByLine() && near(S.show.base, L()[1].at) && near(S.show.anchor.pos, L()[1].at), 'line by line, the line is put at the start of its block');
+  C.showSet(0, 0); C.showSnap(0); C.showPlay(true, 0);
+  ok(C.showNow(14000) === 0 && near(C.showSince(14000), 14000), 'the line waits on the block while the time since the mark runs');
+  C.showHere(C.showStepPlace(1, 14000), 14000); C.showHere(C.showStepPlace(1, 39000), 39000); C.showHere(C.showStepPlace(1, 41000), 41000);
+  ok(row() === '14,25,2,11,13.5' && L().slice(0, 3).every(e => e.own) && near(C.showNow(50000), L()[3].at), '"Next" at the end of each block gives each exactly its time, and the line waits on the next: ' + row());
+  C.showFix(L()[3].key, 30, 41000); C.showHere(C.showStepPlace(1, 49000), 49000);
+  ok(L()[3].d === 8000, 'a block set by hand is timed again by "Next": ' + row());
+  S.show.learn = false;
+  ok(!C.showByLine() && C.showNow(51000) > L()[4].at, 'without "Time it" the line runs, whatever the way of timing');
+}

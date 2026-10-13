@@ -152,8 +152,44 @@ const OUT = process.env.OUT;
   ok(Object.keys(await ev(() => PB.S.cfg.show.times)).length === 0 && await page.locator('#shUndo').isHidden(), '"Undo" takes the chunk back');
   await page.click('#shUp');
   ok(/^This block: 12\.4 s, timed$/.test(await page.locator('#shBlk').textContent()) && Object.values(await ev(() => PB.S.cfg.show.times)).join() === '12.4', '+5 s sets the time of the block the line is in: ' + await page.locator('#shBlk').textContent());
+  // the times on the page, the reason a mark timed nothing, a time typed, timing line by line
+  ok(await page.locator('#showTimes i').count() > 5 && /^~\d/.test(await page.locator('#showTimes i.est').first().textContent()) && /^= 12\.4 s$/.test(await page.locator('#showTimes i.pin').first().textContent()), 'while timing, every block shows its time on the page: ~ estimated, = set by hand');
+  await key('ArrowDown');
+  ok(await page.locator('#shLast').textContent() === 'Not timed: the line is stopped. Space starts it.' && await page.locator('#shUndo').isHidden(), 'a mark that times nothing says why: ' + await page.locator('#shLast').textContent());
+  await key(' '); await later(20);
+  ok(/^Since the mark: 0:2\d$/.test(await page.locator('#shSince').textContent()), 'the panel counts the time since the last mark: ' + await page.locator('#shSince').textContent());
+  await key('ArrowDown');
+  ok(/blocks: \d+$/.test(await page.locator('#shLast').textContent()) && await page.locator('#showTimes i.hit').count() >= 1, 'the panel says how many blocks a chunk timed, and they are marked on the page: ' + await page.locator('#shLast').textContent());
+  await key(' ');
+  // a time is typed on the page
+  await ev(() => { document.querySelector('#toast').hidden = true; });
+  const lab = page.locator('#showTimes i.est').nth(2), lk = await lab.getAttribute('data-key'), dOf = k => page.evaluate(k => { const e = PB.showTl().list.find(q => q.key === k); return [e.d, e.own, PB.S.show.fine[k]]; }, k), l0 = await dOf(lk), pT = (await sh()).pos;
+  await lab.click(); await page.waitForTimeout(100);
+  ok(await page.locator('#showTimes input').count() === 1 && await ev(() => document.activeElement.tagName) === 'INPUT', 'a press on the time of a block opens a box to type it');
+  await page.keyboard.type('abc'); await page.keyboard.press('Enter');
+  ok(await page.locator('#showTimes input.bad').count() === 1 && (await dOf(lk))[0] === l0[0], 'what is not a time is refused and the box stays');
+  await page.locator('#showTimes input').fill('1:05'); await page.keyboard.press('Enter'); await page.waitForTimeout(120);
+  ok((await dOf(lk)).join() === '65000,true,0' && await page.locator('#showTimes input').count() === 0 && await page.locator('#showTimes i[data-key="' + lk + '"]').textContent() === '= 1:05' && (await sh()).pos === pT && !(await sh()).playing, 'Enter keeps the typed time, set by hand, and the keys typed did nothing to the show: ' + await dOf(lk));
+  await page.locator('#showTimes i[data-key="' + lk + '"]').click(); await page.keyboard.type('3'); await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  ok((await dOf(lk))[0] === 65000 && await page.locator('#showTimes input').count() === 0, 'Escape leaves it as it was');
+  await page.locator('#showTimes i[data-key="' + lk + '"]').click(); await page.locator('#showTimes input').fill(''); await page.keyboard.press('Enter'); await page.waitForTimeout(100);
+  ok(!(await dOf(lk))[1] && (await dOf(lk))[0] === l0[0], 'an empty box forgets the time: the block is inferred again');
+  // line by line
+  ok(await page.locator('#shNext').isHidden() && await page.locator('#shMRough').evaluate(el => el.classList.contains('on')), 'timing starts "from time to time", with no "Next"');
+  await page.click('#shMLine'); await page.waitForTimeout(100);
+  const first = await ev(() => { const L = PB.showTl().list, i = L.findIndex(e => Math.abs(e.at - PB.S.show.base) < 1e-6); return i; });
+  ok(await page.locator('#shNext').isVisible() && first >= 0 && await page.locator('#shMLine').evaluate(el => el.classList.contains('on')), '"Line by line" puts the line at the start of its block and shows "Next": ' + JSON.stringify([first, await page.locator('#shNext').isVisible(), await ev(() => [PB.S.show.base, PB.S.show.opt.mode, PB.S.show.learn, PB.showTl().list.slice(8, 14).map(e => e.at)])]));
+  await key(' '); await later(12);
+  ok(Math.abs((await sh()).pos - await page.evaluate(i => PB.showTl().list[i].at, first)) < 1e-6 && (await sh()).playing && /^Since the mark: 0:1\d$/.test(await page.locator('#shSince').textContent()), 'the line waits on the block while the clock runs: ' + await page.locator('#shSince').textContent());
+  await page.click('#shNext'); await page.waitForTimeout(100); await later(7); await key('ArrowDown');
+  const two = await page.evaluate(i => PB.showTl().list.slice(i, i + 3).map(e => [Math.round(e.d / 1000), e.own]).join(' '), first);
+  ok(/^1[23],true 7,true \d+,false$/.test(two) && Math.abs((await sh()).pos - await page.evaluate(i => PB.showTl().list[i + 2].at, first)) < 1e-6, '"Next", by the button or by Arrow down, gives the block exactly its time and the line waits on the next: ' + two);
+  await key(' '); await page.click('#shMRough'); await page.waitForTimeout(100);
+  ok(await page.locator('#shNext').isHidden() && await ev(() => PB.S.show.opt.mode) === 'rough', '"From time to time" hides it again');
+  await ev(() => { PB.S.cfg.show.times = {}; PB.S.show.fine = {}; PB.S.show.tl = null; PB.showTick(); });
+  await page.click('#shUp');
   await page.click('#shLearn');
-  ok(await page.locator('#shLearnBox').isHidden(), '"Time it" off hides its box');
+  ok(await page.locator('#shLearnBox').isHidden() && await page.locator('#showTimes i').count() === 0, '"Time it" off hides its box and the times on the page');
 
   // SHW-29: a press on a call shows its place
   await put(snd - 130 * 5);
