@@ -1,7 +1,7 @@
 # Workbench — UI
 
 **Covers:** what surrounds the pages: the Review panel, find and jump, Settings, view toggles, night mode, language, the start screen, the toolbar and the corner dock, keyboard shortcuts.
-**Code:** `src/view.js` (`reviewData`, `renderDrawer`, `findNext`, `jumpTo`, `updOutline`), `src/io.js` (`openSettings`, `bindUI`, `KEYS`, `KEYMAP`, `openKeys`, `showStart`, `init`), `src/view.js` (`pageStep`), `src/style.css` (colours, toolbar, `#dock`), `src/core.js` (`STR`, `t`).
+**Code:** `src/view.js` (`reviewData`, `renderDrawer`, `findNext`, `jumpTo`, `updOutline`), `src/io.js` (`openSettings`, `bindUI`, `KEYS`, `KEYMAP`, `openKeys`, `GUIDE`, `openGuide`, `drawGuide`, `showStart`, `init`), `src/view.js` (`pageStep`), `src/style.css` (colours, toolbar, `#dock`), `src/core.js` (`STR`, `t`).
 **Checks:** `test/interact`, `test/misc`, `test/shortcuts`, `test/scale-folder`, `test/frontmatter`, `test/notes-todos`, `test/cue-ends`, `test/unit/parse`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
@@ -12,6 +12,7 @@
 Most of this capability was not asked for. It is there because each part was cheap and lowers the risk of a rehearsal: a tolerant parser needs somewhere to show what it could not read; a tool for a dark theatre needs a dark screen; an Italian company needs an Italian interface.
 
 - **Change request, 2026-10-09:** "provide a more modern look to the page that is less taxing on the eyes, with cues more visible, top bar less crowded and potential shortcut support".
+- **Change request, 2026-10-13:** "the current version doesn't provide much support for newcomers, add a heper to show an overlay of the functions of each button with the description and key binding". Answered in UI-13.
 - **Change request, 2026-10-10:** "improve further the user experience. keep consisten the terms, now boards have remove and cues have delete. keep one and make a hotkey for it for when the cue is selected. When a board is added, allow to enter its name before creating it by opening the text box with the default name selected, so that if i type i overwrite it. Also implement movement for blocks with the same dynamics of cues". Four parts: one word for deleting (UI-12), a key for it (CUE-42, BRD-5), the name of a new board (BRD-28), moving blocks (TXT-28 to TXT-31). The client tried all four on a real show and reported "all working as expected" (2026-10-10). Which machine, pointer and keyboard were used is not recorded.
 
 - **Change request, 2026-10-13:** "cleanup the setting page, with separate subsections for different concerns. Show timings settings separated by general details of the show and separate by deparments for cues and notes." Answered in UI-3. The same day, on seeing the sections one under the other: "can you just upgrade with actual sections on the left and just the items of that section expanded?"
@@ -36,6 +37,7 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 | UI-10 | "?" (key, corner button, or Menu) lists every shortcut, in the interface language. The tooltip of a button names its key. | change request 2026-10-09 | shortcuts |
 | UI-11 | The toolbar is one row from 1280 px wide: controls sit in groups (tools, undo, view toggles, panels); Find is a magnifier that widens when used. Night mode, zoom and help are not in the toolbar: they float in the bottom right corner of the desk. | change request 2026-10-09 | shortcuts |
 | UI-12 | One word for taking something out of the show: "Delete" ("Elimina"), on cues, boards and templates. With the box of a cue or of a board open and no field holding the cursor, the Delete key presses that button; the shortcut list names it. | request 2026-10-10 | shortcuts, boards |
+| UI-13 | A guide to the buttons, for a newcomer: "Guide" in the corner, the H key or the Menu lay it over the window. Every control in sight gets a ring and a number; a card lists, by number, its name, what it does and its key, in the interface language. Pressing a number or a row lights the pair. Escape, H, "Close" or a press outside the card closes it; while it is open no key and no press reaches what is under it. In show mode H shows the guide of the show buttons. Since r1.12. | change request 2026-10-13; `[ASSUMED]` (numbers and a card, the H key, never opened unasked) | shortcuts |
 
 ## 3. Consequences
 
@@ -55,8 +57,12 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 
 **Single-letter keys are a trade.** They are fast and need no modifier, but a letter typed with the focus outside a field does something. They are off while a cue box is open because there a letter picks a department (CUE-3). The keys were chosen, not asked for: `[ASSUMED]`.
 
+**The guide describes what is in sight, not everything (UI-13, r1.12).** A control that is hidden when the guide opens ("Back to the line" while the page follows the line, the buttons of "Time it" while it is off) has no row; it gets one the next time the guide is opened with it showing. The numbers and a card were chosen over a label beside each button because the toolbar holds fifteen controls in one row and a description does not fit under any of them. The guide covers buttons only: what the pen and a tap do on the page (a cue, a note, a block to edit) is not in it. It never opens by itself, so a newcomer has to find "Guide" in the corner. In show mode there is no button for it, only H: the corner buttons are hidden there (SHW).
+
 **Ctrl+P is taken over** for the same reason as Ctrl+F: only pages near the screen are drawn, so the browser's own print would give a few pages.
 
-**Not built:** keyboard access to every control; any language besides English and Italian.
+**Not built:** keyboard access to every control; a guide to the gestures on the page; a guide that opens by itself on first use; a guide on the start screen; any language besides English and Italian.
+
+**Not verified, the guide (UI-13):** judged on screenshots at 1500 by 900 only. Whether the numbers stay clear of each other where the toolbar wraps (under 1280 px), and how the card reads under a finger, is not known. Not tried on the laptop.
 
 **Not verified:** the colours, the tag labels and the corner dock were judged on screenshots only; whether the dock gets under a hand or a pen on the laptop is not known. Shortcuts were not tried on an Italian keyboard (/ and ? need Shift there). Night mode and the grid strength in it were judged on screenshots, not on the laptop's display in a dark room.

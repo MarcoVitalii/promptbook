@@ -113,13 +113,28 @@ en: {
   shPlay: 'Start or stop the line', shBack: 'Back to the line', shLeave: 'Leave', shLeave2: 'Press again to leave', shStandby: 'STANDBY', shWarning: 'WARNING', shGo: 'GO',
   shNext: 'Next', shNoCue: 'No more cues', shTempo: '{0}%', shSlower: 'Pace of the night: slower', shFaster: 'Pace of the night: faster', shUse: 'Tonight {0}%: use it', shUseTip: 'The pace of this run, measured from your corrections of the line',
   shLearn: 'Time it', shLearnTip: 'For a rehearsal. While the line runs, each double tap says “the show is here”: the time since the mark before is kept for the blocks in between. Stop the line before jumping elsewhere.',
-  shTimed: 'Timed {0}, was {1}', shBlockT: 'This block: {0}, timed', shBlockE: 'This block: ~{0}, estimated', shBlockTip: 'The time of the block the line is in: 5 seconds less, 5 seconds more',
+  shTimed: 'Timed {0}, was {1} · blocks: {2}', shBlockT: 'This block: {0}, timed', shBlockE: 'This block: ~{0}, estimated', shBlockTip: 'The time of the block the line is in: 5 seconds less, 5 seconds more',
+  shWhyStop: 'Not timed: the line is stopped. Space starts it.', shWhyBack: 'Not timed: behind the mark before.', shWhyShort: 'Not timed: less than a second.', shWhyFast: 'Not timed: far too fast, taken for a jump.', shWhySlow: 'Not timed: far too slow.',
+  shSince: 'Since the mark: {0}', shTypeTip: 'The time of this block: ~ inferred from its words, = set by hand. Press to type it; leave it empty to infer it again.',
+  shByLine: 'Line by line', shByLineTip: 'Exact. The line waits on each block: start with Space, press Next (Arrow down) when the block is over. Each block gets its own time.',
+  shRough: 'From time to time', shRoughTip: 'Rough. The line runs at the times known so far. Now and then, double tap where the show really is, before or after the line: the time since the mark before is shared among the blocks in between.',
+  shNextBtn: 'Next', shNextTip: 'This block is over: it gets the time since the mark before, and the line goes to the next block',
   shShare: '{0}% of the show timed', shRest: 'Rest at {0} wpm', shRestTip: 'The pace measured over the timed speeches: use it for everything that is not timed',
   shLeft: '{0} left', shEnds: 'ends ~{0}', shPeekTip: 'Press to look at the place of this cue; the line stays where it is', shMapTip: 'The whole show, scene by scene. Press to look at that place; the line stays where it is.',
   shForget: 'Forget {0} timed blocks', shHint: 'Show mode. Space starts the line. Double tap a word to put the line there.', shBusy: 'Close the editor first.',
   paceL: 'Pace of blocks not timed (words per minute)', standbyL: 'Standby (seconds before the cue)', warningL: 'Warning (seconds before, 0 for none)',
   kShow: 'Show mode', kShLeave: 'Leave show mode (press twice)', kShHint: 'These are the keys of show mode. The editing keys are back when you leave it.',
-  kShPlay: 'Start or stop the line', kShBack: 'Back to the line', kShStep: 'Line to the next or previous block', kShPace: 'Pace of the night: slower, faster'
+  kShPlay: 'Start or stop the line', kShBack: 'Back to the line', kShStep: 'Line to the next or previous block', kShPace: 'Pace of the night: slower, faster',
+  guide: 'Guide to the buttons', guideB: 'Guide', gHint: 'Every number sits on a button you can see now. Press a number or a row to light the pair. Esc, H or a press outside closes the guide.',
+  gMenuD: 'The whole script as text, settings, templates, history, the files for the cast, backups, opening and saving a show file.',
+  gPens: 'Pens', gPensD: 'Pick the colour the pen writes in on the page.', gEraseD: 'Rub out strokes of ink. Press again to go back to the pen.',
+  gUndoD: 'Take back the last change.', gRedoD: 'Do again what Undo took back.', gJump: 'Acts and scenes', gFind: 'Find',
+  gFindD: 'Search the whole script. Enter goes to the next place, Shift+Enter to the one before.',
+  gBoardsD: 'Show or hide the facing page, where the boards are: drawings and plans beside the script.',
+  gReviewD: 'What the tool could not read or is not sure of. Each entry jumps to its place.', gListD: 'Every cue in order, to check, print or export.',
+  gPrintD: 'Print the whole book, or the script alone.', gNightD: 'A dark screen for a dark theatre.', gKeysD: 'The list of every key.',
+  gShPlayD: 'The line runs down the script as a clock, and the cues are called as it comes near them.', gShBackD: 'Return to where the line is, after looking elsewhere.',
+  gShUndoD: 'Take back the last time that was marked.', gShMap: 'Map of the show'
 },
 it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
@@ -224,13 +239,28 @@ it: {
   shPlay: 'Avvia o ferma la riga', shBack: 'Torna alla riga', shLeave: 'Esci', shLeave2: 'Premi ancora per uscire', shStandby: 'PRONTI', shWarning: 'ATTENZIONE', shGo: 'VIA',
   shNext: 'Prossimo', shNoCue: 'Nessun altro cue', shTempo: '{0}%', shSlower: 'Ritmo della serata: più lento', shFaster: 'Ritmo della serata: più veloce', shUse: 'Stasera {0}%: usalo', shUseTip: 'Il ritmo di questa replica, misurato dalle tue correzioni della riga',
   shLearn: 'Cronometra', shLearnTip: 'Per una prova. Mentre la riga scorre, ogni doppio tocco dice «lo spettacolo è qui»: il tempo passato dal segno precedente viene conservato per i blocchi in mezzo. Ferma la riga prima di saltare altrove.',
-  shTimed: 'Cronometrato {0}, era {1}', shBlockT: 'Questo blocco: {0}, cronometrato', shBlockE: 'Questo blocco: ~{0}, stimato', shBlockTip: 'Il tempo del blocco in cui si trova la riga: 5 secondi in meno, 5 secondi in più',
+  shTimed: 'Cronometrato {0}, era {1} · blocchi: {2}', shBlockT: 'Questo blocco: {0}, cronometrato', shBlockE: 'Questo blocco: ~{0}, stimato', shBlockTip: 'Il tempo del blocco in cui si trova la riga: 5 secondi in meno, 5 secondi in più',
+  shWhyStop: 'Non cronometrato: la riga è ferma. Spazio la avvia.', shWhyBack: 'Non cronometrato: prima del segno precedente.', shWhyShort: 'Non cronometrato: meno di un secondo.', shWhyFast: 'Non cronometrato: troppo veloce, preso per un salto.', shWhySlow: 'Non cronometrato: troppo lento.',
+  shSince: 'Dal segno: {0}', shTypeTip: 'Il tempo di questo blocco: ~ dedotto dalle parole, = fissato a mano. Premi per scriverlo; lascialo vuoto per dedurlo di nuovo.',
+  shByLine: 'Battuta per battuta', shByLineTip: 'Esatto. La riga aspetta su ogni blocco: avvia con Spazio, premi Avanti (Freccia giù) quando il blocco è finito. Ogni blocco ha il suo tempo.',
+  shRough: 'Di tanto in tanto', shRoughTip: 'Approssimato. La riga scorre sui tempi noti. Ogni tanto, doppio tocco dove lo spettacolo è davvero, prima o dopo la riga: il tempo dal segno precedente è ripartito tra i blocchi in mezzo.',
+  shNextBtn: 'Avanti', shNextTip: 'Questo blocco è finito: prende il tempo dal segno precedente, e la riga passa al blocco seguente',
   shShare: 'Cronometrato il {0}% dello spettacolo', shRest: 'Il resto a {0} parole/min', shRestTip: 'Il ritmo misurato sulle battute cronometrate: usalo per tutto ciò che non è cronometrato',
   shLeft: 'mancano {0}', shEnds: 'fine ~{0}', shPeekTip: 'Premi per guardare il punto di questo cue; la riga resta dov’è', shMapTip: 'Tutto lo spettacolo, scena per scena. Premi per guardare quel punto; la riga resta dov’è.',
   shForget: 'Dimentica {0} blocchi cronometrati', shHint: 'Modalità spettacolo. Spazio avvia la riga. Doppio tocco su una parola per portarci la riga.', shBusy: 'Chiudi prima l’editor.',
   paceL: 'Ritmo dei blocchi non cronometrati (parole al minuto)', standbyL: 'Pronti (secondi prima del cue)', warningL: 'Attenzione (secondi prima, 0 per nessuna)',
   kShow: 'Modalità spettacolo', kShLeave: 'Esci dalla modalità spettacolo (premi due volte)', kShHint: 'Questi sono i tasti della modalità spettacolo. I tasti di modifica tornano quando esci.',
-  kShPlay: 'Avvia o ferma la riga', kShBack: 'Torna alla riga', kShStep: 'Riga al blocco successivo o precedente', kShPace: 'Ritmo della serata: più lento, più veloce'
+  kShPlay: 'Avvia o ferma la riga', kShBack: 'Torna alla riga', kShStep: 'Riga al blocco successivo o precedente', kShPace: 'Ritmo della serata: più lento, più veloce',
+  guide: 'Guida ai pulsanti', guideB: 'Guida', gHint: 'Ogni numero è su un pulsante visibile adesso. Premi un numero o una riga per evidenziare la coppia. Esc, H o un tocco fuori chiudono la guida.',
+  gMenuD: 'Tutto il testo del copione, impostazioni, modelli, cronologia, i file per gli attori, backup, apertura e salvataggio di un file spettacolo.',
+  gPens: 'Penne', gPensD: 'Scegli il colore con cui la penna scrive sulla pagina.', gEraseD: 'Cancella i tratti di inchiostro. Premi ancora per tornare alla penna.',
+  gUndoD: 'Annulla l’ultima modifica.', gRedoD: 'Rifà ciò che Annulla ha tolto.', gJump: 'Atti e scene', gFind: 'Cerca',
+  gFindD: 'Cerca in tutto il copione. Invio va al punto successivo, Maiusc+Invio a quello precedente.',
+  gBoardsD: 'Mostra o nascondi la pagina a fronte, dove stanno le tavole: disegni e piante accanto al copione.',
+  gReviewD: 'Ciò che lo strumento non ha saputo leggere o di cui non è sicuro. Ogni voce porta al suo punto.', gListD: 'Tutti i cue in ordine, da controllare, stampare o esportare.',
+  gPrintD: 'Stampa tutto il libro, o il solo copione.', gNightD: 'Uno schermo scuro per un teatro al buio.', gKeysD: 'L’elenco di tutti i tasti.',
+  gShPlayD: 'La riga scorre sul copione come un orologio, e i cue vengono chiamati quando si avvicina.', gShBackD: 'Torna dove si trova la riga, dopo aver guardato altrove.',
+  gShUndoD: 'Annulla l’ultimo tempo segnato.', gShMap: 'Mappa dello spettacolo'
 }};
 let LANG = 'en';
 function t(k) {
@@ -265,7 +295,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.11';
+const VERSION = 'r1.12';
 const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
 /* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
 const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };
@@ -329,7 +359,8 @@ const S = {
   view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
   hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
-  show: { on: false, playing: false, base: 0, t0: 0, follow: true, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, cues: [] },
+  show: { on: false, playing: false, base: 0, t0: 0, follow: true, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, cues: [],
+    opt: { mode: 'rough', share: 'finer', step: 'mark' }, fine: {}, marks: [], why: '' },   // opt.mode: timing from time to time ('rough') or line by line ('line'); fine: how each block was last timed; neither is kept
   store: { mode: 'none', name: '', stamp: {}, dirty: { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }, conflict: false, lastSave: null, err: null }
 };
 const paper = () => PAPERS[S.cfg.paper] || PAPERS.A4;
@@ -1209,9 +1240,11 @@ function showCues() {
   }
   return out.sort((x, y) => x.at - y.at);
 }
+/* timing line by line: the line waits on a block until "Next" says the block is over */
+const showByLine = () => S.show.learn && S.show.opt.mode === 'line';
 function showNow(now) {
   const sh = S.show, tl = showTl();
-  if (!sh.playing) return clamp(sh.base, 0, tl.total);
+  if (!sh.playing || showByLine()) return clamp(sh.base, 0, tl.total);   // timed line by line, the line waits on its block
   return showP(showT(sh.base) + ((now == null ? Date.now() : now) - sh.t0) * sh.tempo);
 }
 /* every change of place, pace, time or running state starts the clock again from where the line is */
@@ -1233,39 +1266,72 @@ function showHere(pos, now) {
   showSet(pos, now);
   const a = sh.anchor, ms = a && run ? sh.played - a.played : 0, want = a && sh.base > a.pos ? showT(sh.base) - showT(a.pos) : 0;
   sh.last = null;
+  sh.why = !run ? 'stop' : !a ? '' : !(want > 0) ? 'back' : ms < 1000 ? 'short' : ms / want < 0.2 ? 'fast' : ms / want > 60 ? 'slow' : '';   // why a mark timed nothing
   if (want > 0 && ms >= 1000) {
     if (sh.learn) { if (ms / want >= 0.2 && ms / want <= 60) showLearn(a.pos, sh.base, ms); }
     else if (ms > 3000 && want / ms >= 0.4 && want / ms <= 2.5) { sh.cal.want += want; sh.cal.ms += ms; }
   }
+  if (sh.learn) sh.marks.push({ pos: sh.base, ok: !!sh.last });
   sh.anchor = { pos: sh.base, played: sh.played };
 }
-/* The stretch from place a to place b took ms. The time is shared among its blocks in proportion
-   to their times so far; a block covered in part takes its share for that part only. */
+/* the running time since the last mark */
+function showSince(now) { const sh = S.show, a = sh.anchor; return a ? sh.played + (sh.playing ? (now == null ? Date.now() : now) - sh.t0 : 0) - a.played : 0; }
+/* The stretch from place a to place b took ms. A block covered in part takes its share for that
+   part only. How the time is shared among the blocks is on trial (S.show.opt.share):
+   'sofar'   in proportion to their times so far: every block of the chunk is stretched alike;
+   'length'  in proportion to their length (the weight of SHW-6), whatever their times were;
+   'finer'   a block set by hand keeps its time, blocks timed before in a smaller chunk keep their
+             proportions, the others share what is left by length.
+   S.show.fine says how each block was last timed: the length of its chunk, 0 when set by hand. */
 function showLearn(a, b, ms) {
-  const T = S.cfg.show.times, want = showT(b) - showT(a), k = ms / want, keys = {};
+  const sh = S.show, T = S.cfg.show.times, F = sh.fine, rule = sh.opt.share, want = showT(b) - showT(a), keys = {}, fine = {}, part = [];
+  const sum = (l, k) => l.reduce((n, p) => n + p[k], 0);
   for (const e of showTl().list) {
     if (e.at >= b) break;
     const f = (Math.min(b, e.at + e.w) - Math.max(a, e.at)) / e.w;
-    if (f <= 1e-9) continue;
-    keys[e.key] = T[e.key];
-    T[e.key] = clamp(Math.round(e.d * (1 - f + f * k) / 100) / 10, 0.1, 3600);
+    if (f > 1e-9) part.push({ e, d: f * e.d, w: f * e.w, how: !e.own ? Infinity : e.key in F ? F[e.key] : e.w });
   }
-  S.show.last = { ms, was: want, keys };
-  S.show.tl = null; markDirty('cfg');
+  const size = sum(part, 'w');
+  for (const p of part) p.k = rule === 'length' ? 'len' : rule !== 'finer' ? 'keep' : p.how === 0 ? 'pin' : p.how < size - 1e-9 ? 'keep' : 'len';
+  let left = ms - sum(part.filter(p => p.k === 'pin'), 'd');
+  if (part.every(p => p.k === 'pin') || left < 0.2 * (want - ms + left)) { for (const p of part) if (p.k === 'pin') p.k = 'keep'; left = ms; }   // the blocks set by hand leave no room: they stretch with the rest
+  const free = part.filter(p => p.k !== 'pin'), k = left / sum(free, 'd'), len = free.filter(p => p.k === 'len'), lw = sum(len, 'w'), lt = sum(len, 'd') * k;
+  for (const p of part) {
+    const key = p.e.key, got = p.k === 'pin' ? p.d : p.k === 'keep' ? p.d * k : lt * p.w / lw;
+    keys[key] = T[key]; fine[key] = F[key];
+    T[key] = clamp(Math.round((p.e.d - p.d + got) / 100) / 10, 0.1, 3600);
+    F[key] = p.k === 'pin' ? 0 : p.k === 'keep' ? Math.min(p.how, size) : size;
+  }
+  sh.last = { ms, was: want, keys, fine };
+  sh.tl = null; markDirty('cfg');
 }
 /* takes the last timed chunk back */
 function showUnlearn(now) {
-  const l = S.show.last, T = S.cfg.show.times; if (!l) return;
+  const l = S.show.last, T = S.cfg.show.times, F = S.show.fine; if (!l) return;
   showSet(showNow(now), now);
   for (const [k, v] of Object.entries(l.keys)) { if (v == null) delete T[k]; else T[k] = v; }
+  for (const [k, v] of Object.entries(l.fine || {})) { if (v == null) delete F[k]; else F[k] = v; }
   S.show.last = null; S.show.tl = null; markDirty('cfg');
 }
 /* the time of the block the line is in, set by hand: d seconds more or less */
-function showNudge(d, now) {
-  const pos = showNow(now), e = showAt(pos, 'at'); if (!e) return;
-  showSet(pos, now);
-  S.cfg.show.times[e.key] = clamp(Math.round((e.d / 1000 + d) * 10) / 10, 0.5, 3600);
+function showNudge(d, now) { const e = showAt(showNow(now), 'at'); if (e) showFix(e.key, e.d / 1000 + d, now); }
+/* the time of a block, typed: so many seconds, or nothing, and the block is inferred from its words again */
+function showFix(key, secs, now) {
+  const T = S.cfg.show.times; if (!showTl().list.some(q => q.key === key) || (secs == null && !(key in T))) return;
+  showSet(showNow(now), now);
+  if (secs == null) { delete T[key]; delete S.show.fine[key]; }
+  else { T[key] = clamp(Math.round(secs * 10) / 10, 0.5, 3600); S.show.fine[key] = 0; }
   S.show.last = null; S.show.tl = null; markDirty('cfg');
+}
+/* what was typed as a time: "12", "12.5", "12,5 s", "1:05". Nothing is null; anything else is NaN. */
+function showSecsOf(str) {
+  const v = String(str).trim().toLowerCase().replace(/\s*s$/, '').replace(',', '.'), m = /^(\d+):([0-5]?\d(?:\.\d+)?)$/.exec(v);
+  return !v ? null : m ? +m[1] * 60 + +m[2] : /^\d+(\.\d+)?$/.test(v) ? +v : NaN;
+}
+/* the line is put at the start of the block it is in, and a chunk starts there: timing line by line begins */
+function showSnap(now) {
+  const sh = S.show, e = showAt(showNow(now), 'at'); if (!e) return;
+  showSet(e.at, now); sh.anchor = { pos: sh.base, played: sh.played };
 }
 /* how much of the show is timed, and the pace measured over its timed speeches once there are 200 words of them */
 function showStats() {
@@ -1281,7 +1347,7 @@ function showRest(wpm, now) {
 const showMeasured = () => S.show.cal.ms >= 60000 ? clamp(Math.round(S.show.cal.want / S.show.cal.ms * 100) / 100, 0.5, 2) : 0;
 /* the block before or after the one the line is in */
 function showStepPlace(d, now) {
-  const L = showTl().list, pos = showNow(now); let i = -1;
+  const sh = S.show, L = showTl().list, pos = sh.learn && sh.playing && sh.anchor && sh.opt.step === 'mark' ? sh.anchor.pos : showNow(now); let i = -1;   // on trial: from the last mark, wherever the clock has taken the line
   for (let k = 0; k < L.length && L[k].at <= pos + 1e-6; k++) i = k;
   return L.length ? L[clamp(i + d, 0, L.length - 1)].at : 0;
 }

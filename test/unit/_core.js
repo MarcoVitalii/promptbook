@@ -6,7 +6,7 @@ const nop = () => {};
 const ctx = vm.createContext({ relayout: nop, markDirty: nop, updUndo: nop, closePop: nop, document: { createElement: el, createElementNS: el, createTextNode: el, querySelector: () => null, querySelectorAll: () => [] }, console });
 vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../src/core.js'), 'utf8'), ctx, { filename: 'src/core.js' });
 const NAMES = ['S', 'VERSION', 'STR', 't', 'defaultConfig', 'normCfg', 'stripTokens', 'parseMeta', 'fullName', 'castCheck', 'parseScript', 'analyze', 'reparse', 'pairCues', 'serialize', 'applyText', 'commitText', 'textMoveCue', 'textCueOwn', 'textMoveBlocks', 'undo', 'redo', 'facingLayout', 'FIG_EXTRA', 'FIG_GAP', 'MAX_BOARDS', 'lcs', 'parseBlocks', 'diffBlocks', 'diffWords', 'diffFor', 'diffNames', 'insLabel', 'castPack', 'castTo', 'castSpeaker',
-  'showWeight', 'showTimeline', 'showTl', 'showT', 'showP', 'showPlace', 'showCues', 'showNow', 'showSet', 'showPlay', 'showTempo', 'showHere', 'showLearn', 'showUnlearn', 'showNudge', 'showStats', 'showRest', 'showMeasured', 'showStepPlace', 'showCalls', 'showClock', 'showSeg'];
+  'showWeight', 'showTimeline', 'showTl', 'showT', 'showP', 'showPlace', 'showCues', 'showNow', 'showSet', 'showPlay', 'showTempo', 'showHere', 'showLearn', 'showUnlearn', 'showNudge', 'showFix', 'showSecsOf', 'showSnap', 'showByLine', 'showSince', 'showStats', 'showRest', 'showMeasured', 'showStepPlace', 'showCalls', 'showClock', 'showSeg'];
 module.exports = vm.runInContext('({' + NAMES.join(',') + '})', ctx);
 module.exports.cuesOutOfOrder = vm.runInContext('cuesOutOfOrder', ctx);
 Object.assign(module.exports, vm.runInContext('({ READABLE_FROM, relCmp, relMark, relNewer })', ctx));   // the release mark of a show

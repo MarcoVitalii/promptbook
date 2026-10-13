@@ -640,21 +640,26 @@ function findNext(q, dir) {
 const showLine = h('div'), showBand = h('div');   // the block being spoken is lit; a small mark on its left edge is the line
 showLine.id = 'showLine'; showBand.id = 'showBand';
 showLine.hidden = showBand.hidden = true; spreads.append(showBand, showLine);
+const showTimes = h('div'); showTimes.id = 'showTimes'; spreads.append(showTimes);   // on trial: the time of every block, on the page
 const SHOW_LO = 1 / 3, SHOW_HI = 2 / 3, SHOW_MORE = 3;   // where the line is put in the window, how far down it goes before the page jumps, how many calls are listed after the warnings
-let showTimer = 0, showWake = null, showSig = '', showLeaveT = 0, showFrag = null, showMap = null, showTagged = new Set();
+let showTimer = 0, showWake = null, showSig = '', showLeaveT = 0, showFrag = null, showMap = null, showTagged = new Set(), showSeen = null, showEdit = null;
 const showSpan = () => paper().h + GAP;
 const showTm = s => { s = Math.ceil(s - 1e-3); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };   // a countdown: 0:01 until the cue
 const showDur = ms => { const m = Math.round(ms / 60000); return m < 60 ? m + '′' : Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0'); };
 const showSecs = ms => ms < 60000 ? r1(ms / 1000) + ' s' : showTm(ms / 1000);
-/* where a place is on paper: [page index, y from the top of that page, the piece of the block it is in] */
-function showY(pos) {
-  const e = showAt(pos, 'at'); if (!e) return null;
+/* the pieces of each group on paper: a block can go over a page */
+function showFrags() {
   if (!showFrag || showFrag.src !== S.pages) {
     const m = new Map();
     S.pages.forEach((P, pi) => { for (const it of P.items) { let a = m.get(it.g); if (!a) m.set(it.g, a = []); a.push({ pi, it }); } });
     showFrag = { src: S.pages, m };
   }
-  const fr = showFrag.m.get(e.g); if (!fr) return null;
+  return showFrag.m;
+}
+/* where a place is on paper: [page index, y from the top of that page, the piece of the block it is in] */
+function showY(pos) {
+  const e = showAt(pos, 'at'); if (!e) return null;
+  const fr = showFrags().get(e.g); if (!fr) return null;
   let y = clamp((pos - e.at) / e.w, 0, 1) * fr.reduce((n, f) => n + f.it.h, 0);
   for (const f of fr) { if (y <= f.it.h || f === fr[fr.length - 1]) return [f.pi, GEO.top + f.it.y + Math.min(y, f.it.h), f.it]; y -= f.it.h; }
   return null;
@@ -691,7 +696,48 @@ function showTick() {
     if (sh.follow && Math.abs(desk.scrollTop - sh.top) > 2) sh.follow = false;   // the page was moved by hand: let go of the line
     if (sh.follow) showFollow(showTop(at));
   }
-  renderShowSide(pos);
+  renderShowSide(pos); renderShowTimes();
+}
+/* While timing, every block shows its time at the right edge of the page: measured, ~ inferred from its
+   words, = set by hand. A bar marks the blocks of the last chunk. Drawn for the pages around the one in
+   view. A press on a time opens a box to type it. */
+function renderShowTimes() {
+  const sh = S.show, on = sh.on && sh.learn, tl = on && showTl(), p0 = on ? currentPage() : -1, was = showSeen;
+  if (showEdit && on) return;
+  if (was && was.tl === tl && was.p0 === p0 && was.last === sh.last && was.pages === S.pages && was.lang === LANG) return;
+  showSeen = { tl, p0, last: sh.last, pages: S.pages, lang: LANG }; showEdit = null; showTimes.textContent = '';
+  if (!on) return;
+  const by = tl.by || (tl.by = new Map(tl.list.map(e => [e.g, e]))), fr = showFrags(), hit = sh.last ? sh.last.keys : {};
+  for (let pi = Math.max(0, p0 - 1); pi < Math.min(S.pages.length, p0 + 3); pi++) for (const it of S.pages[pi].items) {
+    const e = by.get(it.g); if (!e || fr.get(it.g)[0].it !== it) continue;
+    const pin = e.own && sh.fine[e.key] === 0, k = h('i', (pin ? 'pin' : e.own ? 'own' : 'est') + (e.key in hit ? ' hit' : ''), (pin ? '= ' : e.own ? '' : '~') + showSecs(e.d));
+    k.style.left = paper().w - GEO.padR - 4 + 'px'; k.style.top = r1(pi * showSpan() + GEO.top + it.y) + 'px'; k.style.height = Math.max(15, r1(it.h - 8)) + 'px';
+    k.dataset.key = e.key; k.title = t('shTypeTip');
+    showTimes.appendChild(k);
+  }
+}
+/* a time on the page is pressed: it is typed in its place. Enter keeps it, Escape leaves it, nothing infers it again. */
+function showType(k) {
+  const key = k.dataset.key, e = showTl().list.find(q => q.key === key); if (!e || showEdit) return;
+  const inp = h('input'); inp.type = 'text'; inp.inputMode = 'decimal'; inp.value = e.own ? r1(e.d / 1000) : ''; inp.placeholder = String(r1(e.d / 1000));
+  inp.style.left = parseFloat(k.style.left) - 8 + 'px'; inp.style.top = k.style.top;
+  const end = keep => {
+    if (showEdit !== inp) return;
+    const v = showSecsOf(inp.value);
+    if (keep && Number.isNaN(v)) { inp.classList.add('bad'); return; }
+    showEdit = null; showSeen = null; if (keep) showFix(key, v);
+    showTick();
+  };
+  inp.onkeydown = v => { v.stopPropagation(); if (v.key === 'Enter') end(true); else if (v.key === 'Escape') end(false); else inp.classList.remove('bad'); };
+  inp.onblur = () => { end(true); if (showEdit === inp) end(false); };
+  showEdit = inp; showTimes.appendChild(inp); inp.focus(); inp.select();
+}
+showTimes.addEventListener('pointerdown', e => { e.stopPropagation(); const k = e.target.closest('i[data-key]'); if (k) { e.preventDefault(); showType(k); } });
+/* the way of timing: from time to time, the line running, or line by line, the line waiting on each block */
+function showMode(m) {
+  const sh = S.show; showSet(showNow()); sh.opt.mode = m; sh.last = null; sh.why = '';
+  if (showByLine()) showSnap();
+  showBack();
 }
 function showBack() { const sh = S.show; if (!sh.on) return; sh.follow = sh.place = true; sh.top = desk.scrollTop; showTick(); renderVisible(); }
 /* shows a place of the script without moving the line: f is how far into the show, 0 to 1 */
@@ -717,7 +763,7 @@ function showTap(tg) {
   const now = Date.now(), l = S.lastTap;
   S.lastTap = { id: at.b.id, t: now };
   if (!l || l.id !== at.b.id || now - l.t > 420) return;
-  S.lastTap = null; showHere(showPlace(at.b, at.wi, false)); showBack();
+  S.lastTap = null; showHere(showPlace(at.b, showByLine() ? -1 : at.wi, false)); showBack();   // line by line, a block is marked from its start
 }
 /* cues that come within 2 s of each other are one call */
 function showCards(c) {
@@ -766,6 +812,7 @@ function renderShowSide(pos) {
   const e = sh.learn ? showAt(pos, 'at') : null, st = sh.learn ? showStats() : null;
   const sig = [sh.playing, sh.follow, sh.tempo, sh.learn, m, sh.leave, LANG, showDur(ck.at), showDur(ck.total), showDur(ck.left), hm,
     e && e.key + e.d, sh.last && sh.last.ms, st && Math.round(st.share * 100) + '/' + st.wpm + '/' + S.cfg.show.wpm,
+    sh.learn && [sh.why, sh.playing && Math.floor(showSince() / 1000), ...Object.values(sh.opt)].join('/'),
     ...cards.map(g => g.k + showTm(g.s) + g.cues.map(o => o.name))].join('|');
   if (sig === showSig) return;
   showSig = sig;
@@ -781,8 +828,11 @@ function renderShowSide(pos) {
   $('#shLearnBox').hidden = !sh.learn;
   if (sh.learn) {
     $('#shBlk').textContent = e ? t(e.own ? 'shBlockT' : 'shBlockE', showSecs(e.d)) : '';
-    $('#shLast').textContent = sh.last ? t('shTimed', showSecs(sh.last.ms), showSecs(sh.last.was)) : '';
-    $('#shUndo').hidden = !sh.last; $('#shLast').parentNode.hidden = !sh.last;
+    const why = sh.last ? '' : { stop: 'shWhyStop', back: 'shWhyBack', short: 'shWhyShort', fast: 'shWhyFast', slow: 'shWhySlow' }[sh.why];
+    $('#shLast').textContent = sh.last ? t('shTimed', showSecs(sh.last.ms), showSecs(sh.last.was), Object.keys(sh.last.keys).length) : why ? t(why) : '';
+    $('#shLast').classList.toggle('no', !sh.last); $('#shUndo').hidden = !sh.last; $('#shLast').parentNode.hidden = !sh.last && !why;
+    $('#shSince').textContent = sh.playing && sh.anchor ? t('shSince', showTm(Math.floor(showSince() / 1000))) : ''; $('#shSince').parentNode.hidden = !(sh.playing && sh.anchor) && sh.opt.mode !== 'line';
+    $('#shMRough').classList.toggle('on', sh.opt.mode !== 'line'); $('#shMLine').classList.toggle('on', sh.opt.mode === 'line'); $('#shNext').hidden = sh.opt.mode !== 'line';
     $('#shShare').textContent = t('shShare', Math.round(st.share * 100));
     const rest = $('#shRest'); rest.textContent = t('shRest', st.wpm); rest.hidden = !st.wpm || Math.abs(st.wpm - S.cfg.show.wpm) < 3;
   }
@@ -807,7 +857,7 @@ function showOn() {
   if (S.editing) { toast(t('shBusy')); return; }
   exitTemplates(); closePop(); cancelDrag(); $('#menu').hidden = true;
   if (S.drawer === 'review') toggleDrawer('review');
-  Object.assign(sh, { on: true, playing: false, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, leave: false });
+  Object.assign(sh, { on: true, playing: false, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, leave: false, marks: [], why: '' });
   sh.cues = showCues(); sh.base = showPlaceAtView(); sh.t0 = Date.now();
   sh.keep = { facing: S.view.facing, fit: S.view.fit, zoom: S.view.zoom };   // focus: the script alone, as large as the window allows
   S.view.facing = false; S.view.fit = true;
@@ -823,7 +873,7 @@ function showOff() {
   clearInterval(showTimer); clearTimeout(showLeaveT);
   if (showWake) { showWake.release().catch(() => {}); showWake = null; }
   document.body.classList.remove('show'); $('#showside').hidden = true; $('#shProg').hidden = true;
-  showLine.hidden = showBand.hidden = true;
+  showLine.hidden = showBand.hidden = true; renderShowTimes();
   for (const tg of showTagged) delete tg.dataset.st;
   showTagged = new Set();
   if (sh.keep) { Object.assign(S.view, sh.keep); sh.keep = null; }

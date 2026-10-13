@@ -56,7 +56,7 @@ Three properties of the method to keep in mind when reading a green result:
 | `boards` | 82 | BRD-5, BRD-7 to BRD-13, BRD-26, BRD-28, BRD-30, UI-6, UI-12, STO-13 |
 | `cue-move` | 74 | CUE-25 to CUE-34, CUE-43, INP-8 to INP-10, TXT-28 |
 | `block-move` | 34 | TXT-28 to TXT-31 |
-| `shortcuts` | 44 | UI-9 to UI-12, CUE-7, CUE-42, SHW-30 |
+| `shortcuts` | 61 | UI-9 to UI-13, CUE-7, CUE-42, SHW-30 |
 | `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
 | `leaks` | 22 | STO-9; object URLs and database connections are let go |
 | `damaged` | 133 | STO-23 to STO-25, HIS-13 to HIS-15 |

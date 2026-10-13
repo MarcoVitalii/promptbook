@@ -92,6 +92,16 @@ body.show .tag,body.show .w{cursor:default}
 #shLearnBox div[hidden]{display:none}
 #shLearnBox span{flex:1;min-width:0}
 #shLearnBox button{min-height:30px;min-width:0;padding:0 8px}
+#shLearnBox .mode button{flex:1;padding:0 4px;font-size:12px}
+#shNext{background:var(--acc)!important;color:var(--ui)!important;border-color:var(--acc)!important;font-weight:700!important;min-height:38px!important;padding:0 16px!important}
+#shLast.no{color:var(--acc)}
+/* while timing: the time of every block at the right edge of the page, pressed to type it; the blocks of the last chunk carry a bar */
+#showTimes i{position:absolute;z-index:2;box-sizing:border-box;padding-left:5px;font-style:normal;font-size:10.5px;line-height:15px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;cursor:pointer;border-left:3px solid transparent}
+#showTimes input{position:absolute;z-index:4;box-sizing:border-box;width:58px;height:22px;margin-top:-4px;padding:0 4px;border:1.5px solid var(--acc);border-radius:4px;background:var(--paper);color:var(--tx);font:600 12px/1 inherit;font-variant-numeric:tabular-nums}
+#showTimes input.bad{border-color:#c0392b;background:color-mix(in srgb,#c0392b 12%,var(--paper))}
+#showTimes i.own{color:var(--tx);font-weight:650}
+#showTimes i.pin{color:var(--acc);font-weight:650}
+#showTimes i.hit{border-left-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
 #shCtl,#shMore{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 #showside .pace{display:flex;align-items:center;gap:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #shPlay{min-width:56px!important;font-size:18px!important}
@@ -302,7 +312,7 @@ textarea.pin{resize:vertical;font-size:14px;line-height:1.35}
 .pin{width:100%;min-height:38px;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:0 8px;margin-top:8px}
 #editor{position:fixed;z-index:25;background:var(--ui);border:1px solid var(--ui-b);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.3);padding:8px;display:flex;flex-direction:column;gap:6px}
 #editor textarea{width:100%;min-height:70px;resize:vertical;border:1px solid var(--ui-b);border-radius:6px;background:var(--paper);color:var(--tx);padding:8px;font:15px/22px "PB","Segoe UI",Arial,sans-serif}
-#editor .hint,.dbox .hint{font-size:12px;color:var(--muted)}
+#editor .hint,.dbox .hint,#gcard .hint{font-size:12px;color:var(--muted)}
 #editor .prow{margin-top:0}
 #dlg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 .dbox{background:var(--ui);color:var(--ui-ink);border-radius:12px;max-width:780px;width:100%;max-height:100%;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.4)}
@@ -337,6 +347,21 @@ table.keys{border-collapse:collapse;width:100%;font-size:13px}
 kbd{display:inline-block;min-width:24px;text-align:center;font:600 12px/20px ui-monospace,Consolas,monospace;padding:0 6px;margin-right:4px;border:1px solid var(--ui-b);border-bottom-width:2px;border-radius:5px;background:var(--ui2)}
 pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 ui-monospace,Consolas,monospace;margin:6px 0 10px;white-space:pre-wrap}
 
+#guide{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.28)}
+#gcard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:min(900px,calc(100vw - 32px));max-height:calc(100vh - 150px);overflow:auto;background:var(--ui);color:var(--ui-ink);border:1px solid var(--ui-b);border-radius:14px;box-shadow:0 10px 32px rgba(0,0,0,.3);padding:14px 18px}
+#gcard header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#gcard h2{margin:0;font-size:16px}
+#glist{columns:2 320px;column-gap:20px;margin:0 0 8px;padding:0;list-style:none}
+.gi{break-inside:avoid;display:grid;grid-template-columns:28px 1fr;gap:2px 9px;align-items:center;padding:6px;border-radius:8px;cursor:pointer;font-size:13px}
+.gi kbd{margin:0 0 0 6px}
+.gi p{grid-column:2;margin:0;color:var(--tx2);line-height:1.35}
+.gi.on{background:color-mix(in srgb,var(--acc) 15%,transparent)}
+.gnum{display:inline-block;justify-self:start;box-sizing:border-box;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--acc);color:var(--ui);font-weight:700;font-size:12px;line-height:20px;text-align:center}
+.gring{position:fixed;box-sizing:border-box;border:2px solid var(--acc);border-radius:9px;cursor:pointer}
+.gring .gnum{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px}
+.gring.up .gnum{top:auto;bottom:100%;margin:0 0 3px}
+.gring.in .gnum{top:0;bottom:auto;margin:6px 0 0}
+.gring.on{background:color-mix(in srgb,var(--acc) 22%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 45%,transparent)}
 #start{position:fixed;inset:0;z-index:35;background:var(--desk);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 .card{background:var(--ui);border:1px solid var(--ui-b);border-radius:16px;padding:28px 30px;max-width:520px;width:100%;box-shadow:0 10px 34px rgba(0,0,0,.14)}
 .card h1{margin:0;font-size:24px;letter-spacing:.01em}
@@ -369,7 +394,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#showside,#shProg,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #bar,#banner,#showside,#shProg,#showTimes,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#guide,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
   #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}
