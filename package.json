@@ -1,6 +1,6 @@
 {
   "name": "promptbook",
-  "version": "1.5.0",
+  "version": "1.11.0",
   "private": true,
   "description": "A prompt book for theatre in one self-contained HTML file",
   "license": "MIT",

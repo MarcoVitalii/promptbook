@@ -1,10 +1,11 @@
 'use strict';
 /* =====================================================================
-   Promptbook R0
-   parse  : text -> blocks, cues, board tokens
-   layout : blocks -> fixed-measure pages
-   view   : rendering, pins, pen, editing, boards
-   store  : show file (.zip, File System Access) | in-browser fallback
+   Promptbook
+   core.js : strings, state, parse (text -> blocks, cues, board tokens),
+             text edits, undo, compare, layout (blocks -> fixed-measure pages)
+   view.js : rendering, ink, boards, pen and touch, editing, cue lists, show mode, print
+   io.js   : show file (.zip, File System Access), draft in the browser, history, dialogs, keys
+   cast.js : the script for the actors, a second file built from core.js and cast.js
    ===================================================================== */
 
 /* ---------- strings ---------- */

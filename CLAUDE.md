@@ -4,7 +4,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 
 ## Rules that are easy to break
 
-- **Never edit `promptbook.html` or `promptbook-cast.html`.** They are the built releases (460 KB with base64 fonts; 100 KB). Edit `src/`, then run `python3 build.py`. Never Read or grep them either: search `src/`.
+- **Never edit `promptbook.html` or `promptbook-cast.html`.** They are the built releases (about 520 KB with base64 fonts; about 125 KB). Edit `src/`, then run `python3 build.py`. Never Read or grep them either: search `src/`.
 - **Never commit them.** They are in `.gitignore`. CI builds them; a tag publishes them as a GitHub release and on GitHub Pages.
 - **Tests run against `promptbook.html`, not `src/`.** A test result is meaningless until the build has run after the last `src/` change.
 - **No libraries, no npm runtime packages, no network.** The zip reader/writer, IndexedDB wrapper and CSV export are hand-written on purpose.
@@ -25,7 +25,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 | `src/cast.css`, `src/cast.html` | ~70, ~35 | Its styles and shell, with the `/*CSS*/`, `/*JS*/`, `/*PACK*/` placeholders |
 | `src/style.css` | ~310 | All styles, including print |
 | `src/index.html` | ~75 | Shell with the `/*FONTS*/`, `/*CSS*/`, `/*JS*/` placeholders |
-| `build.py` | 24 | Joins `src/` and `fonts/` into `promptbook-cast.html`, then into `promptbook.html` |
+| `build.py` | 27 | Joins `src/` and `fonts/` into `promptbook-cast.html`, then into `promptbook.html` |
 | `test/` | | Playwright checks, one plain Node script per area. `_util.js` holds `open()`, `ok()`, `serve()` and the pen helper. `run.js` is the runner |
 | `test/unit/` | | Checks that need no browser |
 | `scripts/` | | `check.sh` (build and test, skips when unchanged), `hooks/` (Claude Code), `githooks/pre-commit`, `site.js` (the documents and the built files as a static site in `_site/`), `release-notes.sh` (the changelog entry of a tag, or why it cannot be released) |

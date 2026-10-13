@@ -189,10 +189,10 @@ Show file
 - If another program replaces the file (sync, copy over): reloaded when nothing is unsaved, otherwise the Keep mine / Load that version banner.
 - Editing `script.md` in another editor while the tool is open no longer works with a show file; unzip, edit, zip, or use “Edit whole script…”.
 - Unused images are dropped from the zip on save.
-- Needs Chrome or Edge. The new checks (`test/zipshow.test.js`) are written but have not been run yet.
+- Needs Chrome or Edge. The new checks are in `test/zipshow.test.js`.
 - A show file written by r1.2 cannot be opened by r1.1 or earlier; their folders open in r1.2.
 
-## r1.1 — 2026-10-07 (built, not yet tagged)
+## r1.1 — 2026-10-07
 
 Front page
 - The script can start with a frontmatter block between two `---` lines: `title:`, `author:`, `company:`, `year:` or any other `key: value`.

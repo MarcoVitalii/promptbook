@@ -1,5 +1,5 @@
 // Shared helpers for the browser checks.
-const pw = require('./_pw');
+const pw = require('playwright');
 const path = require('path'), fs = require('fs'), http = require('http');
 exports.ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 exports.file = path.resolve(__dirname, '..', 'promptbook.html');
