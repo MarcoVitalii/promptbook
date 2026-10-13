@@ -272,8 +272,11 @@ function defaultConfig() {
     { code: 'TODO', name: it ? 'Da fare' : 'To do', colour: '#d62828', review: true } ], defaultBoard: null,
     templates: [], defaultTemplate: null, recentTemplates: [], templateFade: 0.4, boardGrid: 25, lock: null, castId: '', show: { wpm: 130, standby: 30, warning: 120, times: {} } };
 }
+/* A board image that comes with a show is a picture held in the file itself. Any other address (http, file) is dropped: the tool never asks a host for anything (C2). */
+const dataImg = v => typeof v === 'string' && /^data:image\//i.test(v) ? v : null;
 function normCfg(c) {
   const o = Object.assign(defaultConfig(), c || {});
+  if (o.defaultBoard && o.defaultBoard.imageData != null && !dataImg(o.defaultBoard.imageData)) o.defaultBoard = Object.assign({}, o.defaultBoard, { imageData: null });
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');

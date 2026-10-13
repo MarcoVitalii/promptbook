@@ -210,7 +210,7 @@ function near(pts, x, y, r) {
 /* ---------- facing page and boards ---------- */
 function mkBoard(name, j, tpl) {
   j = j || {};
-  return { tpl: !!tpl, name, w: BOARD_W, h: +j.h || 750, image: j.image || null, imageData: j.imageData || null,
+  return { tpl: !!tpl, name, w: BOARD_W, h: +j.h || 750, image: j.image || null, imageData: dataImg(j.imageData),
     strokes: Array.isArray(j.strokes) ? j.strokes : [], base: typeof j.base === 'string' && j.base ? j.base : null };
 }
 function ensureBoard(name) {

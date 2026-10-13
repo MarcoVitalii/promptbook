@@ -43,7 +43,7 @@ Read as `[ASSUMED]`, all but the correction:
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| CST-7 | `promptbook-cast.html` is one file with no install, server, library or network use. It runs in any current browser, reflows the text to the width of a phone, and has the text size, night mode, an act and scene list, English and Italian. | C1, C2, request | r1.10 | cast |
+| CST-7 | `promptbook-cast.html` is one file with no install, server, library or network use; since r1.11 it carries a Content-Security-Policy (`default-src 'none'`, its inline script and styles only), so nothing in a cast file or a note can make it ask a host for anything (STO-22). It runs in any current browser, reflows the text to the width of a phone, and has the text size, night mode, an act and scene list, English and Italian. | C1, C2, request | r1.10 | cast |
 | CST-8 | A cast file opened in a browser shows its show at once. The file without a show inside asks for a cast file, takes either kind, refuses anything else with a message, and reopens the last show. | as built | r1.10 | cast |
 | CST-9 | The text is shown as written: title page with the characters, acts and scenes, actions in italics, each speech under its speaker name, "together" on simultaneous speeches. Nothing can be edited. | request | r1.10 | cast |
 | CST-10 | "My part" lists every speaker name as the script writes it, with the number of its speeches and one box each. The lines under the ticked names are marked as mine. | request ("checkbox over detected characters") | r1.10 | cast |
@@ -103,4 +103,4 @@ Read as `[ASSUMED]`, all but the correction:
 
 **Compatibility.** A show with a cast department opens in r1.9: the notes are ordinary to-do notes there, and when r1.9 saves the settings the "Cast" mark is lost and must be set again. Shows from r1.9 open unchanged.
 
-**Not verified.** Everything was checked in simulated Chromium at 390 px and 1200 px wide. Never tried: a real phone; opening an `.html` attachment from a chat or mail app on Android or iOS, where the file may be shown as text or without storage, so that part and notes would not survive closing it; Safari and Firefox. Until that trial, "Export my notes" is the way to keep them safe. CST-17 and CST-21 have no automated check.
+**Not verified.** Everything was checked in simulated Chromium at 390 px and 1200 px wide. Never tried: a real phone; opening an `.html` attachment from a chat or mail app on Android or iOS, where the file may be shown as text or without storage, so that part and notes would not survive closing it; Safari and Firefox. Until that trial, "Export my notes" is the way to keep them safe. The same holds for the Content-Security-Policy of CST-7: checked in Chromium only, never in the viewer of a chat or mail app. CST-17 and CST-21 have no automated check.

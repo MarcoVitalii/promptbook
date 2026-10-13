@@ -1,8 +1,8 @@
 # Storage — STO
 
 **Covers:** where a show is kept, the show file, the in-browser fallback, autosave, changes made outside the tool, the shapes of the saved data, compatibility between releases.
-**Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import, `relStamp`, `relWarn`), `src/core.js` (`normCfg`, `inkFile`, `attachInk`, `READABLE_FROM`, `relCmp`, `relMark`, `relNewer`).
-**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`, `test/unit/compat`.
+**Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import, `relStamp`, `relWarn`), `src/core.js` (`normCfg`, `dataImg`, `inkFile`, `attachInk`, `READABLE_FROM`, `relCmp`, `relMark`, `relNewer`).
+**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`, `test/unit/compat`, `test/unit/images`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -22,6 +22,8 @@ One request came from the review of 2026-10-09 (`docs/review-2026-10-09.md`, X2)
 - **r1.11, a part that cannot be read:** "Tell 'missing' from 'unreadable'. On unreadable: say so, keep the damaged file under another name, and do not write over it until the user has chosen."
 
 A review of the code (`docs/review-2026-10-09.md`, X7) found that "nothing in a show says which release wrote it or which is needed to read it. Compatibility rests on the user reading the changelog", and asked: "Write the oldest release able to read the show into `config.json` and warn, not refuse (C10), when a show needs a newer tool. Carry unknown department fields through." The intent is that a stage manager who opens a show with too old a tool is told so, in words that say what to do, and can still work (STO-15 to STO-17).
+
+A fourth came from the review of 9 October 2026 (`docs/review-2026-10-09.md`, X8): "An imported backup can make the tool contact a network host, against C2. No code runs; it is a privacy leak (the request can carry anything the backup's author chose)." The intent is that C2 holds whatever a file contains: a show, a backup or a draft is data, and nothing in it can make the tool ask a host for anything.
 
 Writing straight into a file on disk works only in Chrome and Edge (K6). The intent for any other browser, and for the moment before a file is chosen, is that the tool stays usable and nothing is lost: the show is kept in the browser and can be exported.
 
@@ -132,6 +134,7 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | r1.10, with a cast department | r1.9 | Opens; notes for the cast are to-do notes; the "Cast" mark is lost when r1.9 saves the settings. |
 | r1.11 | r1.10 | Opens; show mode's settings and the release mark are kept and ignored. If r1.10 saves, `release.made` still names r1.11. |
 | A later release, with `release.needs` newer than the tool | r1.11 and later | Opens with the warning of STO-16. |
+| Any release, a backup or draft edited by hand so that `imageData` is a web address | r1.11 and later | Opens; that board, template or default board has no image (STO-21). The tool never wrote such a value. |
 
 ### 2.5 A part that cannot be read
 
@@ -140,6 +143,13 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | STO-18 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, the file of a board the script places, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
 | STO-19 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
 | STO-20 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
+
+### 2.6 Nothing is asked of a host
+
+| ID | Requirement | Basis | Since | Checked by |
+|---|---|---|---|---|
+| STO-21 | A board, template or default-board image that arrives inside a backup, a draft or `config.json` (`imageData`) is kept only when it is the picture itself, a `data:image/…` URL. Anything else (a web address, a file path, another kind of data) is dropped: the show opens whole and that board has no image. | C2, review X8 | r1.11 | misc, unit/images |
+| STO-22 | `promptbook.html` carries a Content-Security-Policy, so the browser refuses every request to a host whatever a show file, a backup or a draft holds. `promptbook-cast.html` carries a narrower one (CST-7). | C2, review X8 | r1.11 | misc, cast |
 
 ## 3. Consequences
 
@@ -156,6 +166,14 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 **The question is a banner, not a dialog**, like the one for a file changed by another program (STO-11), and the two can meet: when the file is also replaced from outside while changes wait, the banner of STO-11 is shown first, and "Keep mine" writes the show, `damaged/` included, over the other version; the banner of STO-18 then returns. In show mode no banner is visible (SHW); nothing is saved there either until the question is answered.
 
 **Not covered by STO-18:** the draft kept in the browser and a backup file. An unreadable draft is not offered on the start screen and is replaced by the next show kept in the browser; an unreadable backup is refused with a message and is never written to.
+
+**No request to a host, by construction (STO-22).** The policy is a `meta` element at the top of `src/index.html`, so it holds from `file://` and from any server: `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src data:; base-uri 'none'; form-action 'none'`. That is what the tool uses and no more: its one inline script and its inline styles; board images as `data:` (in a backup or draft) or `blob:` (read from the show file); the embedded font and the search icon as `data:`; `fetch` of a `data:` URL when "Save as show file…" moves an image out of the page. Downloads, printing, the file pickers, IndexedDB, compression, hashing and the screen wake lock are not governed by it and work as before. `'unsafe-inline'` is needed because the tool is one file; the policy is there to stop requests, not scripts, and the tool still never writes text from a file into the page as markup.
+
+**The policy is the only guard for colours.** A department colour or an ink colour written by hand as `url(http://…)` in a backup or a show file also made the browser ask that host (found while X8 was fixed). Colours are not cleaned when read; the policy refuses the request and the browser's console names it. STO-21 cleans `imageData` as well so that the value is not kept and written back into a later backup.
+
+**A later change that needs a new kind of resource must widen the policy**, or it fails in the page with only a console message: a web worker, a frame, `fetch` of a `blob:` URL, a font or image from anywhere but `data:` and `blob:`. The checks load the built file, so they catch it.
+
+**Not verified (STO-22):** the policy in Firefox and Safari (the checks run in Chromium only); a browser extension can still make requests of its own, which no page can prevent.
 
 **Storage needs Chrome or Edge (K6, A7).** In another browser the tool still works, with the in-browser fallback and backup files only.
 

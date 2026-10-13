@@ -4,7 +4,8 @@ const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
   const html = fs.readFileSync(path.resolve('promptbook.html'));
-  const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); s.end(html); }).listen(0);
+  const hits = [];   // every request that reaches the host
+  const srv = http.createServer((q, s) => { hits.push(q.url); s.setHeader('content-type', 'text/html; charset=utf-8'); s.end(html); }).listen(0);
   const url = 'http://localhost:' + srv.address().port + '/promptbook.html';
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: 'en-GB', hasTouch: true, acceptDownloads: true });
@@ -130,6 +131,54 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const after = await page.evaluate(() => JSON.stringify([PB.serialize(), PB.inkFile(), PB.S.cfg]));
   ok(before === after, 'backup export then import restores script, ink and settings exactly');
 
+  // a backup written by someone else: a board image is a picture inside the file, never an address (STO-21)
+  const far = url.replace('promptbook.html', 'beacon.png?show=secret');
+  const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const sent = []; page.on('request', r => { if (!/^(data|blob):/.test(r.url())) sent.push(r.url()); });
+  const settle = () => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 100)))));
+  const importBk = async (name, b) => {
+    fs.writeFileSync(OUT + '/' + name, JSON.stringify(b));
+    const ch = page.waitForEvent('filechooser');
+    await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Import backup' }).click();
+    await (await ch).setFiles(OUT + '/' + name);
+    await page.waitForFunction(ti => PB.S.cfg.title === ti && document.querySelector('.board[data-name="Vera"] svg'), b.config.title);
+    await settle();
+  };
+  const boardImages = () => page.evaluate(() => ({ kept: [PB.S.boards.get('Spia').imageData, PB.S.templates.get('Fondo').imageData, PB.S.cfg.defaultBoard.imageData].map(String).join(),
+    shown: Array.from(document.querySelectorAll('.board')).map(f => f.dataset.name + ':' + Array.from(f.querySelectorAll('svg image')).map(i => i.getAttribute('href').slice(0, 15) + (i.getBBox().width > 0 ? '' : ' empty')).join()).join(' ') }));
+  const spy = { format: 'promptbook', version: 1, when: new Date().toISOString(), config: { title: 'Spia', defaultBoard: { image: 'd.png', h: 500, imageData: far } }, script: 'ANNA: Ciao.\n{BOARD Spia}\n{BOARD Vera}\n', ink: null,
+    boards: [{ name: 'Spia', image: 's.png', h: 500, imageData: far, strokes: [] }, { name: 'Vera', image: 'v.png', h: 500, imageData: PNG, strokes: [] }], templates: [{ name: 'Fondo', image: 'f.png', h: 500, imageData: far, strokes: [] }] };
+  if (!await page.evaluate(() => PB.S.view.facing)) await page.locator('#bFacing').click();
+  const h0 = hits.length;
+  await importBk('spy.promptbook.json', spy);
+  const s1 = await boardImages();
+  ok(await page.evaluate(() => PB.S.boards.size === 2 && PB.S.templates.size === 1 && PB.serialize().includes('{BOARD Spia}')), 'a backup whose images are web addresses is still imported whole');
+  ok(s1.kept === 'null,null,null', 'the address given as the image of a board, of a template and of the default board is dropped: ' + s1.kept);
+  ok(sent.length === 0 && hits.length === h0, 'importing that backup asks no host for anything: ' + sent.join());
+  ok(s1.shown === 'Spia: Vera:data:image/png;', 'that board is shown without an image; a picture held in the file itself still shows: ' + s1.shown);
+
+  // the page itself refuses to ask a host for anything, whatever a file holds (STO-22)
+  const k0 = errs.length;
+  const refused = await page.evaluate(async u => {
+    const seen = [], on = e => seen.push(e.effectiveDirective); document.addEventListener('securitypolicyviolation', on);
+    const f = await fetch(u).then(() => 'sent', () => 'refused');
+    const i = await new Promise(r => { const im = new Image(); im.onload = () => r('loaded'); im.onerror = () => r('refused'); im.src = u; });
+    for (let n = 0; n < 80 && seen.length < 2; n++) await new Promise(r => setTimeout(r, 25));
+    document.removeEventListener('securitypolicyviolation', on);
+    return [f, i, seen.sort().join()].join(' ');
+  }, far);
+  ok(refused === 'refused refused connect-src,img-src' && hits.length === h0, 'the page carries a policy that refuses a fetch and an image from a host before anything is sent: ' + refused);
+  // a colour is the other place where a file can name an address: the policy stops it
+  const paint = { format: 'promptbook', version: 1, when: spy.when, config: { title: 'Tinta', departments: [{ code: 'LX', name: 'Luci', colour: 'url(' + far + ')' }] }, script: 'ANNA: Ciao {LX 1 | luce}.\n{BOARD Vera}\n', ink: null,
+    boards: [{ name: 'Vera', h: 500, strokes: [{ colour: 'url(' + far + '#a)', width: 3, points: [[10, 10], [200, 200]] }] }], templates: [] };
+  await importBk('paint.promptbook.json', paint);
+  ok(hits.length === h0, 'a colour written as a web address reaches no host either');
+  const said = errs.splice(k0);
+  ok(said.length >= 2 && said.every(e => /Content Security Policy/.test(e)), 'the browser names what it refused and nothing else went wrong: ' + said.length + ' refusals');
+  sent.length = 0;
+  await page.evaluate(b => PB.loadBundle(b), JSON.parse(fs.readFileSync(file, 'utf8')));
+  await page.waitForFunction(() => PB.S.blocks.length > 5);
+
   // save from the browser into a show file (picker replaced by a private file for the test)
   await page.evaluate(async () => { const root = await navigator.storage.getDirectory(); const fh = await root.getFileHandle('show2.promptbook.zip', { create: true }); window.showSaveFilePicker = async () => fh; });
   await page.locator('#banner .btn', { hasText: 'Save as show file' }).click();
@@ -143,6 +192,17 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.emulateMedia({ media: 'print' });
   await page.pdf({ path: OUT + '/cues.pdf', preferCSSPageSize: true, printBackground: true });
   await page.emulateMedia({ media: 'screen' });
+
+  // the draft kept in the browser is read like a backup (STO-21)
+  await page.evaluate(b => localStorage.setItem('promptbook:draft', JSON.stringify(b)), spy);
+  await page.reload();
+  await page.waitForSelector('#start .card');
+  sent.length = 0; const h1 = hits.length;
+  await page.getByText('Continue the unsaved draft').click();
+  await page.waitForFunction(() => PB.S.cfg.title === 'Spia' && document.querySelector('.board[data-name="Vera"] svg image'));
+  await settle();
+  const s2 = await boardImages();
+  ok(s2.kept === 'null,null,null' && s2.shown === 'Spia: Vera:data:image/png;' && sent.length === 0 && hits.length === h1, 'a draft whose images are web addresses opens without them and asks no host for anything: ' + s2.shown + ' ' + sent.join());
 
   console.log(errs.join('\n') || 'no page errors');
   await browser.close(); srv.close();

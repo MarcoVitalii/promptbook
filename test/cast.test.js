@@ -74,6 +74,18 @@ const OUT = process.env.OUT || path.resolve(__dirname, '..', '.cache', 'out');
   const shownText = await cp.locator('#text .tx').allTextContents();
   ok(shownText.join('|').includes('Chi è là? Rispondi subito!') && (await cp.locator('.meta').textContent()).includes('Il molo') && !/[{}]|tagliata/.test(shownText.join('|')), 'the cast file shows the script, title page included, with no token');
   ok(await cv(() => document.documentElement.scrollWidth <= window.innerWidth), 'nothing runs off a phone screen');
+  // the file carries the policy of the prompt book, without images or fetch: it asks no host for anything (STO-22, CST-7)
+  const e0 = errs.length;
+  const refused = await cv(async () => {
+    const seen = [], on = e => seen.push(e.effectiveDirective); document.addEventListener('securitypolicyviolation', on);
+    const f = await fetch('http://127.0.0.1:9/beacon').then(() => 'sent', () => 'refused');
+    const i = await new Promise(r => { const im = new Image(); im.onload = () => r('loaded'); im.onerror = () => r('refused'); im.src = 'http://127.0.0.1:9/beacon.png'; });
+    for (let n = 0; n < 80 && seen.length < 2; n++) await new Promise(r => setTimeout(r, 25));
+    document.removeEventListener('securitypolicyviolation', on);
+    return [f, i, seen.sort().join()].join(' ');
+  });
+  const said = errs.splice(e0);
+  ok(refused === 'refused refused connect-src,img-src' && said.length >= 2 && said.every(e => /Content Security Policy/.test(e)), 'the cast file refuses a fetch and an image from a host: ' + refused);
   ok(await cp.locator('.note.in').count() === 4, 'before a part is ticked every note is there');
   const n3 = await cv(() => Array.from(document.querySelectorAll('.note.in')).map(n => n.closest('.b').className.split(' ')[1] + '>' + n.querySelector('.nh').textContent).join('|'));
   ok(n3 === 'action>Notes|speech>Notes · for MARCO|speech>Notes · for MARCO|speech>Notes · for TUTTI', 'a note belongs to its whole block and names who wrote it and who it is for: ' + n3);
