@@ -7,9 +7,9 @@ exports.serve = () => new Promise(res => {
   const html = fs.readFileSync(exports.file);
   const srv = http.createServer((q, s) => { s.setHeader('content-type', 'text/html; charset=utf-8'); s.end(html); }).listen(0, () => res({ srv, url: 'http://localhost:' + srv.address().port + '/promptbook.html' }));
 });
-// The name box of a board takes the focus a moment after it opens, and the focus leaves it a moment after it closes.
+// The name box of a board takes the focus, with its text selected, a moment after it opens, and the focus leaves it a moment after it closes.
 // A person sees both; a script is faster and must wait, or its Enter and its Ctrl+Z go nowhere on a slow machine.
-exports.nameBox = page => page.waitForFunction(() => { const i = document.querySelector('#pop input'); return !!i && document.activeElement === i; });
+exports.nameBox = page => page.waitForFunction(() => { const i = document.querySelector('#pop input'); return !!i && document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length; });
 exports.popGone = page => page.waitForFunction(() => { const p = document.querySelector('#pop'); return p.hidden && !p.contains(document.activeElement); });
 exports.open = async (opts = {}) => {
   const browser = await pw.chromium.launch();
