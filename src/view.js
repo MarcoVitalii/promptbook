@@ -1725,7 +1725,7 @@ function renderDrawer() {
 function csvText(list) {
   const sep = (1.1).toLocaleString().includes(',') ? ';' : ',';
   const q = v => { v = String(v == null ? '' : v); return /["\n\r;,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  const rows = [[t('thDept'), t('thNo'), t('thDesc'), 'Act', 'Scene', t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
+  const rows = [[t('thDept'), t('thNo'), t('thDesc'), t('thAct'), t('thScene'), t('thWho'), t('thLine'), t('thPage'), t('thEndPage'), t('thEndLine'), t('thEndDesc'), t('thEndedBy'), t('thEnds'), t('thNotes')]];
   for (const o of list) rows.push([o.c.dept, (o.loose ? '/' : '') + o.c.label, o.c.desc, o.act, o.scene, o.who, o.ctx, o.page,
     o.end ? o.end.page : '', o.end ? (o.end.who ? o.end.who + ': ' : '') + o.end.ctx : '', o.end ? o.end.c.desc + (o.endedBy || !o.end.c.notes ? '' : (o.end.c.desc ? ' — ' : '') + o.end.c.notes) : '',
     o.endedBy ? cueName(o.endedBy) : '', o.c.links.map(cueName).join('; '), o.c.notes]);

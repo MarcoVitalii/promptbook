@@ -69,8 +69,33 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   // 6. garbage is refused, current show stays
   await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip', { create: true }); const w = await fh.createWritable(); await w.write('not a zip at all'); await w.close(); window.showOpenFilePicker = async () => [fh]; });
   ok(await ev(() => PB.openZipFile()) === false && await ev(() => PB.S.loaded && PB.serialize().includes('Da cartella')), 'a file that is not a zip is refused and the open show stays open');
+  ok(await page.locator('#toast').textContent() === 'Could not open the show: not a zip file' && await ev(() => PB.t('errOpen', PB.t('zipNot'))) === 'Could not open the show: not a zip file', 'the refusal says why, in words from the string table');
   // the refusal is logged to the console on purpose; anything else there is still a failure
   ok(errs.length === 1 && /not a zip file/.test(errs[0]), 'the refused file is the only error logged');
+  errs.length = 0;
+
+  // 7. a save that fails says why, once
+  const toastNow = () => ev(() => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; });
+  const hush = () => ev(() => { document.querySelector('#toast').hidden = true; });
+  const failed = n => page.waitForFunction(k => window.__tries >= k && !PB.S.store.saving && !!PB.S.store.err, n);
+  await settle(); await hush();
+  await ev(() => { const real = PB.S.store.handle; window.__real = real; window.__tries = 0; PB.S.store.handle = { name: real.name, getFile: () => real.getFile(), createWritable: async () => { window.__tries++; throw new Error('the disk is full'); } }; });
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Uno.\n')); await failed(1);
+  ok(await toastNow() === 'Could not save: the disk is full' && await page.locator('#status').textContent() === 'Save failed', 'a failed save says why in a message, and the status says "Save failed": ' + await toastNow());
+  await hush();
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Due.\n')); await failed(2);
+  ok(await toastNow() === '' && await page.locator('#status').getAttribute('title') === 'the disk is full', 'the same failure on the next try is not announced again; the reason stays on the status');
+  await ev(() => { PB.S.store.handle = window.__real; return PB.saveNow(); }); await settle();
+  ok(await ev(() => !PB.S.store.err) && (await ev(async () => (await PB.readZip(await PB.S.store.handle.getFile())).get('script.md').text())).includes('ANNA: Due.'), 'once the file can be written again, what was waiting is saved');
+  ok(errs.length === 2 && errs.every(x => /the disk is full/.test(x)), 'the two failed saves are the only errors logged');
+  errs.length = 0;
+
+  // 8. in Italian the refusal of a file is in Italian
+  await ev(() => localStorage.setItem('promptbook:view', JSON.stringify({ lang: 'it' })));
+  await page.reload(); await page.waitForSelector('#start .card');
+  await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip'); window.showOpenFilePicker = async () => [fh]; });
+  ok(await ev(() => PB.openZipFile()) === false && await page.locator('#toast').textContent() === 'Impossibile aprire lo spettacolo: non è un file zip', 'with the interface in Italian, the reason a file is refused is in Italian: ' + await page.locator('#toast').textContent());
+  ok(errs.length === 1 && /non è un file zip/.test(errs[0]), 'the refused file is again the only error logged');
   errs.length = 0;
   await done(); srv.close();
 })();

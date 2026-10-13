@@ -67,7 +67,7 @@ async function buildZip(files) {
     off += 30 + nb.length + e.data.length;
   }
   const csize = central.reduce((a, b) => a + b.byteLength, 0), n = files.size;
-  if (n > 65534 || off + csize > 0xFFFFFFF0) throw new Error('show too large for a zip file');
+  if (n > 65534 || off + csize > 0xFFFFFFF0) throw new Error(t('zipBig'));
   const eo = new DataView(new ArrayBuffer(22));
   eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, n, true); eo.setUint16(10, n, true); eo.setUint32(12, csize, true); eo.setUint32(16, off, true);
   return new Blob([...parts, ...central, eo.buffer], { type: 'application/zip' });
@@ -76,13 +76,13 @@ async function readZip(file) {
   const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer());
   let e = tail.byteLength - 22;
   while (e >= 0 && tail.getUint32(e, true) !== 0x06054b50) e--;
-  if (e < 0) throw new Error('not a zip file');
+  if (e < 0) throw new Error(t('zipNot'));
   const n = tail.getUint16(e + 10, true), cdSize = tail.getUint32(e + 12, true), cdOff = tail.getUint32(e + 16, true);
-  if (cdOff === 0xFFFFFFFF || n === 0xFFFF) throw new Error('zip64 is not supported');
+  if (cdOff === 0xFFFFFFFF || n === 0xFFFF) throw new Error(t('zip64'));
   const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
   let p = 0;
   for (let i = 0; i < n; i++) {
-    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('damaged zip file');
+    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error(t('zipBad'));
     const flags = cd.getUint16(p + 8, true), method = cd.getUint16(p + 10, true), csz = cd.getUint32(p + 20, true), usz = cd.getUint32(p + 24, true);
     const nl = cd.getUint16(p + 28, true), xl = cd.getUint16(p + 30, true), cl = cd.getUint16(p + 32, true), lo = cd.getUint32(p + 42, true);
     const name = dec.decode(new Uint8Array(cd.buffer, p + 46, nl)); p += 46 + nl + xl + cl;
@@ -91,8 +91,8 @@ async function readZip(file) {
     const start = lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), body = file.slice(start, start + csz);
     // copied into memory: a slice of the file can no longer be read once the file is rewritten
     if (method === 0) out.set(name, new Blob([await body.arrayBuffer()]));
-    else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error('damaged zip file'); out.set(name, new Blob([z])); }
-    else throw new Error('unsupported zip compression');
+    else if (method === 8) { const z = await pipeBytes(new Uint8Array(await body.arrayBuffer()), new DecompressionStream('deflate-raw')); if (z.length !== usz) throw new Error(t('zipBad')); out.set(name, new Blob([z])); }
+    else throw new Error(t('zipMethod'));
   }
   // a folder zipped by the operating system has everything inside one top-level folder; drop it, and drop its clutter
   for (const k of Array.from(out.keys())) if (/^__MACOSX\//.test(k) || /(^|\/)\.DS_Store$/.test(k)) out.delete(k);
@@ -129,7 +129,9 @@ function markDirty(what, name) {
   setStatus();
   clearTimeout(saveT); saveT = setTimeout(saveNow, 700);
 }
-function saveError(e) { S.store.err = e; console.error(e); setStatus(); }
+/* a failed save says why once: the same reason is not shown again until a save has gone through */
+const errText = e => String((e && e.message) || e);
+function saveError(e) { const s = S.store; if (!s.err || errText(s.err) !== errText(e)) toast(t('errSave', errText(e))); s.err = e; console.error(e); setStatus(); }
 async function saveNow(force) {
   const s = S.store, d = s.dirty;
   if (s.saving) { s.again = true; return; }
@@ -156,7 +158,7 @@ async function saveNow(force) {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
       saveDraft();
     }
-  } catch (e) { s.err = e; console.error(e); }
+  } catch (e) { saveError(e); }
   s.saving = false; setStatus();
   if (s.again) { s.again = false; saveNow(); }
 }
@@ -260,7 +262,7 @@ async function grant(handle) {
 async function openZipFile(handle) {
   try {
     if (!handle) [handle] = await window.showOpenFilePicker({ id: 'promptbook', types: ZIP_TYPES });
-    if (!(await grant(handle))) throw new Error('permission denied');
+    if (!(await grant(handle))) throw new Error(t('errPerm'));
   } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
   let files, file;
   try { file = await handle.getFile(); files = await readZip(file); } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); return false; }

@@ -31,3 +31,11 @@ ok(C.serialize() === t0, 'two undos return to the starting text exactly');
 C.redo(); C.redo();
 ok(/Sono qui\./.test(C.serialize()) && /ANNA: fine\.\n$/.test(C.serialize()), 'two redos reapply them');
 ok(Object.keys(C.STR.en).every(k => k in C.STR.it) && Object.keys(C.STR.it).every(k => k in C.STR.en), 'every string exists in English and Italian');
+// a key is used when its name stands quoted somewhere in src/: t('key'), a list of keys, data-t="key" in the shell
+const fs = require('fs'), path = require('path'), SRC = path.resolve(__dirname, '../../src');
+const used = fs.readdirSync(SRC).filter(f => /\.(js|html)$/.test(f)).map(f => fs.readFileSync(path.join(SRC, f), 'utf8')).join('\n');
+const idle = Object.keys(C.STR.en).filter(k => !used.includes("'" + k + "'") && !used.includes('"' + k + '"'));
+ok(idle.length === 0, 'every string in the table is used somewhere in src/: ' + idle.join(' '));
+// 'format' is caught where it is thrown and never shown
+const lit = (used.match(/new Error\(\s*['"`][^)]*\)/g) || []).filter(x => x !== "new Error('format')");
+ok(lit.length === 0, 'an error that can reach the user takes its message from the table: ' + lit.join(' '));

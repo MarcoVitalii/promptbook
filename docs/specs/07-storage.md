@@ -27,7 +27,7 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 |---|---|---|---|---|
 | STO-1 | A show is one `.zip` file holding `script.md`, `script.ink.json`, `config.json`, `boards/` and `templates/`, and `.git/` once it has a history. Any zip tool can open it. Copying that file moves the show. | D10 as amended | r1.2, r1.7 | zipshow, history |
 | STO-2 | Menu → "Save as show file…" creates the file; "Open show file…" opens it. | r1.2 | r1.2 | zipshow, misc |
-| STO-3 | Every change is saved without a command, shortly after it is made. The status beside the title says "Saving soon", "Saving…", "Saved hh:mm" or "Save failed". Leaving the page with unsaved changes or after a failed save asks first. | R0.9 | r0 | scale-folder, zipshow |
+| STO-3 | Every change is saved without a command, shortly after it is made. The status beside the title says "Saving soon", "Saving…", "Saved hh:mm" or "Save failed". A save that fails also says why in a short message ("Could not save: …"), once: the same reason is not announced again until a save has gone through, and stays as the tooltip of the status. Leaving the page with unsaved changes or after a failed save asks first. | R0.9; review 2026-10-09, X10 | r0, r1.11 | scale-folder, zipshow |
 | STO-4 | A folder zipped by hand (Explorer, Finder) opens as it is: the extra top-level folder is ignored, and so is the clutter macOS adds. | r1.2 | r1.2 | zipshow |
 | STO-5 | A file that is not a zip is refused with a message, and the open show stays open. | as built | r1.2 | zipshow |
 | STO-6 | **Withdrawn in r1.10.** Until r1.9: older show folders still opened ("Open older show folder…") and "Save as show file…" converted one, images and history included. | D10 as amended | r1.2 to r1.9 | — |
