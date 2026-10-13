@@ -89,7 +89,7 @@ Requests, as received:
 
 **"Marked as template" and "live in configurations" pull apart (K10).** A board exists by having a line in the script; a template must have none. So the mark is where it is kept: same file shape, same pen, but listed in `config.json`, edited in its own view, left out of script and print. A script board cannot be marked in place; it is copied to the templates.
 
-**"In configurations" was read as "part of the show's settings"**, not as strokes written inside `config.json`, which would make that file too large to edit by hand. Each drawing is a file `templates/<name>.json`. The client has not vetoed this reading. A name the settings list whose file is not in the show is said when the show opens and in the Templates view, and is kept (STO-31 in `07-storage.md`).
+**"In configurations" was read as "part of the show's settings"**, not as strokes written inside `config.json`, which would make that file too large to edit by hand. Each drawing is a file `templates/<name>.json`. The client has not vetoed this reading. A name the settings list whose file is not in the show is said when the show opens and in the Templates view, and is kept (STO-27 in `07-storage.md`).
 
 **A live link cuts both ways.** A change to a template shows on every board built on it, including boards finished weeks ago. To keep them, make a new template based on the old one instead of editing it.
 

@@ -176,7 +176,7 @@ const OUT = process.env.OUT || '.';
   await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.size) === 2, 'and Enter adds the board');
 
-  // 15. a template the settings name whose file is not in the show: said, and the name kept until the file is back or the user lets it go (STO-31)
+  // 15. a template the settings name whose file is not in the show: said, and the name kept until the file is back or the user lets it go (STO-27)
   const tplJSON = (name, n) => JSON.stringify({ name, image: null, w: 1000, h: 750, strokes: Array.from({ length: n }, (_, k) => ({ colour: '#000', width: 2, points: [[100, 100 + 40 * k], [400, 140 + 40 * k]] })) });
   const put = (name, parts) => page.evaluate(async ([n, ps]) => {
     const fh = await (await navigator.storage.getDirectory()).getFileHandle(n, { create: true });

@@ -205,7 +205,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(s2.kept === 'null,null,null' && s2.shown === 'Spia: Vera:data:image/png;' && sent.length === 0 && hits.length === h1, 'a draft whose images are web addresses opens without them and asks no host for anything: ' + s2.shown + ' ' + sent.join());
 
   // the draft has the quota of the browser: over it the images of the boards are left out, and that is said when it starts, not at
-  // every save; when nothing fits, the save has failed (STO-30). setItem refuses a draft longer than __cap, as a full store would.
+  // every save; when nothing fits, the save has failed (STO-26). setItem refuses a draft longer than __cap, as a full store would.
   await page.evaluate(() => {
     const c = document.createElement('canvas'); c.width = 200; c.height = 120; const g = c.getContext('2d');
     for (let k = 0; k < 600; k++) { g.fillStyle = 'hsl(' + (k * 37) % 360 + ' 80% 50%)'; g.fillRect((k * 53) % 200, (k * 31) % 120, 9, 7); }

@@ -9,8 +9,8 @@ function resetStore() {
   s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false; s.bad = [];
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
   s.bfiles = new Map();   // every drawing in boards/: file name -> the board name written in it, null when it has none
-  s.gone = [];            // templates the settings name that had no file when the show was opened (STO-31)
-  s.draft = 0;            // what the last draft in the browser lacks: 0 nothing, 1 the images of the boards, 2 it was not written (STO-30)
+  s.gone = [];            // templates the settings name that had no file when the show was opened (STO-27)
+  s.draft = 0;            // what the last draft in the browser lacks: 0 nothing, 1 the images of the boards, 2 it was not written (STO-26)
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
@@ -34,7 +34,7 @@ function cfgFile() {
   return c;
 }
 /* Templates the settings name whose file is not in the show. The names stay in the saved list, after the others, so that a file put
-   back by hand is a template again; a name is let go when a template takes it or its file name, or the user drops it (STO-31). */
+   back by hand is a template again; a name is let go when a template takes it or its file name, or the user drops it (STO-27). */
 function tplGone() { const s = S.store; return s.gone.filter(n => !tplTaken(n) && !s.files.has('templates/' + slug(n) + '.json')); }
 /* the configuration says which release saves it and which is needed to read it; true when that is news (STO-15) */
 function relStamp() { const o = relOf(S.cfg), m = S.cfg.release = relMark(S.cfg); return o.made !== m.made || o.needs !== m.needs; }
@@ -236,7 +236,7 @@ function bundle(withImages) {
 }
 /* The draft is the whole show in one value of localStorage, which has a quota. Over it the draft is written without the images
    of the boards; when that fails too nothing is written, and the save has failed (STO-3). Either is said when it starts, in a message
-   and in the banner, not at every save (STO-30). */
+   and in the banner, not at every save (STO-26). */
 function saveDraft() {
   const s = S.store, was = s.draft;
   try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); s.draft = 0; }
@@ -386,7 +386,7 @@ async function loadStore(handle) {
       if (typeof n !== 'string' || !n) continue;
       const j = await readJSON(slug(n) + '.json', 'templates', 'strokes');
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.templates.set(n, mkBoard(n, j, true)); }
-      else if (!s.gone.includes(n) && !s.bad.includes('templates/' + slug(n) + '.json')) s.gone.push(n);   // no file, as against unreadable: the name is kept (STO-31)
+      else if (!s.gone.includes(n) && !s.bad.includes('templates/' + slug(n) + '.json')) s.gone.push(n);   // no file, as against unreadable: the name is kept (STO-27)
     }
     if (tplGone().length) toast(t('tplGone', tplGone().join(', ')));
     const imgs = new Set();
