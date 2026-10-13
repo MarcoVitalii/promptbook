@@ -80,5 +80,29 @@ const { ok, open, nameBox, popGone } = require('./_util');
   await T.pen([[cb.x, cb.y + cb.height + 4], [cb.x + 120, cb.y + cb.height + 6]]);
   const ik = await page.evaluate(() => { PB.renderAll(); const pgs = document.querySelectorAll('.page.script'); return [PB.inkFile().blocks.length, pgs[0].querySelectorAll('.ink path').length, pgs[1].querySelectorAll('.ink path').length, document.querySelector('.ch').textContent]; });
   ok(ik.join() === '1,0,1,Personaggi', 'ink drawn on the character page is redrawn there and not on the front page; heading follows the key');
+
+  // a character list longer than one page runs on to the next, and nothing of it is cut off (PAG-8)
+  const crowd = (n, desc) => '---\ntitle: Folla\ncharacters:\n' + Array.from({ length: n }, (_, k) => '  - PERSONA ' + (k + 1) + ' - ' + desc(k) + '\n').join('') + '---\nPERSONA 1: Ciao.\n';
+  const all = n => Array.from({ length: n }, (_, k) => 'PERSONA ' + (k + 1)).join();
+  const castPages = (tx, paper) => page.evaluate(([tx, paper]) => { PB.startMemory(tx, { paper }); PB.renderAll();
+    const pgs = Array.from(document.querySelectorAll('.page.script')).filter(p => p.querySelector('.tx.cast'));
+    return { n: pgs.length, nos: PB.S.pages.map(P => P.no).join(), first: PB.S.blocks[1].page, heads: pgs.map(pg => pg.querySelectorAll('.ch').length).join(''), names: pgs.flatMap(pg => Array.from(pg.querySelectorAll('.ce b'), e => e.textContent)).join(),
+      per: pgs.map(pg => pg.querySelectorAll('.ce').length).join('+'), two: pgs.every(pg => !!pg.querySelector('.tx.cast.two')), bare: pgs.every(pg => getComputedStyle(pg.querySelector('.pfoot')).display === 'none' && getComputedStyle(pg.querySelector('.phead')).display === 'none'),
+      inside: pgs.every(pg => { const r = pg.querySelector('.row.front').getBoundingClientRect(); return Array.from(pg.querySelectorAll('.ce')).every(e => { const q = e.getBoundingClientRect(); return q.bottom <= r.bottom + 0.5 && q.right <= r.right + 0.5; }); }) }; }, [tx, paper || 'A4']);
+  const mixed = crowd(250, k => 'descrizione '.repeat(1 + (k * 7) % 9));
+  let c = await castPages(crowd(60, () => 'x'));
+  ok(c.n === 1 && c.nos === '-1,0,1' && c.names === all(60) && c.inside && c.two, 'a list that fits one page in two columns stays on one page: ' + c.per);
+  c = await castPages(mixed);
+  ok(c.n > 2 && c.names === all(250) && c.inside, 'a list longer than one page runs on to as many pages as it needs, every character once and none cut off: ' + c.per);
+  ok(c.heads === '1' + '0'.repeat(c.n - 1) && c.bare && c.two, 'the heading is on the first of them only; none has a running head or a number');
+  ok(c.nos === Array.from({ length: c.n + 2 }, (_, k) => k - c.n).join() && c.first === 1, 'and the script still starts on page 1: ' + c.nos);
+  c = await castPages(mixed, 'Letter');
+  ok(c.n > 2 && c.names === all(250) && c.inside, 'the same on Letter paper: ' + c.per);
+  c = await castPages(crowd(25, k => 'una descrizione molto lunga '.repeat(3 + (k * 5) % 6)));
+  ok(c.n === 2 && c.names === all(25) && c.inside && !c.two && c.heads === '10', 'a list of 30 or fewer whose descriptions fill more than a page runs on in one column: ' + c.per);
+  await page.emulateMedia({ media: 'print' });
+  c = await castPages(mixed);
+  ok(c.n > 2 && c.names === all(250) && c.inside, 'in print too the whole list is on its pages: ' + c.per);
+  await page.emulateMedia({ media: 'screen' });
   await T.done();
 })();

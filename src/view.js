@@ -586,6 +586,12 @@ function renderTemplates() {
   host.appendChild(h('p', 'tplhint', t('tplHint')));
   const list = S.cfg.templates.map(n => S.templates.get(n)).filter(Boolean);
   if (!list.length) host.appendChild(h('p', 'tplhint', t('tplEmpty')));
+  const gone = tplGone();
+  if (gone.length) {   // named in the settings, no file in the show: said here until the file is back or the user lets the names go (STO-31)
+    const p = h('p', 'tplhint tplgone', t('tplGoneHint', gone.map(n => n + ' (templates/' + slug(n) + '.json)').join(', ')) + ' '), fb = h('button', 'btn sm', t('tplForget'));
+    fb.type = 'button'; fb.onclick = () => { S.store.gone = []; markDirty('cfg'); renderTemplates(); };
+    p.appendChild(fb); host.appendChild(p);
+  }
   const w = clamp(desk.clientWidth - 90, 360, 940);
   for (const T of list) {
     const sheet = h('div', 'page tsheet');

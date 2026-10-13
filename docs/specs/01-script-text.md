@@ -129,6 +129,6 @@ The front page and the character page are specified in `06-pages-print.md` (PAG-
 | r0.1, r1.0 | Do not know frontmatter: they keep the text and show its lines as unrecognised at the top of page 1. |
 | r1.3 and earlier | Show `%%` text as unrecognised lines and print it. |
 
-**Not built:** the call list from the character list; a character list longer than one page (it is cut off, PAG-8); layout options for the front page; checking the names after `ALL BUT`; a clean-script export; a `%%` span inside a speech.
+**Not built:** the call list from the character list; layout options for the front page; checking the names after `ALL BUT`; a clean-script export; a `%%` span inside a speech.
 
-**Not verified:** the front page and the character page were not printed; a list of more than 30 characters was not tried; the comment marker was not tried with a real pen or finger.
+**Not verified:** the front page and the character page were not printed; a list of more than 30 characters was tried only in the checks (60 and 250 generated names, PAG-8), not with a real cast list; the comment marker was not tried with a real pen or finger.

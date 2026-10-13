@@ -9,6 +9,8 @@ function resetStore() {
   s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false; s.bad = [];
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
   s.bfiles = new Map();   // every drawing in boards/: file name -> the board name written in it, null when it has none
+  s.gone = [];            // templates the settings name that had no file when the show was opened (STO-31)
+  s.draft = 0;            // what the last draft in the browser lacks: 0 nothing, 1 the images of the boards, 2 it was not written (STO-30)
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
@@ -28,8 +30,12 @@ function writeBlob(sub, name, blob) { S.store.files.set(sub ? sub + '/' + name :
 function cfgFile() {
   const c = JSON.parse(JSON.stringify(S.cfg));
   if (onDisk() && c.defaultBoard) delete c.defaultBoard.imageData;
+  c.templates = c.templates.concat(tplGone());
   return c;
 }
+/* Templates the settings name whose file is not in the show. The names stay in the saved list, after the others, so that a file put
+   back by hand is a template again; a name is let go when a template takes it or its file name, or the user drops it (STO-31). */
+function tplGone() { const s = S.store; return s.gone.filter(n => !tplTaken(n) && !s.files.has('templates/' + slug(n) + '.json')); }
 /* the configuration says which release saves it and which is needed to read it; true when that is news (STO-15) */
 function relStamp() { const o = relOf(S.cfg), m = S.cfg.release = relMark(S.cfg); return o.made !== m.made || o.needs !== m.needs; }
 function relWarn() {
@@ -185,7 +191,7 @@ async function saveNow(force) {
       s.lastSave = new Date(); s.err = null;
     } else {
       d.script = d.ink = d.cfg = false; d.boards.clear(); d.tpls.clear();
-      saveDraft();
+      saveDraft(); s.err = null;
     }
   } catch (e) { saveError(e); }
   s.saving = false; setStatus();
@@ -197,9 +203,15 @@ function bundle(withImages) {
     boards: Array.from(S.boards.values()).map(B => boardFile(B, withImages)),
     templates: S.cfg.templates.map(n => S.templates.get(n)).filter(Boolean).map(T => boardFile(T, withImages)) };
 }
+/* The draft is the whole show in one value of localStorage, which has a quota. Over it the draft is written without the images
+   of the boards; when that fails too nothing is written, and the save has failed (STO-3). Either is said when it starts, in a message
+   and in the banner, not at every save (STO-30). */
 function saveDraft() {
-  try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); }
-  catch (e) { try { const b = bundle(false); if (b.config.defaultBoard) delete b.config.defaultBoard.imageData; localStorage.setItem('promptbook:draft', JSON.stringify(b)); } catch (e2) { /* storage full or blocked */ } }
+  const s = S.store, was = s.draft;
+  try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); s.draft = 0; }
+  catch (e) { try { const b = bundle(false); if (b.config.defaultBoard) delete b.config.defaultBoard.imageData; localStorage.setItem('promptbook:draft', JSON.stringify(b)); s.draft = 1; } catch (e2) { s.draft = 2; } }
+  if (s.draft !== was) { showMemBanner(); if (s.draft === 1) toast(t('draftNoImg')); }
+  if (s.draft === 2) throw new Error(t('draftNone'));
 }
 function loadDraft() { try { const d = JSON.parse(localStorage.getItem('promptbook:draft') || 'null'); return d && d.format === 'promptbook' ? d : null; } catch (e) { return null; } }
 function setStatus() {
@@ -223,7 +235,7 @@ function showMemBanner() {
   if (s.mode === 'memory') {
     const acts = [[t('mExport'), exportBundle]];
     if (window.showSaveFilePicker) acts.unshift([t('mSaveTo'), saveToZip]);
-    showBanner(t('memBanner'), acts);
+    showBanner(s.draft === 1 ? t('draftNoImg') : s.draft ? t('errSave', t('draftNone')) : t('memBanner'), acts);
   } else if (!$('#banner').hidden) { $('#banner').hidden = true; if (S.loaded) { sizeWrap(); renderVisible(); } }
 }
 function showDamaged() {
@@ -255,7 +267,7 @@ document.addEventListener('visibilitychange', checkExternal);
 window.addEventListener('focus', checkExternal);
 window.addEventListener('beforeunload', e => {
   const s = S.store, d = s.dirty;
-  if (onDisk() && (s.err || d.script || d.ink || d.cfg || d.boards.size || d.tpls.size)) { e.preventDefault(); e.returnValue = ''; }
+  if (s.err || (onDisk() && (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size))) { e.preventDefault(); e.returnValue = ''; }   // s.err without a show file: the draft could not be written
 });
 
 function idb() {
@@ -338,11 +350,14 @@ async function loadStore(handle) {
       const j = bj.get(from.get(n));
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.boards.set(n, mkBoard(n, j)); }
     }
+    s.gone = [];
     for (const n of (cfg && Array.isArray(cfg.templates) ? cfg.templates : [])) {
       if (typeof n !== 'string' || !n) continue;
       const j = await readJSON(slug(n) + '.json', 'templates', 'strokes');
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.templates.set(n, mkBoard(n, j, true)); }
+      else if (!s.gone.includes(n) && !s.bad.includes('templates/' + slug(n) + '.json')) s.gone.push(n);   // no file, as against unreadable: the name is kept (STO-31)
     }
+    if (tplGone().length) toast(t('tplGone', tplGone().join(', ')));
     const imgs = new Set();
     S.boards.forEach(B => { if (B.image) imgs.add('boards/' + B.image); });
     S.templates.forEach(T => { if (T.image) imgs.add('templates/' + T.image); });

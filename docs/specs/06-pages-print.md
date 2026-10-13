@@ -15,6 +15,8 @@ Once a script is printed and handed to the cast, its page numbers are how a room
 
 The intent of the page lock: after a hand-out, a change to the text should replace as few sheets as possible, and nobody's page 14 should become page 15.
 
+The review of 2026-10-09 (`docs/review-2026-10-09.md`, X11, "Quiet losses") listed: "A character list longer than one page is cut off in print (documented, PAG-8)", and asked: "Say so when it happens." The intent is that nothing the user wrote is left off the paper without a word. The list now goes on to further pages, so there is nothing to say (PAG-8).
+
 ## 2. Requirements
 
 ### 2.1 Layout `[LOCKED]`
@@ -34,8 +36,8 @@ Left page (script):
 | PAG-5 | A level-1 heading starts a new page. No page overflows. | as built | r0 | scale-folder |
 | PAG-6 | A speech longer than the space left on the page is split by lines; the second part is labelled `(segue)`, or `(cont.)` in the English interface. | as built | r0 | scale-folder |
 | PAG-7 | Front page: one page before the script. It shows the frontmatter values only, never the keys, centred, in the order written. `title` (or `titolo`) is set large (38 px bold); everything else small (18 px). No running head, no page number, nothing on the facing page. Not shown: `characters`, and Obsidian's own `tags`, `aliases`, `cssclasses`. | D19: `[LOCKED]` by the request, sizes `[ASSUMED]` | r1.1 | frontmatter |
-| PAG-8 | Character page: a page of its own after the front page, before the script. Heading: the key as typed (`Personaggi`, `Characters`). One line per character in the order written: **NAME** / ALIAS — description. No running head, no number, nothing facing it. Over 30 characters the list is set smaller in two columns. A list longer than one page is cut off. | D19: `[LOCKED]` by the request, layout `[ASSUMED]` | r1.1 | frontmatter |
-| PAG-9 | The front page and the character page have no number. The script still starts on page 1, so adding frontmatter to an existing show changes no page number. | D19 `[ASSUMED]` | r1.1 | frontmatter |
+| PAG-8 | Character page: a page of its own after the front page, before the script. Heading: the key as typed (`Personaggi`, `Characters`). One line per character in the order written: **NAME** / ALIAS — description. No running head, no number, nothing facing it. Over 30 characters the list is set smaller in two columns. A list longer than one page runs on to as many pages as it needs, on screen and in print; the heading is on the first only. Until r1.10 it was cut off at the foot of the page. | D19: `[LOCKED]` by the request, layout `[ASSUMED]`; review X11 | r1.1, r1.11 | frontmatter |
+| PAG-9 | The front page and the character pages have no number. The script still starts on page 1, so adding frontmatter to an existing show changes no page number. | D19 `[ASSUMED]` | r1.1 | frontmatter |
 | PAG-10 | Zoom: in, out and fit-to-width buttons. Zoom scales the page and never reflows it (INK-3). | as built | r0 | misc |
 
 ### 2.2 Print
@@ -72,6 +74,8 @@ Left page (script):
 
 **A lock is matched by content, not by position.** Blocks are recognised by a hash of their words. A change to the words of a block is a different block; its neighbours hold the page starts in place.
 
-**Not built:** a manual page break; a character list longer than one page; "changed since last print" marks outside a lock; double-sided imposition.
+**The character list is cut into pages by measuring it.** Each line of the list is measured as it will be set (one column, or two over 30 characters) and the pages are filled column by column: about 78 one-line characters fit the first page of A4, a few more on a page without the heading. Every such page is unnumbered, so a longer list moves no page number of the script (PAG-9) and no locked page. Ink drawn on the character page stays where it was drawn; it is not tied to a name, so after the list changes it may sit beside another one. A show whose list was cut off in an older release opens with the rest of the list on new pages.
+
+**Not built:** a manual page break; a character whose own entry is taller than a page (it gets a page to itself and its end is cut off); "changed since last print" marks outside a lock; double-sided imposition.
 
 **Not verified:** nothing has been printed on paper, in any release. Print was checked through the print styles in the browser and by the page count of generated PDFs; the PDFs of r1.6 were written and not opened. Paper size and single- or double-sided printing were never confirmed (Q19): A4 and the built print order stand. The printed changed pages of r1.7 are untested on the laptop.

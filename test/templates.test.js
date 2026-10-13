@@ -176,5 +176,41 @@ const OUT = process.env.OUT || '.';
   await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.boards.size) === 2, 'and Enter adds the board');
 
+  // 15. a template the settings name whose file is not in the show: said, and the name kept until the file is back or the user lets it go (STO-31)
+  const tplJSON = (name, n) => JSON.stringify({ name, image: null, w: 1000, h: 750, strokes: Array.from({ length: n }, (_, k) => ({ colour: '#000', width: 2, points: [[100, 100 + 40 * k], [400, 140 + 40 * k]] })) });
+  const put = (name, parts) => page.evaluate(async ([n, ps]) => {
+    const fh = await (await navigator.storage.getDirectory()).getFileHandle(n, { create: true });
+    const w = await fh.createWritable(); await w.write(await PB.buildZip(new Map(ps.map(([k, v]) => [k, new Blob([v])])))); await w.close();
+    window.showOpenFilePicker = async () => [fh]; document.querySelector('#toast').hidden = true;
+    return await PB.openZipFile();
+  }, [name, parts]);
+  const inZip = name => page.evaluate(async n => { const m = await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile()), o = {}; for (const [k, b] of m) o[k] = await b.text(); return o; }, name);
+  const listed = async name => JSON.parse((await inZip(name))['config.json']).templates.join();
+  const allSaved = async () => { await page.waitForFunction(() => { const s = PB.S.store, d = s.dirty; return !s.saving && !d.script && !d.ink && !d.cfg && !d.boards.size && !d.tpls.size; }); await page.waitForTimeout(100); };
+  const toastNow = () => ev(() => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; });
+  const note = page.locator('#tpl .tplgone');
+  const GONE = [['script.md', 'ANNA: Ciao.\n'], ['config.json', JSON.stringify({ title: 'Manca', templates: ['Palco', 'Sala Prove', 'Fondale'], defaultTemplate: 'Sala Prove' })], ['templates/palco.json', tplJSON('Palco', 2)]];
+  ok(await put('gone.zip', GONE) === true && await ev(() => Array.from(PB.S.templates.keys()).join() + '|' + PB.S.cfg.templates.join()) === 'Palco|Palco' && await page.locator('#banner').isHidden(), 'a show whose settings name templates that have no file opens with the templates it has');
+  ok(await toastNow() === 'Templates named in the settings but missing from the show file: Sala Prove, Fondale. See Menu → Templates.', 'and a message names the ones without a file: ' + await toastNow());
+  await menu('Templates');
+  ok(await page.locator('#tpl .board').count() === 1 && /Sala Prove \(templates\/sala-prove\.json\), Fondale \(templates\/fondale\.json\)/.test(await note.textContent()), 'the Templates view names them too, each with the file it would be read from: ' + await note.textContent());
+  await page.locator('.tplbar .btn', { hasText: '+ Template' }).click();
+  await page.waitForFunction(() => PB.S.templates.size === 2); await allSaved();
+  ok(await listed('gone.zip') === 'Palco,Template 2,Sala Prove,Fondale', 'the next change saves the list with the missing names still in it, after the others: ' + await listed('gone.zip'));
+  await fig('Template 2').locator('button', { hasText: 'Rename' }).click();
+  await nameBox(page); await page.locator('#pop input').fill('Fondale'); await page.keyboard.press('Enter'); await popGone(page); await allSaved();
+  ok(await listed('gone.zip') === 'Palco,Fondale,Sala Prove' && !/Fondale/.test(await note.textContent()), 'a template given a missing name takes it, and the name is listed once: ' + await listed('gone.zip'));
+  await fig('Fondale').locator('button', { hasText: 'Delete' }).click(); await allSaved();
+  ok(await listed('gone.zip') === 'Palco,Sala Prove' && 'templates/fondale.json' in await inZip('gone.zip'), 'deleted, it is not kept as a missing name: its file would make it a template again at the next opening');
+  let gz = await inZip('gone.zip'); gz['templates/sala-prove.json'] = tplJSON('Sala Prove', 3);
+  ok(await put('gone.zip', Object.entries(gz)) === true && await ev(() => PB.S.cfg.templates.join() + '|' + PB.S.templates.get('Sala Prove').strokes.length + '|' + PB.S.cfg.defaultTemplate) === 'Palco,Sala Prove|3|Sala Prove' && await toastNow() === '', 'a file put back by hand is a template again, and the default one as it was, with no message');
+  await put('gone2.zip', GONE); await menu('Templates');
+  await note.locator('button', { hasText: 'Forget these names' }).click(); await allSaved();
+  ok(await listed('gone2.zip') === 'Palco' && await note.count() === 0, '"Forget these names" drops them from the saved list: ' + await listed('gone2.zip'));
+  ok(await put('gone2.zip', Object.entries(await inZip('gone2.zip'))) === true && await toastNow() === '', 'and the show then opens with no message');
+  ok(await put('gone3.zip', GONE.slice(0, 1).concat([['config.json', JSON.stringify({ templates: ['Rotto'] })], ['templates/rotto.json', '{"name":"Rot']])) === true && /templates\/rotto\.json/.test(await page.locator('#banner').textContent()) && await toastNow() === '' && await ev(() => PB.S.store.gone.length) === 0,
+    'a template whose file is there but cannot be read is a damaged part, not a missing one');
+  await page.locator('#banner .btn', { hasText: 'Close the show' }).click(); await page.waitForSelector('#start .card');
+
   await done(); srv.close();
 })();

@@ -25,6 +25,8 @@ A review of the code (`docs/review-2026-10-09.md`, X7) found that "nothing in a 
 
 A fourth came from the review of 9 October 2026 (`docs/review-2026-10-09.md`, X8): "An imported backup can make the tool contact a network host, against C2. No code runs; it is a privacy leak (the request can carry anything the backup's author chose)." The intent is that C2 holds whatever a file contains: a show, a backup or a draft is data, and nothing in it can make the tool ask a host for anything.
 
+The same review listed two "quiet losses" in this area (X11): "The draft kept in `localStorage` drops every board image when it exceeds the quota, with no message. A template named in `config.json` whose file is missing is dropped from the list on load, and the shortened list is saved at the next settings change." It asked: "Say so when it happens." The intent is that the tool never leaves the user believing it holds something it does not: when the copy in the browser is kept without the images, or not at all, it says so in words that say what to do; and a template the settings name and the show file does not have is named, not forgotten (STO-30, STO-31).
+
 Writing straight into a file on disk works only in Chrome and Edge (K6). The intent for any other browser, and for the moment before a file is chosen, is that the tool stays usable and nothing is lost: the show is kept in the browser and can be exported.
 
 ## 2. Requirements
@@ -40,7 +42,7 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | STO-5 | A file that is not a zip is refused with a message, and the open show stays open. | as built | r1.2 | zipshow |
 | STO-6 | **Withdrawn in r1.10.** Until r1.9: older show folders still opened ("Open older show folder…") and "Save as show file…" converted one, images and history included. | D10 as amended | r1.2 to r1.9 | — |
 | STO-7 | The start screen offers to reopen the last show file with one click. A folder remembered by an older release is not offered. | as built | r0 | scale-folder |
-| STO-8 | A show that is not on disk is kept in the browser: a banner says so and offers "Save as show file…" and "Export backup". The start screen offers to continue that draft. "Export backup" and "Import backup…" move the whole show as one `.promptbook.json` file, images included. | K6, as built | r0 | misc, templates |
+| STO-8 | A show that is not on disk is kept in the browser: a banner says so and offers "Save as show file…" and "Export backup". The start screen offers to continue that draft. "Export backup" and "Import backup…" move the whole show as one `.promptbook.json` file, images included. What the browser can keep has a limit: STO-30. | K6, as built | r0 | misc, templates |
 | STO-9 | Images no board or template uses are dropped from a show file on save. | r1.2 | r1.2 | — |
 | STO-10 | Nothing generated is stored as a source. Cue lists are computed on screen and exported on demand (C7). | D9 | r0 | — |
 
@@ -80,7 +82,7 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | `paper` | `A4` or `Letter` | anything else is `A4` | r0 |
 | `departments` | `code`, `name`, `colour`, `review` (to-do notes, CUE-21), `cast` (notes for the actors, CST-1; a cast department is always `review` too; the key is written as `false` from r1.10) | codes are put in capitals and stripped to letters, digits, `_`, `-`; `BOARD` is not allowed; an empty list gives the defaults; a field not in this list is kept as it is (STO-17) | r0; `review` r1.4; `cast` r1.10 |
 | `defaultBoard` | `image`, `h`: the background set with "Use as default" before r1.0 | kept working until a default template is chosen (BRD-27) | r0 |
-| `templates` | Template names, in order | names without a file are dropped | r1.0 |
+| `templates` | Template names, in order | a name without a file gives no template; it is said and the name stays in the saved list, after the others (STO-31). Until r1.10 it was dropped without a word at the next change of the settings | r1.0 |
 | `defaultTemplate`, `recentTemplates` | The default template; the last used, newest first, at most 12 | — | r1.0 |
 | `templateFade` | Strength of the greyed chain | kept between 0.15 and 0.8; 0.4 when missing | r1.0 |
 | `boardGrid` | Grid step in board units: `0` off, `25` fine, `50` coarse | a missing or other value is 25 | r1.6 |
@@ -150,7 +152,7 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 |---|---|---|---|---|
 | STO-18 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, any drawing in `boards/`, whether or not a board of the script uses it, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
 | STO-19 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
-| STO-20 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
+| STO-20 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. The one exception is a template the settings name (STO-31): the tool writes a name and its file together, so a name alone means the show file lost a part or was changed by hand. | review X2, C8 | r1.11 | zipshow |
 
 ### 2.6 Nothing is asked of a host
 
@@ -158,6 +160,13 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 |---|---|---|---|---|
 | STO-21 | A board, template or default-board image that arrives inside a backup, a draft or `config.json` (`imageData`) is kept only when it is the picture itself, a `data:image/…` URL. Anything else (a web address, a file path, another kind of data) is dropped: the show opens whole and that board has no image. | C2, review X8 | r1.11 | misc, unit/images |
 | STO-22 | `promptbook.html` carries a Content-Security-Policy, so the browser refuses every request to a host whatever a show file, a backup or a draft holds. `promptbook-cast.html` carries a narrower one (CST-7). | C2, review X8 | r1.11 | misc, cast |
+
+### 2.7 What is not kept is said
+
+| ID | Requirement | Basis | Since | Checked by |
+|---|---|---|---|---|
+| STO-30 | The browser keeps a show that is not on disk (STO-8) within a limit of its own. When the show with its board images is over that limit, it is kept without the images of boards, templates and the default board, and a message and the banner say so and say what to do: save as a show file or export a backup, neither of which has the limit. When even that cannot be kept, nothing is written, the copy in the browser stays as it last was, and it is a failed save (STO-3): "Could not save: …" with what to do, "Save failed" as the status, the same words in the banner, and leaving the page asks first. Each is said when it starts, not at every save, and again if it stops and starts again; the banner stays for as long as it is true. The open show keeps its images throughout, so saving or exporting at that moment loses nothing. | review X11 | r1.11 | misc |
+| STO-31 | A template that `config.json` names and that has no file in the show file is not forgotten. When the show opens a message names each such template; the Templates view names them too, each with the file it would be read from (`templates/<name>.json`), for as long as it is so. The names stay in the saved list, after the templates that are there, so a file put back by hand is a template again at the next opening. A name is let go only when a template is given that name (or one saved under the same file name), or when the user presses "Forget these names" in the Templates view. A template whose file is there and cannot be read is a damaged part (STO-18), not a missing one. | review X11 | r1.11 | templates |
 
 ## 3. Consequences
 
@@ -173,6 +182,10 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 
 **The question is a banner, not a dialog**, like the one for a file changed by another program (STO-11), and the two can meet: when the file is also replaced from outside while changes wait, the banner of STO-11 is shown first, and "Keep mine" writes the show, `damaged/` included, over the other version; the banner of STO-18 then returns. In show mode no banner is visible (SHW); nothing is saved there either until the question is answered.
 
+**A missing template keeps its name; it is not dropped once said (STO-31).** The other choice was to say it once and shorten the list. The name was kept because it costs nothing and is the only record that the template existed: a file of that name put back in `templates/` (from a copy, or from an older show file) is read again only if the settings still name it, and a message shown for a few seconds is too little to rest a deletion on. The price is that the message returns at every opening, so the Templates view has "Forget these names" for the user who does not want the template back. The names are kept beside the settings in memory, not in the list the tool works with, and written back when `config.json` is saved, which is why they come after the others and lose their old place in the order. `defaultTemplate`, `recentTemplates` and the `base` of a board were already kept when they name a template that is not there, so a template that returns is again the default and the base it was. A backup and the draft carry only the templates that exist. The file of a template that is renamed or deleted stays in `templates/` (below), so a missing name that a new template took, and then lost again by deletion, is not kept: its file would bring the deleted template back. A release before r1.11 that opens a show saved with such names does what it always did: it shows the templates that are there and drops the other names at its next change of the settings.
+
+**The limit of the browser is not known in advance (STO-30).** The draft is one value in `localStorage`, which in Chrome and Edge holds about 5 million characters for everything the page keeps there; the tool learns that it is over only when the browser refuses the write, and tries again without the images. So one photo of a stage plan can be enough. What is said is said by a message that passes and by the banner that stays; in show mode the banner is not visible (SHW). A draft continued from the start screen after it was kept without images shows those boards without their image and says nothing more: the draft does not record that it was cut. The same refusal comes when the browser's storage is switched off, from the first change on.
+
 **Not covered by STO-18:** the draft kept in the browser and a backup file. An unreadable draft is not offered on the start screen and is replaced by the next show kept in the browser; an unreadable backup is refused with a message and is never written to.
 
 **No request to a host, by construction (STO-22).** The policy is a `meta` element at the top of `src/index.html`, so it holds from `file://` and from any server: `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src data:; base-uri 'none'; form-action 'none'`. That is what the tool uses and no more: its one inline script and its inline styles; board images as `data:` (in a backup or draft) or `blob:` (read from the show file); the embedded font and the search icon as `data:`; `fetch` of a `data:` URL when "Save as show file…" moves an image out of the page. Downloads, printing, the file pickers, IndexedDB, compression, hashing and the screen wake lock are not governed by it and work as before. `'unsafe-inline'` is needed because the tool is one file; the policy is there to stop requests, not scripts, and the tool still never writes text from a file into the page as markup.
@@ -180,6 +193,8 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 **The policy is the only guard for colours.** A department colour or an ink colour written by hand as `url(http://…)` in a backup or a show file also made the browser ask that host (found while X8 was fixed). Colours are not cleaned when read; the policy refuses the request and the browser's console names it. STO-21 cleans `imageData` as well so that the value is not kept and written back into a later backup.
 
 **A later change that needs a new kind of resource must widen the policy**, or it fails in the page with only a console message: a web worker, a frame, `fetch` of a `blob:` URL, a font or image from anywhere but `data:` and `blob:`. The checks load the built file, so they catch it.
+
+**Not verified (STO-30):** the real limit of a browser (the check makes the browser's write refuse a draft over a length it chooses; no storage was filled), and a browser whose storage is switched off.
 
 **Not verified (STO-22):** the policy in Firefox and Safari (the checks run in Chromium only); a browser extension can still make requests of its own, which no page can prevent.
 

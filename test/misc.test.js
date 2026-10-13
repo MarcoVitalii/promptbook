@@ -204,6 +204,46 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const s2 = await boardImages();
   ok(s2.kept === 'null,null,null' && s2.shown === 'Spia: Vera:data:image/png;' && sent.length === 0 && hits.length === h1, 'a draft whose images are web addresses opens without them and asks no host for anything: ' + s2.shown + ' ' + sent.join());
 
+  // the draft has the quota of the browser: over it the images of the boards are left out, and that is said when it starts, not at
+  // every save; when nothing fits, the save has failed (STO-30). setItem refuses a draft longer than __cap, as a full store would.
+  await page.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 200; c.height = 120; const g = c.getContext('2d');
+    for (let k = 0; k < 600; k++) { g.fillStyle = 'hsl(' + (k * 37) % 360 + ' 80% 50%)'; g.fillRect((k * 53) % 200, (k * 31) % 120, 9, 7); }
+    PB.startMemory('ANNA: Ciao.\n{BOARD Pianta}\n', { title: 'Grande' }, null, [{ name: 'Pianta', image: 'p.png', w: 1000, h: 600, strokes: [{ colour: '#000', width: 2, points: [[1, 1], [50, 50]] }], imageData: c.toDataURL('image/png') }]);
+    const real = Storage.prototype.setItem; window.__cap = 1e9;
+    Storage.prototype.setItem = function (k, v) { if (k === 'promptbook:draft' && v.length > window.__cap) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError'); return real.call(this, k, v); };
+  });
+  const sizes = await page.evaluate(() => [JSON.stringify(PB.bundle(false)).length, JSON.stringify(PB.bundle(true)).length]);
+  const mid = Math.round((sizes[0] + sizes[1]) / 2);
+  const edit = (cap, line) => page.evaluate(([cap, line]) => { window.__cap = cap; document.querySelector('#toast').hidden = true; PB.commitText(PB.serialize() + line); return PB.saveNow(); }, [cap, line]);
+  const toastNow = () => page.evaluate(() => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; });
+  const draft = () => page.evaluate(() => { const d = JSON.parse(localStorage.getItem('promptbook:draft')); return (d.boards[0].imageData ? 'image ' : 'no image ') + d.boards[0].strokes.length + ' ' + d.script.trim().split('\n').pop(); });
+  const leaving = () => page.evaluate(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; });
+  const banner = () => page.locator('#banner span').textContent(), status = () => page.locator('#status').textContent();
+  const NOIMG = 'The images of the boards no longer fit in the browser: its copy of this show is kept without them. Save as a show file or export a backup: neither has this limit.';
+  const NONE = 'Could not save: the browser cannot keep this show, its storage is full or blocked. Save it as a show file or export a backup now.';
+  await edit(1e9, 'ANNA: Zero.\n');
+  ok(sizes[1] - sizes[0] > 2000 && await draft() === 'image 1 ANNA: Zero.' && await toastNow() === '' && /only in this browser/.test(await banner()), 'a draft that fits is kept whole, images included, with no message');
+  await edit(mid, 'ANNA: Uno.\n');
+  ok(await draft() === 'no image 1 ANNA: Uno.' && await page.evaluate(() => !!PB.S.boards.get('Pianta').imageData), 'a draft over the quota is kept without the images of the boards; the open show still has them: ' + await draft());
+  ok(await toastNow() === NOIMG && await banner() === NOIMG && await page.locator('#banner button').count() === 2 && await status() === 'Not on disk', 'that is said, in a message and in the banner, with what to do: ' + await toastNow());
+  await edit(mid, 'ANNA: Due.\n');
+  ok(await draft() === 'no image 1 ANNA: Due.' && await toastNow() === '' && await banner() === NOIMG, 'the next save does not say it again; the banner stays');
+  await edit(1e9, 'ANNA: Tre.\n');
+  ok(await draft() === 'image 1 ANNA: Tre.' && await toastNow() === '' && /only in this browser/.test(await banner()), 'once the draft fits again the banner is the usual one');
+  await edit(mid, 'ANNA: Quattro.\n');
+  ok(await toastNow() === NOIMG && await banner() === NOIMG, 'and a second time over the quota is said again');
+  const q0 = errs.length;
+  await edit(0, 'ANNA: Cinque.\n');
+  ok(await draft() === 'no image 1 ANNA: Quattro.' && await toastNow() === NONE && await banner() === NONE && await status() === 'Save failed', 'when the draft cannot be written at all the save has failed, and the message says what to do: ' + await toastNow());
+  ok(await leaving() === true, 'leaving the page then asks first');
+  await edit(0, 'ANNA: Sei.\n');
+  ok(await toastNow() === '' && await status() === 'Save failed' && /cannot keep this show/.test(await page.locator('#status').getAttribute('title')), 'the same failure is not announced at every save; the reason stays on the status');
+  await edit(1e9, 'ANNA: Sette.\n');
+  ok(await draft() === 'image 1 ANNA: Sette.' && await status() === 'Not on disk' && /only in this browser/.test(await banner()) && await leaving() === false, 'once the browser takes the draft again, the status and the banner say so and the page can be left');
+  const quota = errs.splice(q0);
+  ok(quota.length === 2 && quota.every(e => /cannot keep this show/.test(e)), 'the two failed saves are the only errors logged: ' + quota.length);
+
   console.log(errs.join('\n') || 'no page errors');
   await browser.close(); srv.close();
 })();

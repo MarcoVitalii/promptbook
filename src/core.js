@@ -49,6 +49,8 @@ en: {
   damagedGo: 'Go on without', damagedClose: 'Close the show', damagedFirst: 'Choose first what to do with the parts that cannot be read.',
   damagedKept: 'What could not be read is kept in the show file, in the folder “damaged”.',
   memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
+  draftNoImg: 'The images of the boards no longer fit in the browser: its copy of this show is kept without them. Save as a show file or export a backup: neither has this limit.',
+  draftNone: 'the browser cannot keep this show, its storage is full or blocked. Save it as a show file or export a backup now.',
   errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.', errPerm: 'permission to write to the file was denied',
   zipNot: 'not a zip file', zipBad: 'damaged zip file', zip64: 'zip64 is not supported', zipMethod: 'unsupported zip compression', zipBig: 'show too large for a zip file',
   relTitle: 'This show comes from a newer release',
@@ -67,6 +69,8 @@ en: {
   tplBase: 'Base: {0}', tplNone: 'none', tplDefault: 'Default', tplEmpty: 'No templates yet.', template: 'Template',
   tplHint: 'A template is a background for boards: the stage, with its furniture and props drawn in. Templates are not part of the script and are never printed. A template can be based on another; what it is based on shows greyed out.',
   tplUsed: 'Still used by: {0}', tplMade: 'Template “{0}” created', bBase: 'Base…', bToTpl: 'To templates', blank: 'Blank',
+  tplGone: 'Templates named in the settings but missing from the show file: {0}. See Menu → Templates.',
+  tplGoneHint: 'Named in the settings of this show, but with no file in it: {0}. The names are kept, so a template returns when its file is put back in the show file.', tplForget: 'Forget these names',
   pickBase: 'Draw on top of', tplName: 'Template name', tplFade: 'Template strength', tplManage: 'Templates…',
   gridL: 'Board grid', gridOff: 'Off', gridFine: 'Fine', gridCoarse: 'Coarse',
   mHistory: 'History…', hiTitle: 'History', hiNeedFile: 'History is kept inside the show file. Use “Save as show file…” first.',
@@ -152,6 +156,8 @@ it: {
   damagedGo: 'Continua senza', damagedClose: 'Chiudi lo spettacolo', damagedFirst: 'Scegli prima che cosa fare delle parti illeggibili.',
   damagedKept: 'Ciò che era illeggibile resta nel file spettacolo, nella cartella «damaged».',
   memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
+  draftNoImg: 'Le immagini delle tavole non entrano più nel browser: la sua copia di questo spettacolo è conservata senza. Salva come file spettacolo o esporta un backup: nessuno dei due ha questo limite.',
+  draftNone: 'il browser non può conservare questo spettacolo, il suo spazio è pieno o bloccato. Salvalo subito come file spettacolo o esporta un backup.',
   errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.', errPerm: 'permesso di scrittura sul file negato',
   zipNot: 'non è un file zip', zipBad: 'file zip danneggiato', zip64: 'il formato zip64 non è supportato', zipMethod: 'compressione zip non supportata', zipBig: 'spettacolo troppo grande per un file zip',
   relTitle: 'Questo spettacolo viene da una versione più recente',
@@ -170,6 +176,8 @@ it: {
   tplBase: 'Base: {0}', tplNone: 'nessuna', tplDefault: 'Predefinito', tplEmpty: 'Ancora nessun modello.', template: 'Modello',
   tplHint: 'Un modello è uno sfondo per le tavole: il palco, con mobili e oggetti disegnati. I modelli non fanno parte del copione e non vengono mai stampati. Un modello può basarsi su un altro; ciò su cui si basa appare in grigio.',
   tplUsed: 'Ancora usato da: {0}', tplMade: 'Modello «{0}» creato', bBase: 'Base…', bToTpl: 'Nei modelli', blank: 'Vuota',
+  tplGone: 'Modelli indicati nelle impostazioni ma assenti dal file spettacolo: {0}. Vedi Menu → Modelli.',
+  tplGoneHint: 'Indicati nelle impostazioni di questo spettacolo, ma senza file al suo interno: {0}. I nomi restano, così un modello torna quando il suo file viene rimesso nel file spettacolo.', tplForget: 'Dimentica questi nomi',
   pickBase: 'Disegna sopra a', tplName: 'Nome del modello', tplFade: 'Intensità dei modelli', tplManage: 'Modelli…',
   gridL: 'Griglia delle tavole', gridOff: 'Nessuna', gridFine: 'Fine', gridCoarse: 'Larga',
   mHistory: 'Cronologia…', hiTitle: 'Cronologia', hiNeedFile: 'La cronologia sta dentro il file dello spettacolo. Usa prima «Salva come file spettacolo…».',
@@ -1396,9 +1404,9 @@ function buildRow(g, fr) {
     if (fr.part === 'front') for (const l of b.meta.lines) tx.appendChild(h('div', l.big ? 'ft' : 'fl', l.text));
     else {
       tx.classList.add('cast'); if (b.meta.chars.length > 30) tx.classList.add('two');
-      tx.appendChild(h('div', 'ch', b.meta.charsKey));
+      if (!fr.from) tx.appendChild(h('div', 'ch', b.meta.charsKey));   // a page the list runs on to has no heading (PAG-8)
       const list = h('div', 'cl2');
-      for (const c of b.meta.chars) {
+      for (const c of b.meta.chars.slice(fr.from, fr.to)) {
         const e = h('div', 'ce'); e.appendChild(h('b', null, c.name));
         if (c.aliases.length) e.appendChild(h('span', 'ca', ' / ' + c.aliases.join(' / ')));
         if (c.desc) e.appendChild(h('span', 'cd', ' — ' + c.desc));
@@ -1462,6 +1470,26 @@ function lineStarts(b) {
   M.textContent = '';
   return (m.ls = starts);
 }
+/* the character list as pages: [from, to) of the list on each. One page while it fits; a longer list runs on to as many
+   pages as it needs, filled column by column as the browser fills them (PAG-8) */
+function castPages(g, H) {
+  const m = g.m, n = g.b.meta.chars.length;
+  if (m.cp) return m.cp;
+  const M = $('#measure'), row = buildRow(g, { h: H, part: 'cast', from: 0, to: n, off: 0 });
+  M.appendChild(row);
+  const list = row.querySelector('.cl2'), top = row.getBoundingClientRect().top, cols = row.querySelector('.two') ? 2 : 1;
+  const hs = Array.from(list.children, e => e.getBoundingClientRect().height);
+  const roomN = H - (row.querySelector('.ch').getBoundingClientRect().top - top) - 1;   // on a page without the heading
+  let room = H - (list.getBoundingClientRect().top - top) - 1, from = 0, col = 0, y = 0;
+  M.textContent = '';
+  const out = [];
+  hs.forEach((eh, i) => {
+    if (y && y + eh > room) { y = 0; if (++col === cols) { out.push([from, i]); from = i; col = 0; room = roomN; } }
+    y += eh;
+  });
+  out.push([from, n]);
+  return (m.cp = out);
+}
 /* boards on a facing page: one column up to two boards, then two columns filled row by row.
    hs: height of each board for a width of 1. Returns the columns and the one width all boards get. */
 function facingLayout(hs, availW, availH) {
@@ -1475,7 +1503,8 @@ function paginate() {
   const pp = paper(), H = pp.h - GEO.top - GEO.bot, pages = [];
   let cur = null, y = 0, act = '', scene = '';
   const isHead = g => g.kind === 'single' && g.b.type === 'h';
-  const parts0 = S.meta ? [S.meta.lines.length && 'front', S.meta.chars.length && 'cast'].filter(Boolean) : [];
+  const g0 = S.meta && S.meta.chars.length ? S.groups.find(g => g.kind === 'single' && g.b.type === 'meta') : null;
+  const parts0 = (S.meta && S.meta.lines.length ? [['front', 0, 0]] : []).concat(g0 ? castPages(g0, H).map(r => ['cast', r[0], r[1]]) : []);
   const off = parts0.length;   // front and character pages have no number; the script still starts on page 1
   const lk = lockPlan();   // null while page numbers are free
   let li = -1, sub = 0, tail = 0;   // the locked page being filled, pages inserted after it, pages past the last locked one
@@ -1509,9 +1538,9 @@ function paginate() {
   for (const g of S.groups) {
     const m = g.m, b = g.kind === 'single' ? g.b : null;
     if (b && b.type === 'meta') {
-      parts0.forEach((part, k) => {
+      parts0.forEach(([part, from, to], k) => {
         if (cur.items.length) newPage();
-        push({ g, h: H, whole: false, part, from: 0, to: 0, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
+        push({ g, h: H, whole: false, part, from, to, off: k * H, cont: k > 0, first: k === 0, last: k === off - 1 });
       });
       if (!off) push({ g, h: 0, whole: true });
       continue;
