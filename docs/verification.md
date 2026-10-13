@@ -65,7 +65,7 @@ Three properties of the method to keep in mind when reading a green result:
 | `boards` | 78 | BRD-5, BRD-7 to BRD-13, BRD-26, BRD-28, UI-12, STO-13, UI-6 |
 | `cue-move` | 62 | CUE-25 to CUE-34, INP-8 to INP-10, TXT-28 |
 | `block-move` | 34 | TXT-28 to TXT-31 |
-| `shortcuts` | 44 | UI-9 to UI-11, CUE-7, CUE-42, UI-12 |
+| `shortcuts` | 61 | UI-9 to UI-11, CUE-7, CUE-42, UI-12, UI-13 |
 | `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
 | `unit/cast` | 15 | CST-1, CST-2, CST-5, CST-6 |
 | `cast` | 56 | CST-1, CST-3 to CST-5, CST-7 to CST-16, CST-18 to CST-20 |

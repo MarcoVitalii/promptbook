@@ -100,7 +100,7 @@ These bind every capability. Each restates a decision; the numbering is new in v
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 | r0 |
 | Storage: show file, autosave, data shapes, compatibility | `docs/specs/07-storage.md` | STO | 27 (2 withdrawn) | r0 |
 | History, variants and changes | `docs/specs/08-history.md` | HIS | 15 | r1.7 |
-| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 11 | r0 |
+| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 13 | r0 |
 | Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 30 (5 withdrawn) | r1.11 |
 
 ## 3. Consequences
