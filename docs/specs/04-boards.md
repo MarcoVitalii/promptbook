@@ -1,7 +1,7 @@
 # Boards and templates — BRD
 
 **Covers:** blocking boards on the facing page, their arrangement, names and grid; board templates.
-**Code:** `src/view.js` (facing page and boards, templates), `src/core.js` (`facingLayout`, `normCfg`).
+**Code:** `src/view.js` (facing page and boards, templates), `src/core.js` (`facingLayout`, `normCfg`), `src/io.js` (`boardFileOf`, `loadStore`: which file holds which board).
 **Checks:** `test/boards`, `test/unit/boards`, `test/templates`, `test/interact`, `test/zipshow`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification". In the client's requests "block" means a blocking board.
 
@@ -21,6 +21,9 @@ Requests, as received:
   2. "Add names to the blocks that don't disappear into the options when we have many on the page, like leaving menu on top and name at the bottom."
   3. "Having a light gray fine grid helps a lot when doing blockings."
 - **Change request, 2026-10-10:** "When a board is added, allow to enter its name before creating it by opening the text box with the default name selected, so that if i type i overwrite it." And, on words: "now boards have remove and cues have delete. keep one".
+- **Code review, 2026-10-09** (`docs/review-2026-10-09.md`), two defects:
+  1. X1: "Two boards whose names differ only in case, accents, spacing or punctuation are saved in one file. After reopening, both show the drawing saved last; the other is gone. A name with no Latin letter or digit becomes `board.json`."
+  2. X5: "Undo after renaming a board shows an empty board. The drawing is still held under the new name and comes back with redo."
 
 **Reading applied** `[ASSUMED]`: a template is a board that other boards are drawn on top of; underneath, it shows greyed out.
 
@@ -69,6 +72,13 @@ Requests, as received:
 | BRD-27 | A default background set with "Use as default" before r1.0 keeps working until a default template is chosen, which then takes its place. Nothing is converted. | `[ASSUMED]` | r1.0 | templates |
 | BRD-28 | "+ Board" and "Board here" open a box with the name of the new board: the next free "Board n" is written and selected, so typing replaces it. Enter, "Add board" or a tap elsewhere adds the board; Escape or "Cancel" adds nothing. An empty name, or one already in use, gives the next free name. Adding is one undo step. A pasted image still makes its board at once. | request 2026-10-10 | r1.9 | boards, templates |
 
+### 2.4 Names and drawings
+
+| ID | Requirement | Basis | Since | Checked by |
+|---|---|---|---|---|
+| BRD-29 | Every board name has a drawing of its own. Two names are two boards as soon as they differ in anything, case, an accent, a space or punctuation included, and whatever the alphabet. Each keeps its drawing in the show file, the draft, the backup and the history, also when the names were typed by hand in `script.md`. | review X1 | r1.11 | zipshow |
+| BRD-30 | Renaming a board (a tap on its name, or on its tag in the script) changes its token and takes the drawing to the new name, as one undo step: undo gives back the old name with the drawing, redo the new one. An empty name, or one a board already has, changes nothing. | review X5; the rename itself as built, r0 | r1.11 | boards |
+
 ## 3. Consequences
 
 **Adding a board is now two actions, tap and Enter.** The cost of asking the name first is one key for whoever keeps "Board n". A tap outside the box adds the board, as closing a cue box keeps the cue; only Escape and "Cancel" give up. `{`, `}` and `|` in a name are written as `/`. The client tried the r1.9 features on a real show and reported "all working as expected" (2026-10-10). Which machine, pointer and keyboard were used is not recorded.
@@ -87,7 +97,11 @@ Requests, as received:
 
 **An image on a board that has a base hides the base.** It is drawn over it. Remove the base or the image, whichever is not wanted.
 
-**Files are named after the board.** A drawing is saved as `boards/<name>.json` with the name in lower case, accents and punctuation dropped, spaces as hyphens. Two templates may not share a file name (BRD-24); nothing stops two boards from doing so, and then one drawing replaces the other (`docs/review-2026-10-09.md`, X1). Files of deleted or renamed boards and templates are left behind; unused images are dropped from a show file on save (STO-9).
+**Files are named after the board.** A drawing is saved as `boards/<name>.json` with the name in lower case, accents and punctuation dropped, spaces as hyphens. Several names can come out the same that way ("Sala A" and "sala-a"; every name with no Latin letter or digit comes out as `board`). Two templates may not have such names (BRD-24). Two boards may (BRD-29): board names are in the script, where anyone can type them, so they cannot be refused. The exact name is written inside the file, a board is found by it, and a board never writes into a file that holds another name: it gets the next numbered one (`boards/sala-a-2.json`). The rule is in `07-storage.md` §2.3. Until r1.11 the two boards shared one file and one drawing replaced the other (review X1); the drawing that was replaced then is not in the file and cannot come back. Files of deleted or renamed boards and templates are left behind; unused images are dropped from a show file on save (STO-9).
+
+**Names are compared exactly, letter for letter (BRD-29).** "Sala A" and "Sala a" are two boards, and nothing warns that they look alike; "+ Board" and the rename refuse only a name that a board already has, as before. The same accented letter typed as one character and as letter plus accent also counts as two names. A stricter rule (refusing names that only look alike, as for templates) was not taken: it could not cover a script typed by hand, and in an alphabet other than Latin it would refuse every name after the first.
+
+**A rename moves the drawing, it does not copy it (BRD-30).** The undo step of the rename carries the board along with the token. If a board is already kept under the name the drawing goes back to (a token with the old name was typed in the meantime), the two change places, so neither is lost. When two `{BOARD}` tokens have one name they show one board; renaming one of them takes the drawing with it and leaves the other with an empty board, as it did before. The file under the old name is left behind, as it was at the rename.
 
 **r1.6 changed how existing shows look.** A page with three or more boards is rearranged, and every board gains the fine grid, on screen and in print. In two columns every figure is under 420 px wide (about 360 px on A4), so every board on such a page shows "⋯"; two boards with tall images can fall under 420 px too.
 
@@ -95,4 +109,4 @@ Requests, as received:
 
 **Not built:** movable or rotatable prop objects; more than one base per board; per-layer fade strengths; basing a board on another script board; printing a template sheet; dragging board tags and reordering boards; snap to grid; a grid step per board.
 
-**Not verified:** the grid strengths were set on screenshots by the build, lower than first planned; how they look on the real screen and on paper is not known, and hairlines may print faint on a laser printer. The two-column arrangement was never printed. The five `[ASSUMED]` decisions of r1.6 (BRD-8, BRD-10, BRD-12, and CUE-26, CUE-30) were shown to the client, who did not object and did not confirm.
+**Not verified:** the grid strengths were set on screenshots by the build, lower than first planned; how they look on the real screen and on paper is not known, and hairlines may print faint on a laser printer. The two-column arrangement was never printed. The five `[ASSUMED]` decisions of r1.6 (BRD-8, BRD-10, BRD-12, and CUE-26, CUE-30) were shown to the client, who did not object and did not confirm. BRD-29 and BRD-30 were checked in a simulated browser, with a show file in the browser's private file system and names in Latin and Cyrillic letters; a show really written by r1.10 or earlier was not opened, the check builds one in the shape those releases wrote.

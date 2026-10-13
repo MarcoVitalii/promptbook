@@ -318,6 +318,13 @@ function uniqueBoardName() {
   do { nm = t('board') + ' ' + n++; } while (names.has(nm));
   return nm;
 }
+/* a board takes another name and its drawing goes with it; a board already kept under that name takes the first one, so none is lost */
+function moveBoard(from, to) {
+  const A = S.boards.get(from), Z = S.boards.get(to);
+  S.boards.delete(from); S.boards.delete(to);
+  if (A) { A.name = to; S.boards.set(to, A); markDirty('board', to); }
+  if (Z) { Z.name = from; S.boards.set(from, Z); markDirty('board', from); }
+}
 function boardNameTaken(nm) { return S.boards.has(nm) || S.blocks.some(b => b.cues.some(c => c.board && c.label === nm)); }
 /* name: the one typed when the board was added; the next free "Board n" when it is empty or already taken */
 function newBoard(mkText, init, name) {
@@ -1443,9 +1450,11 @@ function openBoardPop(b, c, x, y) {
       const nm = cleanField(ni.value);
       if (!nm || nm === oldName || S.boards.has(nm)) return;
       const nb = S.byId.get(bid), nc = nb && nb.cues.find(q => q.s === cs); if (!nc) return;
-      const B = S.boards.get(oldName);
-      if (B) { S.boards.delete(oldName); B.name = nm; S.boards.set(nm, B); markDirty('board', nm); }
-      commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)));
+      moveBoard(oldName, nm);
+      if (!commitText(textWith(S.blocks.indexOf(nb), 1, nb.raw.slice(0, nc.s) + '{BOARD ' + nm + '}' + nb.raw.slice(nc.e)))) { moveBoard(nm, oldName); return; }
+      /* one undo step for the token and the drawing: the step commitText just made also carries the board back and forth */
+      const op = S.hist[S.hist.length - 1], un = op.undo, re = op.redo;
+      op.undo = () => { moveBoard(nm, oldName); un(); }; op.redo = () => { moveBoard(oldName, nm); re(); };
     };
     const row = h('div', 'prow');
     const del = h('button', 'btn sm danger', t('del')); del.type = 'button'; del.title = t('del') + '  (Del)'; del.onclick = () => { pop.onclose = null; closePop(); removeCue(bid, cs); };

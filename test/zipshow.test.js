@@ -183,9 +183,63 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   await page.locator('#banner .btn', { hasText: 'Close the show' }).click();
   await page.waitForSelector('#start .card'); await page.waitForTimeout(1000);
   ok(await ev(() => PB.S.store.mode === 'none') && before2.equals(await bytes('cut2.zip')), '"Close the show" returns to the start page and leaves the show file as it was');
+  // a drawing no board of the script uses is looked at too: the name of its board is inside the file
+  ok(await put('orphan.zip', [['script.md', 'ANNA: Ciao.\n'], ['boards/vecchia.json', '{"name":"Vecch']]) === true && /boards\/vecchia\.json/.test(await page.locator('#banner').textContent()), 'an unreadable drawing is reported even when no board of the script is known to use it');
+  await page.locator('#banner .btn', { hasText: 'Close the show' }).click();
+  await page.waitForSelector('#start .card');
   ok(errs.length === 0, 'an unreadable part is not logged as an error: ' + errs.join(' | '));
 
-  // 11. in Italian the refusal of a file is in Italian
+  // 11. boards whose names give one file name ("Sala A" and "sala-a"; every name with no Latin letter) keep a file and a drawing each
+  const st = n => Array.from({ length: n }, (_, k) => ({ colour: '#000', width: 2, points: [[100, 100 + 40 * k], [400, 140 + 40 * k]] }));
+  const counts = ns => ev(ns => ns.map(n => { const B = PB.S.boards.get(n); return B ? B.strokes.length : 0; }).join(), ns);
+  const CLASH = ['Sala A', 'sala-a', 'Сцена', 'Кухня'];
+  // every drawing in the show file on disk: file, the name written in it, its strokes
+  const boardsIn = f => ev(async f => {
+    const m = await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(f)).getFile()), out = [];
+    for (const [k, b] of m) if (/^boards\/.*\.json$/.test(k)) { const j = JSON.parse(await b.text()); out.push(k.slice(7) + ' ' + j.name + ' ' + j.strokes.length); }
+    return out.sort().join(', ');
+  }, f);
+  const reopen = f => ev(async f => { const fh = await (await navigator.storage.getDirectory()).getFileHandle(f); window.showOpenFilePicker = async () => [fh]; return PB.openZipFile(); }, f);
+  const figs = page.locator('.page.facing .board');
+  await ev(b => PB.startMemory('## Scena\n\nANNA: Ciao.\n{BOARD Sala A}\n{BOARD sala-a}\n{BOARD Сцена}\n{BOARD Кухня}\n', {}, null, b), CLASH.map((name, k) => ({ name, strokes: st([1, 4, 2, 3][k]) })));
+  await ev(async () => { const root = await navigator.storage.getDirectory(); window.showSaveFilePicker = async () => root.getFileHandle('clash.promptbook.zip', { create: true }); });
+  await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Save as show file' }).click();
+  await page.waitForFunction(() => PB.S.store.mode === 'zip' && !PB.S.store.saving && PB.S.store.lastSave);
+  let bz = await boardsIn('clash.promptbook.zip');
+  ok(bz === 'board-2.json Кухня 3, board.json Сцена 2, sala-a-2.json sala-a 4, sala-a.json Sala A 1', 'four boards whose names give two file names are saved in four files, the second of each numbered: ' + bz);
+  ok(await reopen('clash.promptbook.zip') === true && await counts(CLASH) === '1,4,2,3', 'opened again, each of them has its own drawing: ' + await counts(CLASH));
+  const rev = await ev(() => PB.histSave('Prima'));
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 4);
+  await figs.nth(1).locator('.bcap button').click();
+  await page.locator('#pop .btn', { hasText: 'Clear ink' }).click();
+  await settle(); await page.waitForTimeout(100);
+  bz = await boardsIn('clash.promptbook.zip');
+  ok(/sala-a-2\.json sala-a 0, sala-a\.json Sala A 1$/.test(bz), 'a change to one of them after reopening is written to its own file and leaves the other alone: ' + bz);
+  ok(await reopen('clash.promptbook.zip') === true && await counts(CLASH) === '1,0,2,3', 'and is the only change when the show is opened again: ' + await counts(CLASH));
+  ok(await ev(sha => PB.histRestore(sha), rev) === true && await counts(CLASH) === '1,4,2,3', 'a revision restored from the history gives each of them its drawing back: ' + await counts(CLASH));
+  await ev(() => PB.loadBundle(JSON.parse(JSON.stringify(PB.bundle(true)))));
+  ok(await ev(() => PB.S.store.mode === 'memory') && await counts(CLASH) === '1,4,2,3', 'the backup and the draft carry each of them too: ' + await counts(CLASH));
+
+  // 12. a show as an older release wrote it: one file per slug, named after the board. "Sala A" and "sala-a" shared sala-a.json
+  //    (the one saved last is in it), and "salotto" was retyped by hand in script.md after its file was written as "Salotto"
+  const OLD = ['Sala A', 'sala-a', 'Pianta', 'salotto'];
+  await ev(async a => {
+    const m = new Map([['script.md', new Blob(['## Scena\n\nANNA: Ciao.\n{BOARD Sala A}\n{BOARD sala-a}\n{BOARD Pianta}\n{BOARD salotto}\n'])], ['config.json', new Blob(['{"title":"Vecchio"}'])]]);
+    for (const [f, name, strokes] of a) m.set('boards/' + f, new Blob([JSON.stringify({ name, image: null, w: 1000, h: 750, strokes })]));
+    const fh = await (await navigator.storage.getDirectory()).getFileHandle('old.promptbook.zip', { create: true });
+    const w = await fh.createWritable(); await w.write(await PB.buildZip(m)); await w.close();
+  }, [['sala-a.json', 'sala-a', st(4)], ['pianta.json', 'Pianta', st(3)], ['salotto.json', 'Salotto', st(2)]]);
+  ok(await reopen('old.promptbook.zip') === true && await counts(OLD) === '0,4,3,2', 'a show of an older release opens with its drawings; of two names that shared a file, the one saved last has the drawing and the other is empty: ' + await counts(OLD));
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 4);
+  const sb = await figs.nth(0).locator('svg').boundingBox();
+  await pen([[sb.x + sb.width * 0.25, sb.y + sb.height * 0.5], [sb.x + sb.width * 0.5, sb.y + sb.height * 0.6], [sb.x + sb.width * 0.75, sb.y + sb.height * 0.5]]);
+  await settle(); await page.waitForTimeout(100);
+  bz = await boardsIn('old.promptbook.zip');
+  ok(bz === 'pianta.json Pianta 3, sala-a-2.json Sala A 1, sala-a.json sala-a 4, salotto.json salotto 2', 'drawing on the empty one gives it a file of its own; the shared file keeps the other drawing: ' + bz);
+  ok(await reopen('old.promptbook.zip') === true && await counts(OLD) === '1,4,3,2', 'and both drawings are there when the show is opened again: ' + await counts(OLD));
+  ok(errs.length === 0, 'none of this logs an error');
+
+  // 13. in Italian the refusal of a file is in Italian
   await ev(() => localStorage.setItem('promptbook:view', JSON.stringify({ lang: 'it' })));
   await page.reload(); await page.waitForSelector('#start .card');
   await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip'); window.showOpenFilePicker = async () => [fh]; });

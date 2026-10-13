@@ -8,6 +8,7 @@ function resetStore() {
   const s = S.store;
   s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false; s.bad = [];
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
+  s.bfiles = new Map();   // every drawing in boards/: file name -> the board name written in it, null when it has none
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
@@ -45,6 +46,18 @@ function boardNames(text) {
   const out = new Set(), re = /\{BOARD[ \t]+([^{}|]+?)[ \t]*(?:\|[^{}]*)?\}/gi; let m;
   while ((m = re.exec(text))) out.add(m[1].trim());
   return out;
+}
+/* The file of a board's drawing. It is named after the board (slug), and the exact name is written inside. Several names can
+   give one slug ("Sala A" and "sala-a"; every name with no Latin letter or digit), so a board is found by the name in the file,
+   and a file that holds another name is never taken: the board gets the next numbered one (sala-a-2.json).
+   Without "make", null when the board has no file yet. */
+function boardFileOf(name, make) {
+  const m = S.store.bfiles, base = slug(name); let f = base + '.json', n = 2;
+  if (m.get(f) === name) return f;
+  for (const [k, v] of m) if (v === name) return k;
+  if (!make) return null;
+  while (m.has(f)) f = base + '-' + n++ + '.json';
+  m.set(f, name); return f;
 }
 /* ---------- zip: just enough of the format to read and write a show file ---------- */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -164,7 +177,7 @@ async function saveNow(force) {
       if (d.script) { d.script = false; writeBlob(null, 'script.md', serialize()); }
       if (d.ink) { d.ink = false; writeBlob(null, 'script.ink.json', JSON.stringify(inkFile())); }
       if (d.cfg) { d.cfg = false; writeBlob(null, 'config.json', JSON.stringify(cfgFile(), null, 2)); }
-      for (const n of d.boards) { const B = S.boards.get(n); if (B) writeBlob('boards', slug(B.name) + '.json', JSON.stringify(boardFile(B))); }
+      for (const n of d.boards) { const B = S.boards.get(n); if (B) writeBlob('boards', boardFileOf(B.name, true), JSON.stringify(boardFile(B))); }
       d.boards.clear();
       for (const n of d.tpls) { const T = S.templates.get(n); if (T) writeBlob('templates', slug(T.name) + '.json', JSON.stringify(boardFile(T))); }
       d.tpls.clear();
@@ -304,8 +317,20 @@ async function loadStore(handle) {
     s.bad = [];
     const cfg = await readJSON('config.json'), text = await readText('script.md'), ink = await readJSON('script.ink.json');
     S.boards = new Map(); S.templates = new Map(); S.urls = new Map();
-    for (const n of boardNames(text || '')) {
-      const j = await readJSON(slug(n) + '.json', 'boards', 'strokes');
+    const bj = new Map(), bn = Array.from(boardNames(text || '')), from = new Map(), held = new Set();
+    for (const k of Array.from(s.files.keys()).sort()) if (/^boards\/[^/]+\.json$/.test(k)) { const j = await readJSON(k, '', 'strokes'); if (j) bj.set(k.slice(7), j); }
+    s.bfiles = new Map(Array.from(bj, ([f, j]) => [f, j && typeof j.name === 'string' ? j.name : null]));
+    for (const n of bn) { const f = boardFileOf(n); if (f) { from.set(n, f); held.add(f); } }
+    /* No file holds this name: the name was retyped by hand in script.md, or the file was made by hand. The board takes the file
+       its slug names, as every release did, unless a board of the script holds it; the name in the file follows at the next save.
+       One file, one board: in a show of an older release where two names shared a file, the name saved last has the drawing. */
+    for (const n of bn) {
+      const f = slug(n) + '.json', j = bj.get(f);
+      if (from.has(n) || held.has(f) || !j || !Array.isArray(j.strokes)) continue;
+      from.set(n, f); held.add(f); s.bfiles.set(f, n); j.name = n; writeBlob('boards', f, JSON.stringify(j));
+    }
+    for (const n of bn) {
+      const j = bj.get(from.get(n));
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.boards.set(n, mkBoard(n, j)); }
     }
     for (const n of (cfg && Array.isArray(cfg.templates) ? cfg.templates : [])) {

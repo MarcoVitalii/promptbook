@@ -105,6 +105,12 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 
 `damaged/` holds parts that could not be read, as they were found (STO-19). The tool writes there and never reads it; it is not part of the history.
 
+In both file names `<name>` is the name in lower case, accents and punctuation dropped, spaces as hyphens (`boards/sala-a.json`), and `board` when nothing is left. For a board, since r1.11, the file name is only where to look first; the `name` inside says whose drawing it is (BRD-29):
+
+1. When a show is opened, each `{BOARD name}` of the script gets the file in `boards/` whose `name` is exactly that name. If several have it, the one named after the board, else the first by file name.
+2. A name that no file holds gets the file named after it, unless a board of the script has that file by rule 1 or took it by this rule before (script order). This is how a file made by hand, or a board whose name was retyped by hand in `script.md`, is still found; the `name` in the file is corrected at the next save.
+3. A board saved for the first time is written to the file named after it. If that file exists and holds another name, or none, it is written to the first free of `<name>-2.json`, `<name>-3.json`, and so on. No file that holds another name is written into.
+
 The backup is `{ "format": "promptbook", "version": 1, "when", "config", "script", "ink", "boards", "templates" }`, with each image as a data URL in `imageData`.
 
 In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `promptbook:view` (`facing`, `cues`, `ink`, `night`, `finger`, `lang`); IndexedDB database `promptbook`, store `kv`, key `dir` holds the handle of the last show.
@@ -135,12 +141,14 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | r1.11 | r1.10 | Opens; show mode's settings and the release mark are kept and ignored. If r1.10 saves, `release.made` still names r1.11. |
 | A later release, with `release.needs` newer than the tool | r1.11 and later | Opens with the warning of STO-16. |
 | Any release, a backup or draft edited by hand so that `imageData` is a web address | r1.11 and later | Opens; that board, template or default board has no image (STO-21). The tool never wrote such a value. |
+| r1.10 and earlier, with two boards whose names gave one file name | r1.11 and later | Opens. The board saved last has the drawing in the file; the other is empty, where before it showed the same drawing. Its own drawing was lost when the file was overwritten. |
+| r1.11, with two boards whose names give one file name | r1.10 and earlier | Opens; both boards show the drawing of the one in `<name>.json`. Do not edit: a stroke on either replaces that file. |
 
 ### 2.5 A part that cannot be read
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| STO-18 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, the file of a board the script places, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
+| STO-18 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, any drawing in `boards/`, whether or not a board of the script uses it, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
 | STO-19 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
 | STO-20 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
 
@@ -189,7 +197,7 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 
 **Files are left behind.** The tool does not delete the file of a renamed or removed board or template. One exception since r1.7: restoring a revision or changing variant replaces the show's files with those of the revision, so boards and templates the revision does not have are gone from the working files (they stay in the history).
 
-**Board files are named after the board**, in lower case with accents and punctuation dropped (`boards/sala-a.json`). Two boards whose names come out the same share one file (`docs/review-2026-10-09.md`, X1).
+**Board files are named after the board, and the name inside decides** (§2.3). Two boards whose names come out the same have a file each since r1.11, the second with a number (`boards/sala-a.json`, `boards/sala-a-2.json`); until then they shared one (review X1). Which of the two has the number depends on which was saved first, so the file name alone does not say whose drawing it is: the `name` inside does. Every drawing in `boards/` is read when a show is opened, those of deleted boards too, to know which name each holds. Templates keep the older rule: two of them may not have names that give one file name (BRD-24).
 
 **Not verified (r1.10):** opening a real show folder zipped by Explorer or Finder with its hidden `.git` folder; the check uses an archive built in the test.
 

@@ -128,6 +128,26 @@ const OUT = process.env.OUT || '.';
   ok((await ev(() => PB.serialize())).includes('{BOARD Salotto}') && !(await ev(() => PB.serialize())).includes('{BOARD b2}'), 'typing a name and Enter renames the token in the text');
   ok((await names().allTextContents()).join() === 'b1,Salotto,b3,b4' && await ev(() => PB.S.boards.has('Salotto') && !PB.S.boards.has('b2')), 'and the name under the drawing');
 
+  // undo and redo of a rename take the drawing along with the token
+  const s3 = await figs.nth(2).locator('svg').boundingBox();
+  for (const dy of [40, 80, 120]) await pen([[s3.x + 40, s3.y + dy], [s3.x + 90, s3.y + dy + 20], [s3.x + 140, s3.y + dy]]);
+  // what the script, the store of boards and the page say about a name: its token, its strokes, the strokes drawn under it
+  const where = nm => ev(nm => { const B = PB.S.boards.get(nm), f = Array.from(document.querySelectorAll('.page.facing .board')).find(x => x.dataset.name === nm); return [PB.serialize().includes('{BOARD ' + nm + '}') ? 'token' : '-', B ? B.strokes.length : '-', f ? f.querySelectorAll('.bstrokes path').length : '-'].join(' '); }, nm);
+  ok(await where('b3') === 'token 3 3', 'three strokes are drawn on the third board');
+  const h0 = await ev(() => PB.S.hist.length);
+  await names().nth(2).click();
+  await page.locator('#pop input').fill('Cucina'); await page.keyboard.press('Enter');
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.page.facing .bname')).some(n => n.textContent === 'Cucina')); await popGone(page);
+  ok(await where('Cucina') === 'token 3 3' && await where('b3') === '- - -' && await ev(() => PB.S.hist.length) === h0 + 1, 'renamed, the board keeps its drawing, and the rename is one undo step');
+  await page.keyboard.press('Control+z');
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.page.facing .bname')).some(n => n.textContent === 'b3'));
+  ok(await where('b3') === 'token 3 3' && await where('Cucina') === '- - -', 'undo gives the old name back with the drawing: ' + await where('b3') + ' / ' + await where('Cucina'));
+  await page.keyboard.press('Control+y');
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.page.facing .bname')).some(n => n.textContent === 'Cucina'));
+  ok(await where('Cucina') === 'token 3 3' && await where('b3') === '- - -', 'redo gives the new name back with the drawing: ' + await where('Cucina') + ' / ' + await where('b3'));
+  await page.keyboard.press('Control+z');
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.page.facing .bname')).some(n => n.textContent === 'b3'));
+
   // the pen does not draw on a name
   const count = () => ev(() => Array.from(PB.S.boards.values()).reduce((s, B) => s + B.strokes.length, 0));
   const c0 = await count(), nb = await names().nth(0).boundingBox();
