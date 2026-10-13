@@ -6,10 +6,10 @@
 
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
-- **Use it:** open <https://marcovitalii.github.io/promptbook/> in Chrome or Edge, or download `promptbook.html` from the [latest release](https://github.com/MarcoVitalii/promptbook/releases/latest) and open it from disk; it needs no network. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show. A show folder from an early release no longer opens: zip the folder and open the zip.
+- **Use it:** open <https://marcovitalii.github.io/promptbook/> in Chrome or Edge, or download `promptbook.html` from the [latest release](https://github.com/MarcoVitalii/promptbook/releases/latest) and open it from disk; it needs no network. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show.
 - **Learn it:** `docs/guide/index.md`: a tutorial, how-to guides for the stage manager and the author (taking in a rewrite, revisions, changed pages, the cast file, calling a show), explanations of why it works as it does, and a reference. Also in Italian: `docs/guide/it/index.md`.
 - **For the actors:** `promptbook-cast.html`, from the same places. "Send to cast…" in the tool writes a copy with a show inside.
-- **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What is planned:** `PLAN.md`. **What changed:** `CHANGELOG.md`. The same documents are [on the site](https://marcovitalii.github.io/promptbook/).
+- **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What changed:** `CHANGELOG.md`. The same documents are [on the site](https://marcovitalii.github.io/promptbook/).
 - **Pitch in:** `CONTRIBUTING.md`.
 
 ## Documents
@@ -28,9 +28,7 @@ There are two sets. `docs/guide/` is for whoever uses the tool, arranged as [Di�
 | `docs/specs/01` … `11` | Script text, cues, ink, boards, input, pages and print, storage, history, workbench, cast, show mode |
 | `docs/decisions.md` | Every decision and conflict, with its source and its consequences |
 | `docs/architecture.md` | C4 diagrams: system context, containers, components; how a change travels |
-| `docs/verification.md` | What was checked and how, release by release; what never was |
-| `docs/review-2026-10-09.md` | Criticalities, refactor opportunities, technical debt |
-| `PLAN.md` | Next actions, backlog, risks |
+| `docs/verification.md` | What was checked and how; what never was |
 | `CHANGELOG.md` | One entry per release, written for the user |
 | `CONTRIBUTING.md` | Setting up, sending a change, making a release |
 
@@ -41,7 +39,7 @@ There are two sets. `docs/guide/` is for whoever uses the tool, arranged as [Di�
 | `src/` | Source: `core.js` (parse, layout), `view.js` (rendering, input), `io.js` (storage, dialogs), `style.css`, `index.html`; for the actors `cast.js`, `cast.css`, `cast.html` |
 | `fonts/` | Inter, Latin subset, SIL Open Font License 1.1 (`fonts/OFL.txt`) |
 | `build.py` | Joins `src/` and `fonts/` into `promptbook.html` and `promptbook-cast.html`. Needs Python 3 only. |
-| `promptbook.html`, `promptbook-cast.html` | The release. Built, not in the repository: every [release](https://github.com/MarcoVitalii/promptbook/releases) carries the two files. Tags up to r1.9 also carry them in the tree. |
+| `promptbook.html`, `promptbook-cast.html` | The release. Built, not in the repository: every [release](https://github.com/MarcoVitalii/promptbook/releases) carries the two files. |
 | `test/` | Browser checks (Playwright, Chromium). `test/unit/` holds the checks that need no browser. |
 | `scripts/` | `check.sh` builds and tests; `site.js` builds the static site; `release-notes.sh` reads a release out of the changelog; `hooks/` are run by Claude Code, `githooks/` by git. |
 | `.github/` | CI and release workflows, issue and pull request templates, Dependabot. |
@@ -61,7 +59,7 @@ npm run build                               # writes promptbook.html and promptb
 
 ```sh
 npm run check:fast   # build + syntax + test/unit, under a second
-npm run check        # the above + the browser checks, about 25 s
+npm run check        # the above + the browser checks, about 75 s
 npm test             # the same, even when nothing changed
 npm run site         # the documents and the built files as a site, in _site/
 ```
@@ -73,9 +71,9 @@ npm run site         # the documents and the built files as a site, in _site/
 1. Change `src/`, set `VERSION` in `src/core.js`.
 2. `npm test` — builds `promptbook.html` and runs every check; all must pass.
 3. Add the dated entry to `CHANGELOG.md`; update the capability file in `docs/specs/`, `SPEC.md` §6 and `docs/verification.md` §3; merge to `main`.
-4. Tag that commit (`r1.1`, `r1.2`, …) and push the tag. The release workflow checks once more, attaches the two built files to a GitHub release and publishes them, with the documents, on the site.
+4. Tag that commit (`r1.11`, then `r1.12`, …) and push the tag. The release workflow checks once more, attaches the two built files to a GitHub release and publishes them, with the documents, on the site.
 
-The file a show uses is whatever `promptbook.html` it opens. To go back, download that file from an older release (for r1.9 and earlier: check out the tag, the file is in it). A show written by a newer release is readable by an older one only where the compatibility table in `docs/specs/07-storage.md` says so.
+The file a show uses is whatever `promptbook.html` it opens. To go back, download that file from an older release. A show written by a newer release is readable by an older one only where `docs/specs/07-storage.md` §2.4 says so; the show itself names the oldest release that reads it.
 
 ## Licence
 

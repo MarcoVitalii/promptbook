@@ -4,7 +4,7 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 
 ## Rules that are easy to break
 
-- **Never edit `promptbook.html` or `promptbook-cast.html`.** They are the built releases (about 520 KB with base64 fonts; about 125 KB). Edit `src/`, then run `python3 build.py`. Never Read or grep them either: search `src/`.
+- **Never edit `promptbook.html` or `promptbook-cast.html`.** They are the built releases. Edit `src/`, then run `python3 build.py`. Never Read or grep them either: search `src/`.
 - **Never commit them.** They are in `.gitignore`. CI builds them; a tag publishes them as a GitHub release and on GitHub Pages.
 - **Tests run against `promptbook.html`, not `src/`.** A test result is meaningless until the build has run after the last `src/` change.
 - **No libraries, no npm runtime packages, no network.** The zip reader/writer, IndexedDB wrapper and CSV export are hand-written on purpose.
@@ -42,23 +42,20 @@ Read only the part that is needed; do not load these whole. Each capability file
 - `docs/guide/`: the guide for whoever uses the tool (stage manager, author), by the four kinds of Diátaxis. `index.md` (the map), `tutorial.md` (learning: one path through the sample scene), `how-to/01` to `12` (one task each, steps only), `explanation/01` to `05` (why, no steps), `reference.md` (forms, keys, files, glossary). Keep the kinds apart: no explanation inside a how-to beyond a line and a link, no steps inside an explanation. Button and menu names are quoted from `STR.en`. A change in behaviour that a guide describes is made in the guide too. New files are picked up by `scripts/site.js` from their folder. `docs/guide/it/` is the same guide in Italian, one file per English file with the same name: change both together, and quote button names from `STR.it` there. The site pairs the two by file name for its language selector.
 - `SPEC.md`: entry point. How the specification is organised, goals G1 to G6, constraints C1 to C11, assumptions, open questions, table of releases.
 - `docs/specs/`: one file per capability. `01-script-text.md` (TXT), `02-cues.md` (CUE), `03-ink.md` (INK), `04-boards.md` (BRD), `05-input.md` (INP), `06-pages-print.md` (PAG, page layout locked), `07-storage.md` (STO, data shapes in §2.3, compatibility in §2.4), `08-history.md` (HIS), `09-workbench.md` (UI), `10-cast.md` (CST: notes for the cast, the cast file, the script for the actors), `11-show.md` (SHW: show mode, read only, the running line, warnings and standbys).
-- `docs/decisions.md`: decisions D1 to D19 and conflicts K1 to K10, with what follows from each.
+- `docs/decisions.md`: decisions D1 to D19 and conflicts K1 to K10, with what follows from each. A row states the decision as it stands.
 - `docs/architecture.md`: C4 diagrams (context, containers, components) and the component table that maps to sections of `src/`.
-- `docs/verification.md`: check record per release, test file to requirement mapping, what was never verified.
-- `docs/review-2026-10-09.md`: known defects (X), refactor opportunities (F), technical debt (T).
+- `docs/verification.md`: check record per release (§3), test file to requirement mapping, what was never verified (§4).
 - `CHANGELOG.md`: one entry per release, written for the user.
-- `PLAN.md`: next actions, backlog, risks.
 - `CONTRIBUTING.md`: how a collaborator sets up, sends a change and makes a release.
-- `docs/background/syntax-comparison.md`: background on the script syntax choice. Rarely needed.
 
-A change in behaviour starts in the capability file: quote the request under Intent, add or change the requirement rows (never renumber an ID), write the consequences. Then the code.
+A change in behaviour starts in the capability file: quote the request under Intent, add or change the requirement rows (never renumber an ID), write the consequences. Then the code. The documents describe the tool as it is: no "since rX", no "until rX", no commit hashes. What changed between releases goes in `CHANGELOG.md` only.
 
 ## Build and tests: hooks do it
 
 Do not run the build or the tests by hand as a routine, and do not explore how to run them. Hooks in `.claude/settings.json` do it and stay silent when green:
 
 - After every Edit or Write under `src/`, `fonts/`, `test/unit/` or to `build.py`: build, syntax check, `test/unit` (no browser, under a second). A failure comes back as a few lines.
-- At the end of a turn: every check, browser included (about 25 s), only if a source or test changed since the last green run. A failure comes back once.
+- At the end of a turn: every check, browser included (about 75 s), only if a source or test changed since the last green run. A failure comes back once.
 - Read, Edit and Write on `promptbook.html` are refused.
 
 No hook output means the build is current and the checks pass. To run something on purpose:

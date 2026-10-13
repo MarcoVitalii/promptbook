@@ -18,7 +18,7 @@ Needs Python 3 and Node 24 (the version is in `.node-version`; `fnm use` reads i
 ```sh
 npm run setup                               # pinned tools, Chromium for the checks, the git pre-commit hook
 sudo npx playwright install-deps chromium   # once per machine: system libraries Chromium needs
-npm run build                               # writes promptbook.html: open it in Chrome or Edge
+npm run build                               # writes promptbook.html (open it in Chrome or Edge) and promptbook-cast.html
 ```
 
 ## Making a change
@@ -31,7 +31,7 @@ npm run build                               # writes promptbook.html: open it in
 
    ```sh
    npm run check:fast   # build + syntax + test/unit, under a second
-   npm run check        # the above + the browser checks, about 25 s
+   npm run check        # the above + the browser checks, about 75 s
    ```
 
 6. **Add a line to `CHANGELOG.md`** under the release that is not yet released, written for the person who uses the tool.

@@ -1,265 +1,59 @@
 # Changelog
 
-## r1.11 — not yet released
+## r1.12 — not yet released
 
-- **Show mode**, for show day. The "Show" button in the top bar makes the book read only: the pen draws nothing, a tap pins nothing, no cue or block can be moved, nothing opens for editing. It is also a focus mode: the toolbar, the corner buttons and the facing page are gone and the script is as large as the window allows. "Leave" takes two presses, so a stray touch does not end it, and puts everything back.
-- **A line runs down the script.** Space starts and stops it. Double tap a word to put it there, or Arrow down and Arrow up for one block. The line is a clock: it does not hear the stage, so pauses and silent business need a stop or a correction.
-- **Every block has its own time.** To begin with it is its words at 130 a minute. In rehearsal, turn on "Time it": while the line runs, each double tap (or Arrow down) says "the show is here", and the real time since the mark before is kept for the blocks in between. Mark often for fine times, rarely for rough ones. "Undo" takes the last one back; −5 s and +5 s set the block the line is in by hand, which is the way to give a silent fight its minute. Stop the line before jumping elsewhere. "Time it" is off every time show mode is entered, so a show night changes nothing. A block whose words change goes back to the estimate.
-- **The page no longer scrolls under your eyes.** It stands still while the line goes down it, and jumps a third of the window when the line is two thirds down. Scroll anywhere to look at something else: the line keeps running, and "Back to the line" (or Enter) returns to it.
-- **Warnings and standbys, counted down.** Cues the line will reach within 30 seconds are in STANDBY, within 2 minutes in WARNING, each with the estimated time to it; cues on the same word are one call; a cue just passed shows as GO for 4 seconds. Their tags are outlined on the page. Both times are in Settings; a warning time of 0 turns warnings off.
-- **How long the show is and how far in.** The panel shows the time so far, the whole, what is left and when it would end. A map shows the show scene by scene, each as long as its time, with a tick for every cue; press it to look at that place.
-- **Pace of the night:** − and + (or `[` and `]`) make the line run slower or faster than the times say, for tonight only. After a minute of corrections the panel offers the pace it measured.
-- **A rail on the right** holds the calls, the clock and the pace. On the page the block being spoken is lit, with a small mark on its left edge that shows roughly how far into it the show is. Press a call to look at the place of its cue: the line runs on where it was, and "Back to the line" returns.
 - **A guide to the buttons**, for whoever is new to the tool. "Guide" in the bottom right corner, the H key or the Menu puts a number on every button on screen and opens a card that says, number by number, what the button is called, what it does and which key does the same. Press a number or a row to see which button it is. Esc, H or a press outside closes it. In show mode H gives the guide of the show buttons. It covers the buttons only, not what the pen and a tap do on the page. Checked in a simulated browser only.
-- **S enters show mode**, and S twice leaves it. The list of shortcuts (?) now shows only the keys of the mode you are in.
-- The screen is kept awake in show mode where the browser allows it.
-- Checked in a simulated browser only: not yet on the laptop with pen and touch, and neither the pace of 130 nor the timing has been tried in a real rehearsal.
-- A cue can be dragged between two lines again, as a block can: carry its tag to the space between two blocks, and release where the line in the cue's colour shows. The cue gets a line of its own there. Released on a word it goes after that word, as before. Checked in a simulated browser with the mouse; not tried with a finger, for which the space between two blocks may be narrow.
-- Ctrl+Z pressed right after closing a box with Enter (the name of a board, the number of a cue) is no longer lost: the closed box held the keyboard for an instant.
-- Two boards whose names differ only in capitals, accents, spaces or punctuation ("Sala A" and "sala-a") each keep their own drawing. Until now they were saved in one file and one drawing replaced the other. Undo after renaming a board brings back the old name with its drawing, in one step.
-- A part of a show file that cannot be read (the settings, the ink, the drawing of a board or of a template) is no longer opened as if it were empty and then written over. The show opens without it, a banner names it, and nothing is saved until you choose: "Go on without" keeps the damaged part, untouched, in a folder `damaged/` inside the show file; "Close the show" leaves the file as it was.
-- A damaged show file is found when it is opened. Every part is checked against the checksum the zip keeps for it: a part that fails is set aside in the same way, the script included, and never shown as if it were good. A file cut short, or whose index is damaged, is refused with "damaged zip file" and is not touched; the show you had open stays open. A zip protected by a password is refused in words, where before its protected parts were skipped and lost at the next save.
-- A history with a damaged part never stops the show from opening or from being saved. The History box lists the revisions it can still read and says where it has to stop; "Restore", "Changes" and a change of variant that need a lost part say so and change nothing. A new revision can always be saved.
-- A show now says which release saved it. Opened with a release too old for it, it opens all the same with a warning that says which release it asks for and to get the newer `promptbook.html`.
-- A backup can no longer make the tool ask the internet for anything: an image in a backup must be the picture itself, and the browser is told to refuse every request to a host.
-- The reasons a show file cannot be opened or saved are in Italian when the tool is. A save that fails says why once, not at every attempt. The column headings of the exported cue lists follow the language.
-- A show kept only in the browser that is too large for it says so: first that it is kept without the images of the boards, then, if even that does not fit, that it could not be saved, each time with what to do (save as a show file, or export a backup). Leaving the page asks first.
-- A template the settings name whose file is missing is named when the show opens and in the Templates view, and its name is kept, so the file can be put back; "Forget these names" lets them go. A character list too long for one page runs on to the next.
-- The cue list marks with ↕ a number that is out of order in its department (LX 12 after LX 14). A hint only: nothing is renumbered.
-- An image put on a board at the very moment the show is being saved is no longer dropped from the show file.
-- Over a long day of reloads, restores and changes of variant the tool no longer piles up copies of the board images in the browser's memory.
-- `promptbook.html` carries the full text of the licence of its font.
-- The fixes above come from a review of the code (`docs/review-2026-10-09.md`). Checked in a simulated browser only; no file damaged by a real disk was tried.
+- **A guide to the tool**, in English and in Italian, on the site and in `docs/guide/`: a tutorial with the sample scene, how to take in a rewrite, mark a moment, reissue the changed pages, tell each actor what changed, keep a variant, send to the cast, time and call a show, and why it works as it does. Most of its steps were written from the specification and not walked through on a laptop.
 
-**Compatibility.** Show files written by r1.10 open unchanged. `config.json` gains `show` (pace, standby and warning times, the timed blocks) and `release` (the release that saved the show, and the oldest that reads it); an older release keeps both and ignores them. Exceptions and changes: a show from r1.10 or earlier with two boards whose names gave one file name opens with the drawing on the board saved last and the other empty (before, both showed the same drawing; the other drawing was already lost when it was written over). A zip with a part protected by a password is refused; it used to open without that part. A show file that is damaged used to open with whatever could be read; now it is refused, or opens with the banner. With the interface in Italian, the exported cue lists have Italian column headings (Atto, Scena). r1.10 opens a show saved by r1.11: two boards with look-alike names show one drawing there, and a stroke on either replaces it, so do not edit those boards in r1.10; a folder `damaged/` in the show file is kept and ignored; the names of templates with no file are dropped when r1.10 saves the settings.
+**Compatibility.** Nothing in the show file changes: shows written by r1.11 open unchanged, and r1.11 opens a show saved by r1.12.
 
-## r1.10 — 2026-10-10
+## r1.11 — 2026-10-13
 
-The script for the actors, and notes sent to them from the prompt book. Checked in a simulated browser only, at the width of a phone: never tried on a real phone, and never opened from a chat or mail attachment.
+The first release. What follows is the tool as it stands; the requirements behind each line are in `docs/specs/`.
 
-- A second file, `promptbook-cast.html`: the script for the actors. It shows the text on a phone or a computer, with text size, night mode and the list of acts and scenes. Nothing in it can change the script.
-- "My part": one box per speaker name as the script writes it, so a chorus, TUTTI or "ANNA e MARCO" is ticked like a character. The lines under the ticked names are marked.
-- "Hide my lines" covers them for practice. A tap shows a line, another tap covers it again.
-- Notes are beside the text, never inside it, so the script is as long with notes as without. On a computer or a tablet they are written out in a margin on the right; on a phone a line with notes has a round button with their number, filled while one is unread.
-- An actor taps a line, then the note button in its margin, and writes a note. Part, notes and read marks stay on their device.
-- In the prompt book, a department can be marked "Cast" (Settings). A note pinned under it is for the actors: it belongs to the whole block it is pinned in and is for whoever speaks that block; the label says otherwise (buttons: "Everyone" and the characters). On an action or a heading it is for everyone. The department name says who is writing. Add a second such department, for example "Regia", to tell the director's notes from the stage manager's. These notes are listed in Review under "Notes for the cast" and are never cues.
-- Menu → "Send to cast…" saves one `.html` file to send to everybody: the reader with the show inside, text without cues, comments and to-do notes, and the notes for the cast beside their blocks. Each actor sees the notes for the names they ticked and those for everyone, and can tick a note as read.
-- Send a new file after each rehearsal. When an actor opens it, "What is new" lists the notes to read, the lines that changed (their own by name) and their own notes that need a look. The notes they wrote follow their lines into the new text; one whose line changed is flagged until they confirm it; one whose line was cut is kept aside and can be put on another line. Changed lines keep a dotted edge until the next file.
-- Show folders are no longer opened: a show is its `.zip` file and nothing else. "Open older show folder…" is gone from the start screen and the menu.
-- A file older than the one already opened asks before it opens and changes nothing the actor has. A show keeps its identity when its title changes.
-
-**Compatibility.** Show files written by r1.9 open unchanged. Exception: a show still kept as a folder (the form before r1.2) does not open any more. Zip the folder (in Explorer: right-click → Send to → Compressed folder) and open the zip, or open it once in r1.9 and use "Save as show file…"; the history comes along only if the hidden `.git` folder is in the zip. A script edited in another program while the tool is open is no longer picked up; that worked only for folders. Shows from r1.9 have no cast department until one is added ("Send to cast…" offers it). r1.9 opens a show saved by r1.10: notes for the cast are ordinary to-do notes there, and if r1.9 saves the settings the "Cast" mark is lost and must be ticked again. `promptbook.html` is 108 KB larger, because it carries the actors' file.
-
-## r1.9 — 2026-10-10
-
-Blocks that can be dragged to another place, a name for a board before it is made, one word and one key for deleting, and two smaller helps at the keyboard. Tried by the client on a real show, who reported that all of it works as expected. Shows written by r1.8 open unchanged, and r1.8 opens a show saved by r1.9.
-
-- After you pick the department of a new cue, the cursor is already in the margin text. Tab goes to the description, Shift+Tab to the number (which still fills itself when left blank), Enter accepts.
-- Blocks can be moved. Every line of the script has a faint grip in the left gutter: drag it with the mouse or the pen, or hold it for a moment with a finger and then drag, and release where the red line shows. Cues and ink go with the block; speeches said together move as one; a board moves with its line, also when dragged by its tag in the margin. One undo step. Esc gives up.
-- "+ Board" and "Board here" first ask the name: "Board n" is written and selected, so typing replaces it. Enter adds the board, Esc adds nothing.
-- One word: boards now say "Delete", like cues and templates ("Remove" is gone). With the box of a cue or of a board open, the Delete key deletes it, unless the cursor is in a field.
-- Esc in Find leaves it: the field empties and folds back to the magnifier, and the single-key shortcuts work again.
-
-## r1.8 — 2026-10-10
-
-A calmer screen, cues that stand out, a shorter toolbar and keyboard shortcuts. Checked in a simulated browser only: the colours, the tags and the corner controls were judged on screenshots, not on the rehearsal laptop, and nothing was printed on paper.
-
-- Softer colours by day and by night: no pure white paper, no pure black text, a lit button is a tint and not a black block.
-- The label of a cue in the margin is a block of the department colour; an end keeps an outlined label. The box round the cue word is stronger. Printed pages show the same tags.
-- The toolbar is one row, in groups. Night mode, zoom and “?” moved to the bottom right corner of the desk. Find is a magnifier until you use it.
-- Shortcuts, when you are not typing in a field: B boards, C cues, I ink, N night, 1–4 pens, E eraser, F finger, + − 0 zoom, Page Down / Page Up, Home / End, L cue list, R Review, / find, Ctrl+S save now. Press ? for the list.
-- Ctrl+P now opens the tool’s print choices. Before, it ran the browser’s print, which gives only a few pages.
-
-Compatibility: nothing in the show file changes.
-
-## r1.7 — 2026-10-09
-
-History of the show, variants for venues, page numbers that hold once a script is handed out, and a list of changes per character. Checked in a simulated browser only: not yet run on the rehearsal laptop, and nothing was printed on paper. The history was read back with git itself (`git fsck`, `git log`, `git diff`).
-
-History (Menu → “History…”)
-- “Save revision” keeps the whole show as it is now under a name you type, for example “Rehearsal 12 October”: script, ink, boards, templates and settings.
-- Every revision is listed with its date. “Restore” brings one back. What you had before is saved first as a revision of its own, so a restore can always be undone by restoring that one.
-- The history is inside the show file, so it travels with it. A show that is not on disk yet has no history: use “Save as show file…” first.
-
-Variants
-- A variant is the show as it is given in one place or on one occasion: a theatre with other lights, a contest that needs a shorter running time. “New variant” starts one from the show as it is now.
-- Each variant has its own text, cues, boards and revisions. Pick a variant in History to move to it; the one you leave is saved first.
-- A change made in one variant does not reach the others. A correction that every variant needs must be made in each, or merged with git (see below).
-
-Locked page numbers
-- Tick “Lock page numbers here” when you save the revision you print and hand out. From then on a page starts where it started on paper.
-- Text added later that no longer fits goes to inserted pages: 12A, 12B after page 12. A page whose text is all cut disappears and its number is not reused. Pages after the last printed one are numbered on as usual.
-- A page that differs from the printed one shows “∗ changed since …” at its foot, on screen and in print. History lists the changed pages, and “Print changed pages” prints only those, script pages without boards, for the cast to swap into their copies.
-- Only words count: adding or moving a cue does not mark a page as changed.
-- Lock again at a later revision to make that one the reference; lettered pages keep their letters. “Unlock” returns to plain numbers.
-- The cue list, Review and the scene menu show the same page labels.
-
-Changes
-- “Changes” beside a revision compares it with the show now; any two revisions can be chosen.
-- Lines are shown as on GitHub: cut words struck through in red, new words underlined in green, grouped by act and scene, with the page where known.
-- “Show” narrows the list: “Text” leaves out cue changes; “Everything, cues too” includes them; a character's name shows what reaches that actor, with the count beside the name. That is their own lines, actions that name them in capitals, and a changed line just before one of theirs in the same scene, marked “the line before yours”.
-- “Print” prints the list as shown, for example one sheet per actor.
-
-For those who use git
-- The history is a git repository: a `.git` folder inside the show file, or beside `script.md` in an older show folder. A revision is a commit with a tag, a variant is a branch, the first one `main`.
-- Unzip the show, run `git reset` once (the tool writes no index), then `git log`, `git diff main Teatro-Verdi`, `git merge` or `git push` work as usual. Zip the folder again, `.git` included, to open the result in the tool.
-- The tool reads loose objects only. After `git gc` or a clone, history that git has packed cannot be read here until it is unpacked (`git unpack-objects`).
-
-Compatibility
-- A show written by r1.6 opens unchanged and has no history until the first revision is saved.
-- r1.6 opens a show written by r1.7 and keeps its history when it saves a show file, but shows plain page numbers, has no History menu, and drops the history when a show folder is saved as a show file.
-- Restoring a revision or changing variant replaces the ink and the boards too, with those of that revision.
-
-## r1.6 — 2026-10-08
-
-Four changes asked for after the first rehearsals. They were checked in a simulated browser only: this release has not yet run on the rehearsal laptop, and nothing was printed on paper. Try moving a cue with your finger and with the pen before relying on it in a rehearsal.
-
-Boards
-- A facing page with three or more boards now sets them in two columns, row by row: 1 2, then 3 4, and so on. One or two boards stay in one column, at the size they had.
-- A page takes up to 8 boards. “+ Board”, “Board here” and pasting an image say so when the page is full. A page that already holds more, because they were typed in the script text, still shows them all.
-- The name of a board is now under its drawing and is always shown, in the Templates view too. A name longer than the drawing is cut with “…”; rest the pointer on it to read it in full. Tap the name to rename the board.
-- On small boards the buttons are behind one “⋯” button; tap it for the same list. That is every board on a page with three or more. On a page with one or two boards the buttons show as before, unless tall images make the boards small. Templates keep all their buttons.
-- Boards and templates have a light grey grid, over the image and under the ink, with every fourth line a little stronger for counting. Settings → “Board grid”: Off, Fine or Coarse. It is one setting for the whole show. The grid is only a guide: the ink does not snap to it and the eraser and “Clear ink” leave it alone. It prints when it is on.
+Script
+- The script is plain text as it is typed today: `NAME: text` for a speech, `(text)` for an action, `# Act` and `## Scene` for headings, `& NAME: text` for a line spoken together with the one above. A pasted Word text is read as it comes; a line that cannot be read is listed in Review and never dropped.
+- Any block is edited in place. Every change is one undo step.
+- Blocks can be moved: drag the grip in the left gutter and release where the line shows. Cues and ink go with the block.
+- The script can start with a frontmatter block between two `---` lines (`title:`, `author:`, any `key: value`). Its values make a front page. `characters:` (or `personaggi:`) lists the characters, with aliases and descriptions, on a page of their own; Review lists speakers that are not in the list.
+- Text between two `%%` lines is commented out: kept in the script, left off the page, the cue list and every print.
 
 Cues
-- A cue can be moved: press its tag in the margin, drag it to a word and release. With the mouse or the pen, just drag. With a finger, hold the tag for a moment (a third of a second) until it lifts, then drag; a quick swipe that starts on a tag still scrolls the page.
-- While you drag, a copy of the tag follows the pointer and the word that will receive the cue is highlighted in the colour of the cue. Between words, the nearest word is taken. Near the top or bottom of the window the script scrolls, so a cue can go to another page.
-- The whole cue moves: number, margin text, description and what it ends. Ends and to-do notes can be dragged like any cue.
-- A cue always lands after a word, behind the cues already on that word. A cue that sat on a line of its own becomes a cue on the word and its line is removed; a cue cannot be dragged onto a line of its own.
-- If a move puts an end above its start, or a start below its end, the move is kept and a message says that the two no longer match.
-- Release away from the text, on the facing page or back on the tag itself, or press Esc, to leave the cue where it was. A tap on a tag still opens the cue editor. A move is one undo.
-- The pen leaves no ink while it drags a tag. A hand resting on a tag while the pen is near does not lift it.
-- Board tags cannot be dragged yet.
+- Tap a word and pick a department to pin a cue. Cues live in the script text as `{LX 12 | margin text | description}` and show as a tag in the margin, with the cue word boxed in the colour of the department.
+- A blank number on a new cue becomes the last of its department plus one. Nothing is ever renumbered.
+- A cue can have an end (`{/SND 5}`), or be ended by another cue (`{SND 6 / SND 5}`). A rail in the margin shows what is running.
+- A cue is moved by dragging its tag to a word, or to the space between two blocks.
+- The cue list is made from the script: filter by department, print, CSV, one sheet or one CSV per department. It marks a number used twice and, with ↕, a number out of order.
+- A department ticked "To do" holds notes for after the rehearsal: pinned like cues, listed in Review, never in the cue list.
 
-Text
-- Removing a cue or a board whose token sits on a line of its own, with a blank line above and below, now leaves one blank line, not two.
+Ink and boards
+- The pen draws over the script. Ink belongs to its block of text and follows it through every edit; when the words of that block change, the ink is flagged for a look.
+- Boards on the facing page: an image or a blank sheet, drawn on with the same pen, with a name and a light grid. Three or more on a page are set in two columns.
+- Templates are stage backgrounds kept with the show's settings. A board is drawn on top of a template, which shows greyed beneath; change the template and every board built on it follows.
 
-Compatibility
-- A show written by r1.5 opens unchanged. Its boards gain the fine grid and, where a page has three or more boards, the new arrangement, on screen and in print. Turn the grid off in Settings if you do not want it on paper.
-- r1.5 opens a show written by r1.6; it ignores the grid setting.
+Pages and print
+- The page is laid out as a prompt book: name, text, cue margin, and the facing page for the boards. Print gives the book or the script pages alone.
+- Page numbers can be locked once a script is handed out: text added later goes to inserted pages (12A, 12B), changed pages are marked, and "Print changed pages" prints only those.
 
-## r1.5 — 2026-10-08
+Show file and history
+- A show is one `.zip` file with plain files inside (`script.md`, `config.json`, the ink, the boards). Every change is saved without a command. Needs Chrome or Edge; in another browser the show is kept in the browser and moved with a backup file.
+- History (Menu → "History…"): "Save revision" keeps the whole show under a name; "Restore" brings a revision back; a variant is the show as it is given in one place. "Changes" compares two revisions, word by word, and can show only what reaches one character.
+- The history is a git repository inside the show file. Unzip the show, run `git reset` once, and git reads it.
+- A damaged show file is found when it is opened. A file cut short is refused and not touched. A part that cannot be read is set aside: a banner names it, nothing is saved until you choose, and "Go on without" keeps the damaged part in a folder `damaged/` inside the show file.
+- A show says which release saved it. Opened with a release too old for it, it opens all the same with a warning that says which release it asks for.
+- The tool never asks the internet for anything, whatever a show file or a backup holds.
 
-Show file
-- Fixed: after a show file was opened, only the first change was saved. Every later save failed, the status showed a save error and the changes stayed in the open tab only. It happened whenever the show held a very small file, such as the ink file of a show with nothing drawn yet.
-- Fixed: “Keep mine”, offered when another program has changed the show file, failed in the same way and left the file as the other program wrote it.
-- The parts of a show file are now read into memory when it is opened, board images included.
+For the cast
+- A second file, `promptbook-cast.html`: the script for the actors, on a phone or a computer. "My part" marks the lines of the names an actor ticks; "Hide my lines" covers them for practice.
+- A department marked "Cast" holds notes for the actors. Menu → "Send to cast…" saves one file to send to everybody, with the text and those notes beside it. Each actor sees the notes for the names they ticked, writes notes of their own, and finds them again in the next file.
 
-If you worked in r1.2 to r1.4 on a show opened from its file, open it again and check that your last changes are there. What was not saved has to be entered again.
+Show mode
+- "Show" in the top bar makes the book read only and clears the screen for show day: the pen draws nothing, a tap pins nothing. "Leave" takes two presses.
+- A line runs down the script; Space starts and stops it, a double tap on a word puts it there. The line is a clock: it does not hear the stage.
+- Every block has its own time, at first its words at 130 a minute. In rehearsal, with "Time it" on, each double tap says "the show is here" and the real time is kept for the blocks in between.
+- Cues the line will reach within 30 seconds are in STANDBY, within 2 minutes in WARNING, each with the estimated time to it. The panel shows how long the show is and how far in.
 
-Compatibility
-- A show written by r1.4 opens unchanged, and r1.4 opens a show written by r1.5.
-
-## r1.4 — 2026-10-07
-
-Comments
-- Text between two lines holding `%%` is set aside: it stays in `script.md` and is left off the page, the cue list and every print. One line can be closed on itself: `%% text %%`. This is Obsidian's comment form, so the block is hidden there too.
-- The text editor of a block has “Comment out”; on a comment it has “Restore”. A commented block leaves a small `%%` marker in the left gutter: tap it to read the content, restore it or edit it. Each step is one undo.
-- Cues inside a comment are not cues. Ink on a commented block is set aside (it shows under “Ink whose text was removed”) and comes back when the block is restored unchanged.
-- A `%%` that is never closed hides nothing: the line is listed under “Lines not recognised”.
-- Review lists “Commented out”, not counted in the badge.
-- Whole lines only. To cut part of a speech, split the speech first.
-
-To do notes
-- A department can be ticked “To do” in Settings. Its notes are pinned like cues (`{TODO | short text | longer text}`) and show in the margin, but they are not cues: they are left out of the cue list, its count, the CSV and the prints, they get no number, and they are never offered as something to end.
-- Review lists them first under “To do”, counted in the badge. Tap one to jump to it; the tick removes the note from the script (one undo).
-- New shows come with a red TODO department. A show that already has its own department list is not changed: add a department in Settings and tick “To do”.
-
-Cue list
-- The short margin text and the longer description are two columns, “Margin” and “Description”. The description column appears only when a listed cue has one; the panel widens for it. The cue editor and the CSV headers use the same two names; CSV columns keep their positions.
-- “Cue line” is now the cue word with two words on each side. The word is boxed in the department colour, as on the page; in the CSV it is in `[brackets]`. A cue on its own line keeps the `▸` between the lines around it.
-- The cue list is printed from its own panel only (“Print”, “Print by dept”). The Print button in the top bar offers the book and the script pages.
-
-Numbers
-- A newly pinned cue whose number is left blank gets the last number of its department before that point, plus one: 5 gives 6, A12 gives A13, 5.5 gives 5.6; the first cue of a department is 1. The field shows the number it will get. Pinning and numbering are one undo.
-- Nothing is renumbered. A cue placed between 5 and 6 becomes a second 6 and is marked as a duplicate, as before. To leave a cue without a number, clear the field after the cue exists.
-- Enter closes the cue editor even when no field has been typed in.
-
-Compatibility
-- A show written by r1.3 opens unchanged. Do not edit or print a show with r1.3 once it uses `%%`: r1.3 shows the commented text as unrecognised lines and prints it. TODO notes read by r1.3 are ordinary cues of a department.
-
-## r1.3 — 2026-10-07
-
-Cue ends
-- A cue can end another cue and be a cue of its own: `{SND 6 / SND 5 | sfuma 3s}`. SND 6 has its own number and row in the cue list and the CSV, and the running rail from SND 5 stops at its tag. One cue can end several, in any department: `{SND 9 / SND 6 / VID 2}`. A cue that links can itself be ended later.
-- `{/SND 5}` still works for an end with no cue of its own, for fades the operator does by hand.
-- A part after ` / ` counts as a link only if it starts with an upper-case department code, so a label such as `1/2` or `5 / 6` stays a label. A link whose target is not found is listed in Review.
-- Margin tag of a linking cue: drawn like a plain end (outlined, stop square before its number) with the running rail ending on it; hovering shows what it ends. Editing carries through links: renumbering a cue rewrites the links to it; deleting a cue keeps the cue that linked to it, without the link; deleting a linking cue leaves its targets open. Each is one undo.
-- In the editor of an end, “Make it a cue” turns `{/SND 5}` into `{SND / SND 5}` ready to be numbered; on a linking cue, “Make it a plain end” does the reverse.
-- The “runs” tick box per department is gone, with “Still running at the end” in Review and the ordering in the End row. A cue with no end is simply a cue. A `runs` value in an old `config.json` is ignored.
-
-Notes and department lists
-- A cue can carry a longer note after a second bar: `{SND 5 | mare | Traccia 03, -12 dB}`. Typed in a new field of the cue editor. It shows in the cue list, in print and in the CSV, not in the margin (a dot on the tag shows that notes exist).
-- The CSV has three new columns at the end: “Ended by”, “Ends”, “Notes”. Existing columns keep their positions.
-- Cue list: “By dept (.zip)” saves one CSV per department in one file; “Print by dept” prints one sheet per department, each on a new page. The department chips still filter one department for the CSV and Print buttons.
-- A show written by r1.2 opens unchanged. Do not edit a show with r1.2 once it uses links or notes: r1.2 shows `6 / SND 5` as the label and the note as part of the short text.
-
-## r1.2 — 2026-10-07
-
-Show file
-- A show is now one `.zip` file instead of a folder of loose files. Menu → “Save as show file…” creates it; “Open show file…” opens it. Autosave rewrites the zip.
-- Inside: `script.md`, `script.ink.json`, `config.json`, `boards/`, `templates/`, exactly as the folder had them. Any zip tool can open it.
-- A folder zipped by hand (Explorer, Finder) opens as is; the extra top-level folder is ignored.
-- Older show folders still open (“Open older show folder…”). “Save as show file…” converts one, images included; only the show's own files are copied, so the zip never contains the empty file the save dialog creates or other stray files. “Save into a folder…” is gone.
-- If another program replaces the file (sync, copy over): reloaded when nothing is unsaved, otherwise the Keep mine / Load that version banner.
-- Editing `script.md` in another editor while the tool is open no longer works with a show file; unzip, edit, zip, or use “Edit whole script…”.
-- Unused images are dropped from the zip on save.
-- Needs Chrome or Edge. The new checks are in `test/zipshow.test.js`.
-- A show file written by r1.2 cannot be opened by r1.1 or earlier; their folders open in r1.2.
-
-## r1.1 — 2026-10-07
-
-Front page
-- The script can start with a frontmatter block between two `---` lines: `title:`, `author:`, `company:`, `year:` or any other `key: value`.
-- The values are shown on a front page before the script, in the order written, the title larger. Keys are not shown.
-- The front page and the character page have no number; the script still starts on page 1.
-- `title` in the script replaces the title from Settings.
-
-Characters
-- `characters:` (or `personaggi:`) in the frontmatter lists the characters, one `- NAME/ALIAS - description` per line; alias and description are optional. `[ANNA, MARCO]` on one line also works.
-- The list is printed on a page of its own after the front page: name / alias — description.
-- A speech typed with an alias (`A: …`) is shown under the full name.
-- Review lists speakers that are not in the list, and listed characters that never speak.
-- Group names are not checked: ALL, OTHERS, ALL OTHERS, ALL BUT x, TUTTI, GLI ALTRI, TUTTI TRANNE x and similar.
-
-Files
-- No new files. `script.md` may now begin with the frontmatter block.
-- Do not edit a show with r1.0 or r0.1 once it has frontmatter: they keep the text but show it as unrecognised lines on page 1.
-
-## r1.0 — 2026-10-06
-
-Cue ends
-- A cue can have an end: `{/SND 5 | sfuma in 3s}`. Tap a word and pick the cue from the new "End:" row.
-- An end closes the nearest earlier open cue with the same department and number; without a number, the nearest open cue of that department.
-- End tags are outlined in the margin. A rail runs down the outer margin from a cue to its end, across pages.
-- Cue list shows where each cue ends; the CSV has three new columns. Ends that close nothing are listed in Review.
-- Renumbering or moving a cue to another department carries its end. Deleting a cue deletes its end. Each is one undo.
-- Departments have a "runs" tick box in Settings (on for sound and video by default).
-
-Board templates
-- Templates are backgrounds kept in the show's configuration: menu → Templates…. They are never in `script.md` and never printed.
-- A board can be based on a template and a template on another template. What a board is based on shows greyed and cannot be drawn on or erased from the board.
-- "+ Board" asks what to draw on when there are templates and no default; with a default template it stays one tap.
-- "Base…" and "To templates" on boards. "Use as default" is gone; a default background set earlier still applies until a default template is chosen.
-
-Files
-- New: `templates/` folder; `base` in board files; `runs`, `templates`, `defaultTemplate`, `recentTemplates`, `templateFade` in `config.json`.
-- A show written by r0.1 opens unchanged. Do not edit a show with r0.1 once it uses ends or templates: r0.1 shows `{/…}` as unknown cues and ignores templates.
-
-Other
-- Version shown on the start screen.
-- A second pin on the same line straight after the first is no longer taken for a double tap.
-
-## r0.1 — 2026-10-06
-
-- Cue words are boxed in the department colour instead of underlined. Several departments on one word give nested boxes. The line to the margin leaves from the box corner.
-
-## r0 — 2026-10-06 (not in this repository; r0.1 is the first commit)
-
-- Script view in the prompt-book layout: name column, text, cue margin, facing page. Simultaneous speech in columns.
-- Tolerant parser for `NAME: text`, `(actions)`, `#` headings, `&` simultaneous lines.
-- Tap a word to pin a cue; cues live in the script text as `{DEPT number | description}`.
-- Pen ink anchored to text blocks; flagged when its text changes.
-- Boards on the facing page, with images and ink.
-- Cue list with department filter, CSV, print. Print of book or script.
-- Saves into a show folder; in-browser fallback with backup export and import.
+Around it
+- Review lists everything that looks wrong, as hints: the tool never refuses or corrects what was typed.
+- Find, a menu of acts and scenes, night mode, zoom, keyboard shortcuts (press ? for the list).
+- English and Italian.

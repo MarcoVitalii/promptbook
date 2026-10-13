@@ -27,20 +27,20 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 | Finger tap between blocks | Standalone cue or board | — |
 | Mouse | As finger | As finger |
 
-| ID | Requirement | Basis | Since | Checked by |
-|---|---|---|---|---|
-| INP-1 | Input is split by pointer type as in the table above, with no mode switch. | D14 `[ASSUMED]` | r0 | interact, scale-folder |
-| INP-2 | Touches are ignored while the pen is down and for about half a second after it lifts. | D14 | r0 | palm |
-| INP-3 | Palm rule: while the pen hovers near the screen, a touch can still tap quickly to pin a cue, but it cannot scroll, long-press, or be a large contact. | D14 | r0 | palm |
-| INP-4 | Because the page must not scroll under the pen, finger scrolling is done by the tool itself, not by the browser. Pinch-zoom is replaced by the zoom buttons. | D14 | r0 | scale-folder |
-| INP-5 | The pen can tap margin tags, the ink flag, the comment marker and board buttons. | as built | r0 | misc, cue-move |
-| INP-6 | A toolbar toggle, "Finger", lets finger and mouse draw, for machines without a pen. A toolbar "Eraser" makes the active drawing pointer erase. The two are never lit together: choosing one leaves the other. | D14; fix of 2026-10-09 | r0, r1.7 | misc |
-| INP-7 | Double-tap, double-click or long press on a block opens its text for editing. A second pin on the same line straight after the first is not taken for a double tap. | as built | r0, r1.0 | misc |
-| INP-8 | Finger hold on a tag: a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts. A quick finger tap on a tag opens the cue editor. Board tags lift too since the change of 2026-10-10: they move their line (TXT-28). | `[ASSUMED]` | r1.6 | cue-move |
-| INP-9 | The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. | as built | r1.6 | cue-move |
-| INP-10 | Escape cancels a drag and closes the open popover or menu. A system `pointercancel` ends a drag with no change. | as built | r1.6 | cue-move |
-| INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. The single-key shortcuts added in r1.8 are UI-9 (`09-workbench.md`); they are off while the cue pin is open, so the department letters keep their meaning. | as built | r0 | interact |
-| INP-12 | In show mode (`11-show.md`) none of the editing gestures above does anything: pen and finger scroll, a double tap on a word puts the running line there (SHW-2, SHW-9), and the keyboard has its own keys (Space, Enter, arrows, `[` `]`, S to enter and to leave; SHW-30). | request r1.11 `[LOCKED]` | r1.11 | show |
+| ID | Requirement | Basis | Checked by |
+|---|---|---|---|
+| INP-1 | Input is split by pointer type as in the table above, with no mode switch. | D14 `[ASSUMED]` | interact, scale-folder |
+| INP-2 | Touches are ignored while the pen is down and for about half a second after it lifts. | D14 | palm |
+| INP-3 | Palm rule: while the pen hovers near the screen, a touch can still tap quickly to pin a cue, but it cannot scroll, long-press, or be a large contact. | D14 | palm |
+| INP-4 | Because the page must not scroll under the pen, finger scrolling is done by the tool itself, not by the browser. Pinch-zoom is replaced by the zoom buttons. | D14 | scale-folder |
+| INP-5 | The pen can tap margin tags, the ink flag, the comment marker and board buttons. | as built | misc, cue-move |
+| INP-6 | A toolbar toggle, "Finger", lets finger and mouse draw, for machines without a pen. A toolbar "Eraser" makes the active drawing pointer erase. The two are never lit together: choosing one leaves the other. | D14 | misc |
+| INP-7 | Double-tap, double-click or long press on a block opens its text for editing. A second pin on the same line straight after the first is not taken for a double tap. | as built | misc |
+| INP-8 | Finger hold on a tag: a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts. A quick finger tap on a tag opens the cue editor. Board tags lift too: they move their line (TXT-28). | `[ASSUMED]` | cue-move |
+| INP-9 | The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. | as built | cue-move |
+| INP-10 | Escape cancels a drag and closes the open popover or menu. A system `pointercancel` ends a drag with no change. | as built | cue-move |
+| INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. The single-key shortcuts are UI-9 (`09-workbench.md`); they are off while the cue pin is open, so the department letters keep their meaning. | as built | interact |
+| INP-12 | In show mode (`11-show.md`) none of the editing gestures above does anything: pen and finger scroll, a double tap on a word puts the running line there (SHW-2, SHW-9), and the keyboard has its own keys (Space, Enter, arrows, `[` `]`, S to enter and to leave; SHW-30). | request 2026-10-11 `[LOCKED]` | show |
 
 ## 3. Consequences
 
@@ -48,7 +48,7 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 
 **The browser's own gestures are switched off on the page.** Scrolling, momentum, long press and double tap are re-implemented by the tool. Pinch-zoom is gone.
 
-**All pointer handling is one state machine.** Draw, erase, tap, scroll, long press and cue drag share one state object and three event handlers. The cue drag of r1.6 changed that code, which also does palm rejection and finger scrolling; the older palm checks pass unchanged, on simulated events.
+**All pointer handling is one state machine.** Draw, erase, tap, scroll, long press and cue drag share one state object and three event handlers. The drag of a cue or a block runs in the same code as palm rejection and finger scrolling; all of it is checked on simulated events only.
 
 **Timing and distance thresholds as built.** Only the first two are named in the requirements; the rest are values in the code:
 
@@ -64,4 +64,4 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 
 **One letter per department.** The keyboard shortcut uses the first letter of the code. Two departments starting with the same letter share it; the first in the Settings list wins.
 
-**Not verified:** every pen, finger and palm behaviour is checked with synthetic events in Chromium, never on the device. That covers the palm rule (INP-3, INP-9), the finger hold (INP-8) and the pen's eraser end, which could not be simulated at all. The device trial is the open gate for r1.6 (`PLAN.md`, next actions).
+**Not verified:** every pen, finger and palm behaviour is checked with synthetic events in Chromium, never on the device. That covers the palm rule (INP-3, INP-9), the finger hold (INP-8) and the pen's eraser end, which could not be simulated at all.

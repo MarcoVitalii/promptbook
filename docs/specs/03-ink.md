@@ -15,19 +15,19 @@ It collides with goal G1, text that can be edited freely (K4): ink is positioned
 
 ## 2. Requirements
 
-| ID | Requirement | Basis | Since | Checked by |
-|---|---|---|---|---|
-| INK-1 | The pen draws over script pages. The eraser removes the strokes it touches. Four colours (red, blue, green, black). Every stroke, erasure and "Clear ink" is one undo step. | D6 `[LOCKED]`, R0.5 | r0 | interact |
-| INK-2 | Each speech, action and heading is a block. A stroke belongs to the block it starts in and is stored relative to that block, in units of the text size (15 px), from the top-left corner of the block's text column. In simultaneous speech a stroke belongs to the speech of its column. | K4 `[ASSUMED]` | r0 | interact, misc |
-| INK-3 | The page has a fixed measure: fixed column widths and one embedded open-licence font, so line breaks are the same on screen, at any zoom and in print. Zoom scales the page; it never reflows it. | K4 `[ASSUMED]` | r0 | misc |
-| INK-4 | With every inked block the ink file keeps a snapshot of the block's text and its line count. On load: text unchanged, ink as it is; text changed, ink shown with a "check" flag; block gone, ink listed as orphaned. | K4 `[ASSUMED]` | r0 | scale-folder |
-| INK-5 | After an edit, inside or outside the tool, blocks are matched again by exact text first, then by order and similarity, and ink follows its block. Ink on an untouched block is never disturbed. | K4 `[ASSUMED]` | r0 | scale-folder, misc |
-| INK-6 | The snapshot is the block's text with cue tokens removed: adding, editing, moving or deleting a cue never flags ink. | K4 | r0 | interact, cue-ends |
-| INK-7 | The flag is a red "!" beside the block. Tapping it offers "Ink is fine" or "Clear ink on this block". Flagged blocks are listed in Review. | K4 `[ASSUMED]` | r0 | interact |
-| INK-8 | Orphaned ink is kept in the file and listed in Review, where it can be deleted. Undoing the deletion of the text re-attaches it, with no flag. | K4 `[ASSUMED]` | r0 | misc |
-| INK-9 | Ink on a block that is commented out is set aside as orphaned and comes back when the block is restored unchanged. | `[ASSUMED]` | r1.4 | notes-todos |
-| INK-10 | Pen ink on the front page or the character page belongs to the frontmatter block and stays on the page it was drawn on. | `[ASSUMED]` | r1.1 | frontmatter |
-| INK-11 | The "Ink" toggle hides all ink and flags on screen. | as built | r0 | — |
+| ID | Requirement | Basis | Checked by |
+|---|---|---|---|
+| INK-1 | The pen draws over script pages. The eraser removes the strokes it touches. Four colours (red, blue, green, black). Every stroke, erasure and "Clear ink" is one undo step. | D6 `[LOCKED]` | interact |
+| INK-2 | Each speech, action and heading is a block. A stroke belongs to the block it starts in and is stored relative to that block, in units of the text size (15 px), from the top-left corner of the block's text column. In simultaneous speech a stroke belongs to the speech of its column. | K4 `[ASSUMED]` | interact, misc |
+| INK-3 | The page has a fixed measure: fixed column widths and one embedded open-licence font, so line breaks are the same on screen, at any zoom and in print. Zoom scales the page; it never reflows it. | K4 `[ASSUMED]` | misc |
+| INK-4 | With every inked block the ink file keeps a snapshot of the block's text and its line count. On load: text unchanged, ink as it is; text changed, ink shown with a "check" flag; block gone, ink listed as orphaned. | K4 `[ASSUMED]` | scale-folder |
+| INK-5 | After an edit, inside or outside the tool, blocks are matched again by exact text first, then by order and similarity, and ink follows its block. Ink on an untouched block is never disturbed. | K4 `[ASSUMED]` | scale-folder, misc |
+| INK-6 | The snapshot is the block's text with cue tokens removed: adding, editing, moving or deleting a cue never flags ink. | K4 | interact, cue-ends |
+| INK-7 | The flag is a red "!" beside the block. Tapping it offers "Ink is fine" or "Clear ink on this block". Flagged blocks are listed in Review. | K4 `[ASSUMED]` | interact |
+| INK-8 | Orphaned ink is kept in the file and listed in Review, where it can be deleted. Undoing the deletion of the text re-attaches it, with no flag. | K4 `[ASSUMED]` | misc |
+| INK-9 | Ink on a block that is commented out is set aside as orphaned and comes back when the block is restored unchanged. | `[ASSUMED]` | notes-todos |
+| INK-10 | Pen ink on the front page or the character page belongs to the frontmatter block and stays on the page it was drawn on. | `[ASSUMED]` | frontmatter |
+| INK-11 | The "Ink" toggle hides all ink and flags on screen. | as built | — |
 
 ## 3. Consequences
 

@@ -281,7 +281,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.11';
+const VERSION = 'r1.12';
 const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
 /* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
 const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };

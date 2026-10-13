@@ -20,9 +20,9 @@ const GROUPS = [
   ['Understanding it', list('docs/guide/explanation')]
 ];
 const PROJECT = [
-  ['The project', ['SPEC.md', 'CHANGELOG.md', 'PLAN.md', 'CONTRIBUTING.md']],
+  ['The project', ['SPEC.md', 'CHANGELOG.md', 'CONTRIBUTING.md']],
   ['Capabilities', list('docs/specs')],
-  ['Reference', list('docs').concat(list('docs/background'))]
+  ['Reference', list('docs')]
 ];
 /* The guide exists in Italian too, same file names under docs/guide/it/. The project documents are in English only. */
 const IT = 'docs/guide/it/';
