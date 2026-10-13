@@ -99,6 +99,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   await page.locator('#dlg .btn', { hasText: 'Close' }).click();
   ok(await ev(() => document.querySelector('#dlg').hidden && PB.S.loaded), 'the box closes and the show stays open');
   await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+  await page.locator('#dlg .snav button', { hasText: 'Departments' }).click();
   await page.locator('#dlg .drow input').nth(1).fill('Lights');
   await page.locator('#dlg .btn', { hasText: 'Save' }).click();
   await settle(); await page.waitForTimeout(100);

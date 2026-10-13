@@ -22,6 +22,7 @@ const OUT = process.env.OUT || path.resolve(__dirname, '..', '.cache', 'out');
   await page.locator('#dlg .btn', { hasText: 'Close' }).click();
 
   await menu('Settings');
+  await page.locator('#dlg .snav button', { hasText: 'Departments' }).click();
   const boxes = () => page.evaluate(() => Array.from(document.querySelectorAll('#dlg .drow')).map(r => r.querySelectorAll('input[type=checkbox]')[1].checked ? 'c' : '-').join(''));
   ok(await boxes() === '----c', 'Settings shows which department is for the cast: ' + await boxes());
   await page.locator('#dlg .drow').nth(2).locator('input[type=checkbox]').nth(1).check();

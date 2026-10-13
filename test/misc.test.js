@@ -100,7 +100,15 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 
   // Letter paper + settings + new department
   await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+  const secs = await page.evaluate(() => Array.from(document.querySelectorAll('#dlg .sec')).map(s => s.querySelector('h3').textContent + ': ' + [s.querySelectorAll('input[type=text]:not(.drow input)').length, s.querySelectorAll('select').length, s.querySelectorAll('input[type=number]').length, s.querySelectorAll('.drow').length].join(' ')));
+  ok(secs.join(' | ') === 'The show: 1 1 0 0 | Show mode timings: 0 0 3 0 | Departments for cues and notes: 0 0 0 4 | Boards and templates: 0 2 0 0 | This browser: 0 1 0 0', 'Settings has one section for each concern: the show, the timings of show mode, the departments, the boards, the browser: ' + secs.join(' | '));
+  const shown = () => page.evaluate(() => [Array.from(document.querySelectorAll('#dlg .sec')).filter(s => s.offsetParent).map(s => s.querySelector('h3').textContent).join(','), Array.from(document.querySelectorAll('#dlg .snav button')).filter(b => b.getAttribute('aria-current') === 'true').map(b => b.textContent).join(',')].join(' / '));
+  ok(await page.locator('#dlg .snav button').count() === 5 && await shown() === 'The show / The show', 'the sections are listed on the left and Settings opens on the first, alone: ' + await shown());
+  await page.locator('#dlg .snav button', { hasText: 'Show mode timings' }).click();
+  ok(await shown() === 'Show mode timings / Show mode timings', 'a section picked on the left is the only one shown: ' + await shown());
+  await page.locator('#dlg .snav button', { hasText: 'The show' }).click();
   await page.locator('#dlg select').first().selectOption('Letter');
+  await page.locator('#dlg .snav button', { hasText: 'Departments' }).click();
   await page.locator('#dlg .btn', { hasText: '+ Department' }).click();
   const rowsN = await page.locator('#dlg .drow').count();
   await page.locator('#dlg .drow').nth(rowsN - 1).locator('input[type=text]').first().fill('fly');
