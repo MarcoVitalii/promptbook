@@ -39,7 +39,17 @@ jobs:
           sudo apt-get install -y --no-install-recommends poppler-utils
 
       - name: Build and run every check
-        run: npm test
+        shell: bash
+        run: npm test 2>&1 | tee "$RUNNER_TEMP/check.log"
+
+      # The log of a run needs a GitHub login; the summary and the annotation of a run do not.
+      - name: Say what failed
+        if: failure()
+        shell: bash
+        run: |
+          [ -s "$RUNNER_TEMP/check.log" ] || exit 0
+          { echo '### Checks failed'; echo '```'; tail -n 40 "$RUNNER_TEMP/check.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=Checks failed::$(tail -n 30 "$RUNNER_TEMP/check.log" | sed 's/%/%25/g' | awk '{ printf "%s%%0A", $0 }')"
 
       - name: Build the site
         run: npm run site
