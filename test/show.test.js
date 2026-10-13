@@ -211,6 +211,7 @@ const OUT = process.env.OUT;
 
   // Settings hold the pace, the two times, and can forget the timed blocks
   await page.click('#bMenu'); await page.locator('#menu button', { hasText: 'Settings' }).click();
+  await page.locator('#dlg .snav button', { hasText: 'Show mode timings' }).click();
   const nums = page.locator('#dlg input[type=number]');
   ok(await nums.count() === 3 && await nums.nth(0).inputValue() === '130', 'Settings show the pace of blocks not timed: ' + await nums.nth(0).inputValue());
   await page.locator('#dlg button', { hasText: 'Forget 1 timed blocks' }).click();

@@ -253,6 +253,7 @@ const OUT = process.env.OUT || '.';
   // the setting
   const setGrid = async label => {
     await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+    await page.locator('#dlg .snav button', { hasText: 'Boards and templates' }).click();
     const sel = page.locator('#dlg label:text-is("Board grid") + select');
     const seen = [await sel.inputValue(), (await sel.locator('option').allTextContents()).join('|')];
     await sel.selectOption({ label });
