@@ -1,8 +1,8 @@
 # Storage — STO
 
 **Covers:** where a show is kept, the show file, the in-browser fallback, autosave, changes made outside the tool, the shapes of the saved data, compatibility between releases.
-**Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import), `src/core.js` (`normCfg`, `inkFile`, `attachInk`).
-**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`.
+**Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import, `relStamp`, `relWarn`), `src/core.js` (`normCfg`, `inkFile`, `attachInk`, `READABLE_FROM`, `relCmp`, `relMark`, `relNewer`).
+**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`, `test/unit/compat`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -20,6 +20,8 @@ Three later requests changed where those files sit:
 One request came from the review of 2026-10-09 (`docs/review-2026-10-09.md`, X2), which found that a damaged settings or ink file opened as empty and was then written over:
 
 - **r1.11, a part that cannot be read:** "Tell 'missing' from 'unreadable'. On unreadable: say so, keep the damaged file under another name, and do not write over it until the user has chosen."
+
+A review of the code (`docs/review-2026-10-09.md`, X7) found that "nothing in a show says which release wrote it or which is needed to read it. Compatibility rests on the user reading the changelog", and asked: "Write the oldest release able to read the show into `config.json` and warn, not refuse (C10), when a show needs a newer tool. Carry unknown department fields through." The intent is that a stage manager who opens a show with too old a tool is told so, in words that say what to do, and can still work (STO-15 to STO-17).
 
 Writing straight into a file on disk works only in Chrome and Edge (K6). The intent for any other browser, and for the moment before a file is chosen, is that the tool stays usable and nothing is lost: the show is kept in the browser and can be exported.
 
@@ -66,14 +68,15 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
   "templateFade": 0.4,
   "boardGrid": 25,
   "lock": null,
-  "castId": "" }
+  "castId": "",
+  "release": { "made": "r1.11", "needs": "r1.10" } }
 ```
 
 | Field | Meaning | Read as | Since |
 |---|---|---|---|
 | `title` | Show title; the script's own `title` wins (TXT-13) | text | r0 |
 | `paper` | `A4` or `Letter` | anything else is `A4` | r0 |
-| `departments` | `code`, `name`, `colour`, `review` (to-do notes, CUE-21), `cast` (notes for the actors, CST-1; a cast department is always `review` too; the key is written as `false` from r1.10) | codes are put in capitals and stripped to letters, digits, `_`, `-`; `BOARD` is not allowed; an empty list gives the defaults | r0; `review` r1.4; `cast` r1.10 |
+| `departments` | `code`, `name`, `colour`, `review` (to-do notes, CUE-21), `cast` (notes for the actors, CST-1; a cast department is always `review` too; the key is written as `false` from r1.10) | codes are put in capitals and stripped to letters, digits, `_`, `-`; `BOARD` is not allowed; an empty list gives the defaults; a field not in this list is kept as it is (STO-17) | r0; `review` r1.4; `cast` r1.10 |
 | `defaultBoard` | `image`, `h`: the background set with "Use as default" before r1.0 | kept working until a default template is chosen (BRD-27) | r0 |
 | `templates` | Template names, in order | names without a file are dropped | r1.0 |
 | `defaultTemplate`, `recentTemplates` | The default template; the last used, newest first, at most 12 | — | r1.0 |
@@ -81,7 +84,8 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | `boardGrid` | Grid step in board units: `0` off, `25` fine, `50` coarse | a missing or other value is 25 | r1.6 |
 | `castId` | The name of the show in the files for the cast (CST-15); written when the first is saved | anything but text is `""` | r1.10 |
 | `lock` | Locked page numbers (PAG-14) | dropped unless all five lists are present | r1.7 |
-| `runs` (per department) | "Cues run until stopped", r1.0 to r1.2 | ignored | removed r1.3 |
+| `release` | `made`: the release that saved the show last. `needs`: the oldest release that opens and saves it without loss (STO-15) | a show without it, or with a `needs` that is not a release name, opens with no message; a `needs` newer than the tool gives the warning of STO-16 | r1.11 |
+| `runs` (per department) | "Cues run until stopped", r1.0 to r1.2 | ignored; kept in the file since r1.11, as any field the tool does not know | removed r1.3 |
 
 `script.ink.json`:
 
@@ -97,7 +101,7 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 
 `boards/<name>.json` has the same stroke shape plus `name`, `image` (file name), `w` (always 1000), `h`, and `base` when the board is built on a template. Board coordinates are in those units, so ink scales with the board. `templates/<name>.json` has the board shape. The image file sits beside the JSON file.
 
-`damaged/` holds parts that could not be read, as they were found (STO-16). The tool writes there and never reads it; it is not part of the history.
+`damaged/` holds parts that could not be read, as they were found (STO-19). The tool writes there and never reads it; it is not part of the history.
 
 The backup is `{ "format": "promptbook", "version": 1, "when", "config", "script", "ink", "boards", "templates" }`, with each image as a data URL in `imageData`.
 
@@ -108,7 +112,10 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
 | STO-13 | A show written by an older release opens in a newer one. Every exception is stated under "Compatibility" in `CHANGELOG.md`. | C8 | r1.0 | templates, boards, unit/boards |
-| STO-14 | The reverse is not promised: the changelog says, release by release, what an older tool does with a newer show. | C8 | r1.0 | — |
+| STO-14 | The reverse is not promised: the changelog says, release by release, what an older tool does with a newer show. From r1.11 the show says it too (STO-15, STO-16). | C8 | r1.0 | — |
+| STO-15 | A show says which release saved it last and which is the oldest able to open and save it without loss: `release.made` and `release.needs` in `config.json`, and so in a backup. The mark is written at the first save by this release, whatever was changed; opening a show does not write it. `needs` is one constant of the tool, raised only when a saved format changes in a way an older release would damage. A `needs` newer than that constant, left by a newer release, is kept when this release saves. Release names are compared part by part as numbers: r1.9 is older than r1.10. | review X7 | r1.11 | zipshow, unit/compat |
+| STO-16 | A show that needs a release newer than the tool is opened all the same (C10), with a box that names the release it asks for and the release in use, says that what this release does not know may be shown wrongly and dropped when it saves, and says what to do: get the newer `promptbook.html`. It comes on every opening, also from a backup, until the tool is new enough. A show with no mark, as every release before r1.11 wrote it, opens with no message. | review X7, C10 | r1.11 | zipshow, unit/compat |
+| STO-17 | A field of a department, or of the show-mode settings (`show`), that this release does not know is kept through opening, the Settings box and saving, so that what a later release adds survives a save by this one. Settings of the show it does not know were already kept. | review X7 | r1.11 | zipshow, unit/compat |
 
 | Show written by | Opened with | Result |
 |---|---|---|
@@ -123,14 +130,16 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | r1.7 | r1.6 | Opens and keeps the history when it saves a show file; plain page numbers, no History menu; drops the history when a show folder is saved as a show file. |
 | A show folder, never saved as a show file | r1.10 and later | Cannot be opened. Zip the folder and open the zip (STO-4), or open it in r1.9 and use "Save as show file…". |
 | r1.10, with a cast department | r1.9 | Opens; notes for the cast are to-do notes; the "Cast" mark is lost when r1.9 saves the settings. |
+| r1.11 | r1.10 | Opens; show mode's settings and the release mark are kept and ignored. If r1.10 saves, `release.made` still names r1.11. |
+| A later release, with `release.needs` newer than the tool | r1.11 and later | Opens with the warning of STO-16. |
 
 ### 2.5 A part that cannot be read
 
 | ID | Requirement | Basis | Since | Checked by |
 |---|---|---|---|---|
-| STO-15 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, the file of a board the script places, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
-| STO-16 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
-| STO-17 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
+| STO-18 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, the file of a board the script places, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
+| STO-19 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
+| STO-20 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
 
 ## 3. Consequences
 
@@ -140,17 +149,25 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 
 **The parts of a show file are read into memory when it is opened, board images included.** Until r1.5 they were read lazily from the file, which stopped working once the file had been rewritten: after a show file was opened, only the first change was saved. A user who worked in r1.2 to r1.4 on a show opened from its file may have lost what came after the first change. The checks for the show file (`test/zipshow`) were written at r1.2 and released without being run; at r1.4 the file was recorded as stopping with an error before its first check, not investigated; the defect was found and fixed in r1.5.
 
-**"Cannot be read" means: not JSON, or JSON of the wrong kind.** A part that does not parse (cut short, empty, overwritten with something else), that is not a JSON object, or, for a board or a template, that has no list of strokes, is unreadable (STO-15). Until r1.10 all three were taken as missing, and the next change wrote a new file over the old one; a board file without strokes was dropped without a word and replaced at the first stroke on that board. A part that parses and merely holds odd values is read as before (§2.3, "Read as").
+**"Cannot be read" means: not JSON, or JSON of the wrong kind.** A part that does not parse (cut short, empty, overwritten with something else), that is not a JSON object, or, for a board or a template, that has no list of strokes, is unreadable (STO-18). Until r1.10 all three were taken as missing, and the next change wrote a new file over the old one; a board file without strokes was dropped without a word and replaced at the first stroke on that board. A part that parses and merely holds odd values is read as before (§2.3, "Read as").
 
 **The unreadable part is moved aside in memory as the show opens, and reaches the disk only with the first save.** That first save is the user's choice: "Go on without", or "Save as show file…", which writes the show and its `damaged/` folder to the new file and leaves the old file alone. With `config.json` unreadable the list of templates is unknown, so no template is loaded; their files stay in `templates/` and come back once the settings name them again. To repair by hand: unzip, mend the file in `damaged/`, put it back in its place, zip. With a history, the last revision may still hold a good copy (HIS). The tool never empties `damaged/`, and restoring a revision or changing variant keeps it.
 
-**The question is a banner, not a dialog**, like the one for a file changed by another program (STO-11), and the two can meet: when the file is also replaced from outside while changes wait, the banner of STO-11 is shown first, and "Keep mine" writes the show, `damaged/` included, over the other version; the banner of STO-15 then returns. In show mode no banner is visible (SHW); nothing is saved there either until the question is answered.
+**The question is a banner, not a dialog**, like the one for a file changed by another program (STO-11), and the two can meet: when the file is also replaced from outside while changes wait, the banner of STO-11 is shown first, and "Keep mine" writes the show, `damaged/` included, over the other version; the banner of STO-18 then returns. In show mode no banner is visible (SHW); nothing is saved there either until the question is answered.
 
-**Not covered by STO-15:** the draft kept in the browser and a backup file. An unreadable draft is not offered on the start screen and is replaced by the next show kept in the browser; an unreadable backup is refused with a message and is never written to.
+**Not covered by STO-18:** the draft kept in the browser and a backup file. An unreadable draft is not offered on the start screen and is replaced by the next show kept in the browser; an unreadable backup is refused with a message and is never written to.
 
 **Storage needs Chrome or Edge (K6, A7).** In another browser the tool still works, with the in-browser fallback and backup files only.
 
-**Compatibility is kept by convention.** Nothing in `config.json` or in the show file says which release wrote it or which release is needed to read it; `version` in the ink file and in the backup is written and never read. The table above is the only guard, and it relies on the user reading the changelog (`docs/review-2026-10-09.md`, X7).
+**The release mark guards from r1.11 on, and only against releases that read it.** `release.needs` is `r1.10` today: r1.10 keeps everything r1.11 writes, while r1.9 loses the "Cast" mark of a department when it saves the settings. No release before r1.11 looks at the mark, so for them the table above and the changelog remain the only guard. The mark starts to work the first time a later release raises `needs` (the constant `READABLE_FROM` beside `VERSION` in `src/core.js`): r1.11 and later then warn. Raising it is a decision made by hand with each change of a saved format; nothing checks that it was made.
+
+**`release.made` is the last release that knew about the mark, not always the last that saved.** A release before r1.11 that saves a show keeps the mark as it found it. After a show that asks for a newer release has been saved by an older one, `needs` stays as it was, so the warning returns on every opening, and the newer release can see from `made` that an older one has been at the show.
+
+**One mark covers the whole show.** It sits in `config.json`; the ink file, the boards and the templates have none of their own, and `version` in the ink file and in the backup is still written and never read. A change to any of those formats that an older release would damage is declared by raising `needs`.
+
+**Unknown fields are carried only in the configuration.** The tool keeps the settings of the show, the fields of a department and the fields of `show` that it does not know (STO-17). A board, a template and the ink of a block are still written from the fields the tool knows: a field a later release adds to one of those is lost when an older release saves it, and has to be declared by raising `needs`. `show.scenes`, written by a build of r1.11 that was never released, is the one field dropped on purpose (`11-show.md`).
+
+**The actors' file gives no such warning.** `promptbook-cast.html` and the file for the cast carry `made`, and the script for the actors never writes the show back, so nothing can be lost there; an actor could not act on the warning either.
 
 **Files are left behind.** The tool does not delete the file of a renamed or removed board or template. One exception since r1.7: restoring a revision or changing variant replaces the show's files with those of the revision, so boards and templates the revision does not have are gone from the working files (they stay in the history).
 
@@ -158,6 +175,8 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 
 **Not verified (r1.10):** opening a real show folder zipped by Explorer or Finder with its hidden `.git` folder; the check uses an archive built in the test.
 
-**Not built:** zip64 (a show file over 4 GB), encrypted zip entries, a format version checked on open.
+**Not built:** zip64 (a show file over 4 GB), encrypted zip entries, a refusal to open or to save a show that needs a newer release (C10: the tool warns, STO-16).
+
+**Not verified (r1.11):** the release mark against a real later release; no release has raised `needs` yet, so the check uses a show file built in the test that asks for r99.0.
 
 **Not verified:** the real file dialogs. The checks use the browser's private file system through the same interface; the real "Open" and "Save" pickers were never exercised by a check.

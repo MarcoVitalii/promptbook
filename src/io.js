@@ -29,6 +29,12 @@ function cfgFile() {
   if (onDisk() && c.defaultBoard) delete c.defaultBoard.imageData;
   return c;
 }
+/* the configuration says which release saves it and which is needed to read it; true when that is news (STO-15) */
+function relStamp() { const o = relOf(S.cfg), m = S.cfg.release = relMark(S.cfg); return o.made !== m.made || o.needs !== m.needs; }
+function relWarn() {
+  const n = relNewer(S.cfg); if (!n) return;
+  openDlg(t('relTitle'), (body, foot, close) => { body.appendChild(h('p', null, t('relWarn', n, VERSION))); dlgBtn(foot, t('close'), 'pri', close); }, true);
+}
 function boardFile(B, withData) {
   const o = { name: B.name, image: B.image || null, w: BOARD_W, h: B.h, strokes: B.strokes };
   if (B.base) o.base = B.base;
@@ -154,6 +160,7 @@ async function saveNow(force) {
         if (!s.conflict && await zipChanged()) { s.conflict = true; showConflict(); }
         if (s.conflict) { s.saving = false; setStatus(); return; }
       }
+      if (any && relStamp()) d.cfg = true;   // the first save by this release marks the show
       if (d.script) { d.script = false; writeBlob(null, 'script.md', serialize()); }
       if (d.ink) { d.ink = false; writeBlob(null, 'script.ink.json', JSON.stringify(inkFile())); }
       if (d.cfg) { d.cfg = false; writeBlob(null, 'config.json', JSON.stringify(cfgFile(), null, 2)); }
@@ -172,7 +179,8 @@ async function saveNow(force) {
   if (s.again) { s.again = false; saveNow(); }
 }
 function bundle(withImages) {
-  return { format: 'promptbook', version: 1, when: new Date().toISOString(), config: JSON.parse(JSON.stringify(S.cfg)), script: serialize(), ink: inkFile(),
+  if (!onDisk()) relStamp();   // in the browser the backup is the show; a show file is marked when it is saved
+  return { format: 'promptbook', version: 1, when: new Date().toISOString(), config: Object.assign(JSON.parse(JSON.stringify(S.cfg)), { release: relMark(S.cfg) }), script: serialize(), ink: inkFile(),
     boards: Array.from(S.boards.values()).map(B => boardFile(B, withImages)),
     templates: S.cfg.templates.map(n => S.templates.get(n)).filter(Boolean).map(T => boardFile(T, withImages)) };
 }
@@ -268,7 +276,7 @@ function loadShow(cfg, text, inkF) {
   reparse(text || ''); attachInk(inkF);
   S.loaded = true; $('#start').hidden = true;
   relayout(true); desk.scrollTop = 0; renderVisible();
-  updUndo(); setStatus(); showMemBanner();
+  updUndo(); setStatus(); showMemBanner(); relWarn();
 }
 async function grant(handle) {
   if (!handle.queryPermission) return true;
@@ -312,7 +320,7 @@ async function loadStore(handle) {
     for (const key of imgs) { const blob = s.files.get(key); if (blob) S.urls.set(key, URL.createObjectURL(blob)); }
     loadShow(cfg, text || '', ink);
     idbSet('dir', handle);
-    if (text == null) openTextDialog(true);
+    if (text == null && !relNewer(S.cfg)) openTextDialog(true);   // the box would take the place of the warning
   } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); resetStore(); showStart(); return false; }
   return true;
 }
@@ -690,16 +698,16 @@ function openSettings() {
       c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
       cb.type = 'checkbox'; cb.checked = !!d.review; rv.append(cb, t('deptReview')); rv.title = t('deptReviewTip');
       cc.type = 'checkbox'; cc.checked = !!d.cast; cl.append(cc, t('deptCast')); cl.title = t('deptCastTip');
-      x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); list.appendChild(r);
+      x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); r.dept = d; list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
     const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
     body.appendChild(h('p', 'hint', t('deptHint')));
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
-      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }; });
+      const deps = $$('.drow', list).map(r => { const i = $$('input', r); return Object.assign({}, r.dept, { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }); });   // with the fields this release does not know
       const paperChanged = ps.value !== S.cfg.paper;
-      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value, show: { wpm: sw.value, standby: ss.value, warning: sg.value, times } }));
+      S.cfg = normCfg(Object.assign({}, S.cfg, { title: inScript ? S.cfg.title : ti.value.trim(), paper: ps.value, departments: deps, templateFade: +fs2.value, boardGrid: +gs.value, show: Object.assign({}, S.cfg.show, { wpm: sw.value, standby: ss.value, warning: sg.value, times }) }));
       if (ls.value !== LANG) { LANG = ls.value; savePrefs(); applyLang(); }
       close();
       if (paperChanged) S.meas = new Map();

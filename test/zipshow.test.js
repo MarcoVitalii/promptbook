@@ -74,7 +74,49 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   ok(errs.length === 1 && /not a zip file/.test(errs[0]), 'the refused file is the only error logged');
   errs.length = 0;
 
-  // 7. a save that fails says why, once
+  // 7. the release mark: written at the first save, and a show that asks for a newer release opens with a warning
+  const cfgIn = name => ev(async n => JSON.parse(await (await PB.readZip(await (await (await navigator.storage.getDirectory()).getFileHandle(n)).getFile())).get('config.json').text()), name);
+  const ver = await ev(() => PB.VERSION);
+  ok(await ev(() => document.querySelector('#dlg').hidden && !('release' in PB.S.cfg)) && !('release' in await cfgIn('odd.zip')), 'a show with no release mark, as older releases wrote it, opens with no message and is not rewritten for that');
+  ok(await ev(() => PB.bundle(false).config.release.made === PB.VERSION && !('release' in PB.S.cfg)), 'a backup taken from it is marked; the show file waits for its next save');
+  await ev(() => PB.commitText(PB.serialize() + '\nANNA: Ancora.\n'));
+  await settle(); await page.waitForTimeout(100);
+  const mark = await cfgIn('odd.zip');
+  ok(mark.release && mark.release.made === ver && /^r\d+\.\d+$/.test(mark.release.needs) && mark.title === 'Vecchio', 'the first save, here of the script alone, writes into config.json the release that saved and the oldest that can read it: ' + JSON.stringify(mark.release));
+  const openNewer = () => ev(async () => {
+    const root = await navigator.storage.getDirectory(); let fh;
+    try { fh = await root.getFileHandle('newer.zip'); } catch (e) {
+      fh = await root.getFileHandle('newer.zip', { create: true });
+      const cfg = { title: 'Domani', release: { made: 'r99.1', needs: 'r99.0' }, departments: [{ code: 'LX', name: 'Luci', colour: '#c98a00', desk: 'Ion' }], show: { wpm: 120, hold: 3 } };
+      const w = await fh.createWritable(); await w.write(await PB.buildZip(new Map([['script.md', new Blob(['ANNA: Da domani {LX 1}.\n'])], ['config.json', new Blob([JSON.stringify(cfg)])]]))); await w.close();
+    }
+    window.showOpenFilePicker = async () => [fh];
+    return await PB.openZipFile();
+  });
+  ok(await openNewer() === true && await ev(() => PB.S.loaded && PB.S.store.mode === 'zip' && PB.serialize().includes('Da domani') && PB.S.cfg.title === 'Domani'), 'a show that asks for a newer release is opened all the same');
+  const saidRel = await page.locator('#dlg:not([hidden]) .dbox').textContent();
+  ok(/newer release/.test(saidRel) && saidRel.includes('r99.0') && saidRel.includes(ver) && /may drop/.test(saidRel) && /Get the newer promptbook\.html/.test(saidRel), 'and a box says which release it asks for, which this one is, what may be lost and what to do: ' + saidRel);
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  ok(await ev(() => document.querySelector('#dlg').hidden && PB.S.loaded), 'the box closes and the show stays open');
+  await page.locator('#bMenu').click(); await page.locator('#menu button', { hasText: 'Settings' }).click();
+  await page.locator('#dlg .drow input').nth(1).fill('Lights');
+  await page.locator('#dlg .btn', { hasText: 'Save' }).click();
+  await settle(); await page.waitForTimeout(100);
+  const kept = await cfgIn('newer.zip');
+  ok(kept.departments[0].name === 'Lights' && kept.departments[0].desk === 'Ion' && kept.show.hold === 3 && kept.show.wpm === 120, 'saving the settings keeps the fields of a department and of show mode that this release does not know: ' + JSON.stringify([kept.departments[0], kept.show]));
+  ok(kept.release.made === ver && kept.release.needs === 'r99.0', 'the mark then names this release as the last to save, and still asks for the newer one: ' + JSON.stringify(kept.release));
+  ok(await openNewer() === true && await page.locator('#dlg:not([hidden]) .dbox').textContent().then(x => x.includes('r99.0')), 'so the warning comes again the next time the show is opened');
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  const bk = await ev(() => PB.bundle(false).config.release);
+  ok(bk.made === ver && bk.needs === 'r99.0', 'a backup carries the same mark');
+  ok(await ev(() => { PB.loadBundle({ format: 'promptbook', script: 'ANNA: Dal backup.\n', config: { release: { made: 'r99.1', needs: 'r99.0' } } }); return !document.querySelector('#dlg').hidden && PB.serialize().includes('Dal backup'); }), 'a backup that asks for a newer release warns and opens too');
+  await page.locator('#dlg .btn', { hasText: 'Close' }).click();
+  ok(await ev(() => { PB.startMemory('ANNA: Nuovo.\n', {}); return document.querySelector('#dlg').hidden && PB.bundle(false).config.release.made === PB.VERSION; }), 'a new show opens with no message and its backup is marked');
+
+  // back to the show file of 5, for the checks that need a file to save to
+  ok(await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('odd.zip'); window.showOpenFilePicker = async () => [fh]; return await PB.openZipFile(); }) === true, 'the earlier show file opens again');
+
+  // 8. a save that fails says why, once
   const toastNow = () => ev(() => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; });
   const hush = () => ev(() => { document.querySelector('#toast').hidden = true; });
   const failed = n => page.waitForFunction(k => window.__tries >= k && !PB.S.store.saving && !!PB.S.store.err, n);
@@ -90,7 +132,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   ok(errs.length === 2 && errs.every(x => /the disk is full/.test(x)), 'the two failed saves are the only errors logged');
   errs.length = 0;
 
-  // 8. a part that is missing is not a damaged part: no settings, no ink, no file for the board, and no message
+  // 9. a part that is missing is not a damaged part: no settings, no ink, no file for the board, and no message
   const put = (name, parts) => ev(async ([n, ps]) => {
     const fh = await (await navigator.storage.getDirectory()).getFileHandle(n, { create: true });
     const w = await fh.createWritable(); await w.write(await PB.buildZip(new Map(ps.map(([k, v]) => [k, new Blob([v])])))); await w.close();
@@ -105,7 +147,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   await allSaved(); await page.waitForTimeout(100);
   ok(!Object.keys(await inZip('bare.zip')).some(k => k.startsWith('damaged/')), 'and nothing is set aside when it is saved');
 
-  // 9. the settings, the ink and a board cut short: said in words, nothing written until the user chooses, the bytes kept
+  // 10. the settings, the ink and a board cut short: said in words, nothing written until the user chooses, the bytes kept
   const cut = { 'config.json': '{"title":"Rotto","paper":"Let', 'script.ink.json': '{"version":1,"blocks":[{"text":"ANNA: Ciao a tutti quanti.","lines":1,"strokes":[{"colour":"#c00","wid', 'boards/pianta.json': '{"name":"Pianta","image":null,"w":1000,"h":500,"strokes":[{"colour":"#000"' };
   const broken = [['script.md', script]].concat(Object.entries(cut));
   ok(await put('cut.zip', broken) === true && await ev(() => PB.S.loaded && PB.S.cfg.title === '' && PB.inkFile().blocks.length === 0 && !(PB.S.boards.get('Pianta') || { strokes: [] }).strokes.length), 'a show file with unreadable parts still opens, without them');
@@ -143,7 +185,7 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
   ok(await ev(() => PB.S.store.mode === 'none') && before2.equals(await bytes('cut2.zip')), '"Close the show" returns to the start page and leaves the show file as it was');
   ok(errs.length === 0, 'an unreadable part is not logged as an error: ' + errs.join(' | '));
 
-  // 10. in Italian the refusal of a file is in Italian
+  // 11. in Italian the refusal of a file is in Italian
   await ev(() => localStorage.setItem('promptbook:view', JSON.stringify({ lang: 'it' })));
   await page.reload(); await page.waitForSelector('#start .card');
   await ev(async () => { const fh = await (await navigator.storage.getDirectory()).getFileHandle('bad.zip'); window.showOpenFilePicker = async () => [fh]; });

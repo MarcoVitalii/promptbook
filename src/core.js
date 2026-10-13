@@ -51,6 +51,8 @@ en: {
   memBanner: 'This show is only in this browser. Save it as a show file or export a backup.',
   errOpen: 'Could not open the show: {0}', errSave: 'Could not save: {0}', errFile: 'Could not read that file.', errPerm: 'permission to write to the file was denied',
   zipNot: 'not a zip file', zipBad: 'damaged zip file', zip64: 'zip64 is not supported', zipMethod: 'unsupported zip compression', zipBig: 'show too large for a zip file',
+  relTitle: 'This show comes from a newer release',
+  relWarn: 'This show asks for Promptbook {0} or later; this is {1}. It is open all the same, but this release may show wrongly what it does not know, and may drop it when it saves. Get the newer promptbook.html and open the show with that; until then, change as little as you can here.',
   pastedImg: 'Image pasted as a new board', notFound: 'Not found', exported: 'Backup exported', untitled: 'Untitled show',
   endRow: 'End:', endTitle: 'End of {0}', endLoose: 'End with nothing to close', linkTitle: 'Ends {0}', linkLoose: 'Nothing to end: {0}',
   moveUnpaired: 'Moved. This cue and its end no longer match: check the order.',
@@ -152,6 +154,8 @@ it: {
   memBanner: 'Questo spettacolo è solo in questo browser. Salvalo come file spettacolo o esporta un backup.',
   errOpen: 'Impossibile aprire lo spettacolo: {0}', errSave: 'Impossibile salvare: {0}', errFile: 'Impossibile leggere il file.', errPerm: 'permesso di scrittura sul file negato',
   zipNot: 'non è un file zip', zipBad: 'file zip danneggiato', zip64: 'il formato zip64 non è supportato', zipMethod: 'compressione zip non supportata', zipBig: 'spettacolo troppo grande per un file zip',
+  relTitle: 'Questo spettacolo viene da una versione più recente',
+  relWarn: 'Questo spettacolo chiede Promptbook {0} o successivo; questo è {1}. È aperto lo stesso, ma questa versione può mostrare male ciò che non conosce, e può perderlo quando salva. Procurati il promptbook.html più recente e apri lo spettacolo con quello; fino ad allora, cambia qui il meno possibile.',
   pastedImg: 'Immagine incollata come nuova tavola', notFound: 'Non trovato', exported: 'Backup esportato', untitled: 'Spettacolo senza titolo',
   endRow: 'Fine:', endTitle: 'Fine di {0}', endLoose: 'Fine senza niente da chiudere', linkTitle: 'Chiude {0}', linkLoose: 'Niente da chiudere: {0}',
   moveUnpaired: 'Spostato. Il cue e la sua fine non corrispondono più: controlla l’ordine.',
@@ -246,6 +250,18 @@ const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: butt
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
 const VERSION = 'r1.11';
+const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
+/* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
+const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };
+function relCmp(a, b) {
+  const x = relParts(a), y = relParts(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; }
+  return 0;
+}
+/* the mark a show carries in config.json: the release that saved it last and the oldest that reads it without loss. What a newer release asked for stays asked */
+const relOf = c => c && c.release && typeof c.release === 'object' ? c.release : {};
+function relMark(c) { const r = relOf(c); return Object.assign({}, r, { made: VERSION, needs: relCmp(r.needs, READABLE_FROM) > 0 ? r.needs : READABLE_FROM }); }
+const relNewer = c => relCmp(relOf(c).needs, VERSION) > 0 ? relOf(c).needs : '';   // the release a show asks for when this one is older, or ''
 
 function defaultConfig() {
   const it = LANG === 'it';
@@ -261,7 +277,7 @@ function normCfg(c) {
   if (!Array.isArray(o.departments) || !o.departments.length) o.departments = defaultConfig().departments;
   o.departments = o.departments.map(x => {
     const code = String(x.code || '').toUpperCase().replace(/[^\p{L}\p{N}_-]/gu, '');
-    return { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast };
+    return Object.assign({}, x, { code, name: String(x.name || ''), colour: String(x.colour || x.color || '#888888'), review: !!x.review || !!x.cast, cast: !!x.cast });   // a field a later release added is carried through (STO-17)
   }).filter(x => x.code && x.code !== 'BOARD');
   if (!PAPERS[o.paper]) o.paper = 'A4';
   o.title = String(o.title || '');
@@ -273,7 +289,7 @@ function normCfg(c) {
   o.boardGrid = [0, 25, 50].includes(gr) ? gr : 25;
   o.castId = typeof o.castId === 'string' ? o.castId : '';   // names the show to the actors' files, whatever its title becomes
   const sw = o.show || {}, num = (v, d, lo, hi) => clamp(v == null || v === '' || !Number.isFinite(+v) ? d : Math.round(+v), lo, hi);   // show mode: pace and lead times
-  o.show = { wpm: num(sw.wpm, 130, 40, 300), standby: num(sw.standby, 30, 5, 300), warning: num(sw.warning, 120, 0, 900), times: {} };
+  o.show = Object.assign({}, typeof sw === 'object' && !Array.isArray(sw) ? sw : null, { wpm: num(sw.wpm, 130, 40, 300), standby: num(sw.standby, 30, 5, 300), warning: num(sw.warning, 120, 0, 900), times: {} }); delete o.show.scenes;   // what a later release added is carried through (STO-17); the scene paces of a build that was never released are not
   for (const [k, v] of Object.entries(sw.times && typeof sw.times === 'object' ? sw.times : {})) if (Number.isFinite(+v) && +v > 0) o.show.times[k] = clamp(Math.round(+v * 10) / 10, 0.1, 3600);   // seconds a timed block takes, by its words
   const lk = o.lock;   // locked page numbers, see makeLock
   o.lock = lk && ['pages', 'n', 'cont', 'sig', 'keys'].every(k => typeof lk[k] === 'string') && lk.pages ? Object.assign({}, lk, { name: String(lk.name || ''), rev: String(lk.rev || '') }) : null;
