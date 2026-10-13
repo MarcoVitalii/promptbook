@@ -1,5 +1,9 @@
 # Changelog
 
+## r1.12 — not yet released
+
+- Settings is in sections, listed on the left with one shown at a time: the show (title, paper), the timings of show mode, the departments for cues and notes, boards and templates, and the language, which stays with the browser. Nothing was added or removed, and a show opens as before.
+
 ## r1.11 — 2026-10-13
 
 The first release. What follows is the tool as it stands; the requirements behind each line are in `docs/specs/`.

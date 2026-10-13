@@ -777,12 +777,20 @@ function openSettings() {
     let times = S.cfg.show.times;
     const fg = h('button', 'btn sm', t('shForget', Object.keys(times).length)); fg.type = 'button'; fg.onclick = () => { times = {}; fg.disabled = true; };
     const tb = h('button', 'btn sm', t('tplManage') + ' (' + S.templates.size + ')'); tb.type = 'button'; tb.onclick = () => { close(); enterTemplates(); };
-    body.append(h('label', null, t('showTitle')), ti, h('label', null, t('paperL')), ps, h('label', null, t('langL')), ls,
-      h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs,
-      h('label', null, t('paceL')), sw, ...(Object.keys(times).length ? [h('label'), fg] : []), h('label', null, t('standbyL')), ss, h('label', null, t('warningL')), sg, h('label', null, t('deptsL')));
-    const list = h('div'); body.appendChild(list);
+    body.classList.add('set');
+    const nav = h('nav', 'snav'), pane = h('div', 'spane'), secs = [];
+    body.append(nav, pane);
+    const pick = s => { for (const [b, x] of secs) { b.setAttribute('aria-current', x === s); x.hidden = x !== s; } pane.scrollTop = 0; };
+    const sec = (title, hint, ...kids) => {
+      const s = h('section', 'sec'), b = h('button', null, title); b.type = 'button'; b.onclick = () => pick(s);
+      s.append(h('h3', null, title), ...(hint ? [h('p', 'hint', hint)] : []), ...kids); nav.appendChild(b); pane.appendChild(s); secs.push([b, s]); return s;
+    };
+    const frow = (label, input) => { const r = h('div', 'frow'); r.append(h('label', null, label), input); return r; };
+    sec(t('secShow'), '', h('label', null, t('showTitle')), ti, h('label', null, t('paperL')), ps);
+    sec(t('secTimes'), t('secTimesHint'), frow(t('paceL'), sw), frow(t('standbyL'), ss), frow(t('warningL'), sg), ...(Object.keys(times).length ? [fg] : []));
+    const list = h('div', 'dlist');
     const addRow = d => {
-      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '\u2715'), rv = h('label', 'chk'), cb = h('input'), cl = h('label', 'chk'), cc = h('input');
+      const r = h('div', 'drow'), c = h('input'), n = h('input'), col = h('input'), x = h('button', 'btn sm', '✕'), rv = h('label', 'chk'), cb = h('input'), cl = h('label', 'chk'), cc = h('input');
       c.type = 'text'; n.type = 'text'; col.type = 'color'; x.type = 'button';
       c.value = d.code; n.value = d.name; col.value = /^#[0-9a-f]{6}$/i.test(d.colour) ? d.colour : '#888888';
       cb.type = 'checkbox'; cb.checked = !!d.review; rv.append(cb, t('deptReview')); rv.title = t('deptReviewTip');
@@ -790,8 +798,11 @@ function openSettings() {
       x.onclick = () => r.remove(); r.append(c, n, col, rv, cl, x); r.dept = d; list.appendChild(r);
     };
     S.cfg.departments.forEach(addRow);
-    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' }); body.appendChild(ab);
-    body.appendChild(h('p', 'hint', t('deptHint')));
+    const ab = h('button', 'btn sm', t('addDept')); ab.type = 'button'; ab.onclick = () => addRow({ code: '', name: '', colour: '#2a9d8f' });
+    sec(t('deptsL'), t('deptsHint'), list, ab, h('p', 'hint', t('deptHint')));
+    sec(t('secBoards'), '', h('label', null, t('templates')), tb, h('label', null, t('tplFade')), fs2, h('label', null, t('gridL')), gs);
+    sec(t('secUi'), t('secUiHint'), h('label', null, t('langL')), ls);
+    pick(secs[0][1]);
     dlgBtn(foot, t('cancel'), '', close);
     dlgBtn(foot, t('save'), 'pri', () => {
       const deps = $$('.drow', list).map(r => { const i = $$('input', r); return Object.assign({}, r.dept, { code: i[0].value, name: i[1].value, colour: i[2].value, review: i[3].checked, cast: i[4].checked }); });   // with the fields this release does not know
@@ -804,7 +815,7 @@ function openSettings() {
       markDirty('cfg'); relayout(true);
       if (S.mode === 'templates') renderTemplates();
     });
-  }, true);
+  });
 }
 
 /* ---------- cast: the reader for the actors, with the show inside ---------- */
