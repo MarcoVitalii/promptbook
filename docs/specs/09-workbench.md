@@ -37,7 +37,7 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 
 ## 3. Consequences
 
-**Review is the safety net of the tolerant parser.** Because nothing is refused (TXT-6, CUE-5, CUE-10, TXT-16), a mistake never stops work, and it is also never blocked from reaching paper. The badge is the only signal; it is on the stage manager to open the panel before printing.
+**Review is the safety net of the tolerant parser.** Because nothing is refused (TXT-6, CUE-5, CUE-10, TXT-16), a mistake never stops work, and it is also never blocked from reaching paper. The badge is the only signal; it is on the stage manager to open the panel before printing. Two hints are outside Review and its badge: a cue number used twice and a cue number out of order are marked in the cue list only (CUE-5).
 
 **The browser's find is useless here.** Pages are drawn only when near the screen (PAG), so Ctrl+F is taken over by the tool.
 
@@ -53,7 +53,7 @@ One principle runs through it (C10): the tool reports, it does not refuse. Every
 
 **Ctrl+P is taken over** for the same reason as Ctrl+F: only pages near the screen are drawn, so the browser's own print would give a few pages.
 
-**Not built:** a hint for out-of-order cue labels (CUE-5); keyboard access to every control; any language besides English and Italian.
+**Not built:** keyboard access to every control; any language besides English and Italian.
 
 **Not verified:** the new colours, the tag labels and the corner dock were judged on screenshots only; whether the dock gets under a hand or a pen on the laptop is not known. Shortcuts were not tried on an Italian keyboard (/ and ? need Shift there).
 

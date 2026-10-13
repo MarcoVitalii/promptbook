@@ -1557,6 +1557,8 @@ function collectCues(review) {
   const seen = new Map();
   for (const o of out) if (o.c.label && !o.loose) { const k = o.c.dept + '\u0001' + o.c.label; seen.set(k, (seen.get(k) || 0) + 1); }
   for (const o of out) o.dup = !o.loose && !!o.c.label && seen.get(o.c.dept + '\u0001' + o.c.label) > 1;
+  const odd = review ? new Set() : cuesOutOfOrder(out.map(o => o.c));
+  for (const o of out) o.outOrder = odd.has(o.c);
   return out;
 }
 function reviewData() {
@@ -1622,7 +1624,7 @@ function cueTable(list, clickable) {
   for (const o of list) {
     const tr = h('tr', clickable ? 'cr' : ''), d = h('td', 'dp', o.c.dept);
     d.style.setProperty('--c', cueColour(o.c)); tr.appendChild(d);
-    const n = h('td', o.dup || o.loose ? 'dupe' : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup) n.title = t('dup'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
+    const n = h('td', o.dup || o.loose || o.outOrder ? 'dupe' + (o.outOrder ? ' outord' : '') : '', (o.loose ? '\u25A0 ' : '') + o.c.label); if (o.dup || o.outOrder) n.title = [o.dup && t('dup'), o.outOrder && t('outOrder')].filter(Boolean).join('\n'); if (o.loose) n.title = t('endLoose'); tr.appendChild(n);
     const dc = h('td', null, o.c.desc);
     if (o.c.links.length) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsCue', o.c.links.map(cueName).join(', '))));
     if (o.end) dc.appendChild(h('div', 'endl', '\u25A0 ' + t('endsAt', o.end.page) + (o.endedBy ? ' ' + t('endedBy', cueName(o.endedBy)) : '') + (o.end.c.desc && !o.endedBy ? ' — ' + o.end.c.desc : '') + ' · ' + (o.end.who ? o.end.who + ': ' : '') + o.end.ctx));

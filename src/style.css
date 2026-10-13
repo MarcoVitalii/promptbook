@@ -263,6 +263,7 @@ table.cl{width:100%;border-collapse:collapse;font-size:13px}
 .cl .dp{font-weight:700;white-space:nowrap;border-left:5px solid var(--c);padding-left:8px}
 .cl .ctx{color:var(--muted);font-size:12px}
 .cl .dupe{color:var(--acc);font-weight:700}
+.cl .outord::before{content:'\2195\00a0'}
 .cl .notes{font-size:12px;white-space:pre-wrap}
 .cl .notes+.notes{margin-top:3px}
 .cl .cw{font-weight:700;color:var(--ui-ink);padding:0 2px;border-radius:2px;box-shadow:0 0 0 1.5px var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}

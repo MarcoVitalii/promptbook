@@ -1,8 +1,8 @@
 # Cues — CUE
 
 **Covers:** cue tokens, pinning, margin tags, ends and linking cues, the running rail, to-do notes, automatic numbers, moving a cue, the cue list and its exports.
-**Code:** `src/core.js` (`mkCue`, `splitLinks`, `fmtToken`, `pairCues`, `textEdits`, `textMoveCue`, `textCueOwn`), `src/view.js` (`layoutTags`, drag, `openPin`, `openCueEdit`, `collectCues`, `cueTable`, `csvText`).
-**Checks:** `test/interact`, `test/cuebox`, `test/cue-ends`, `test/notes-todos`, `test/cue-move`, `test/unit/cue-move`, `test/unit/parse`.
+**Code:** `src/core.js` (`mkCue`, `splitLinks`, `fmtToken`, `pairCues`, `cuesOutOfOrder`, `textEdits`, `textMoveCue`, `textCueOwn`), `src/view.js` (`layoutTags`, drag, `openPin`, `openCueEdit`, `collectCues`, `cueTable`, `csvText`).
+**Checks:** `test/interact`, `test/cuebox`, `test/cue-ends`, `test/notes-todos`, `test/cue-move`, `test/unit/cue-move`, `test/unit/cue-order`, `test/unit/parse`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -41,7 +41,7 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 | CUE-2 | A cue is attached to the word it follows, in dialogue or in an action, or stands alone on its own line. | D4 `[LOCKED]` | r0 | interact, unit/parse |
 | CUE-3 | The stage manager never types the token. Tapping a word opens a pin with one button per department; one tap creates the cue. Label and texts can be added then or later. On a cue just pinned the cursor is already in the margin text, the field filled most often; Tab goes on to the description, Shift+Tab back to the number, Enter accepts (r1.9). With the pin open, the first letter of a department code pins from the keyboard. | K3 `[ASSUMED]` | r0 | interact |
 | CUE-4 | Pinning takes the stage manager under 3 seconds. | K3 `[ASSUMED]` | r0 | not measured with a person; the tool's own part was 60 ms on a 375-page script |
-| CUE-5 | Duplicate, missing and out-of-order labels are allowed. They are hints, never errors, and the tool never changes a number on its own. | D7 `[LOCKED]` | r0 | cue-ends (duplicates) |
+| CUE-5 | Duplicate, missing and out-of-order labels are allowed. They are hints, never errors, and the tool never changes a number on its own. The cue list marks a number used more than once in a department, and a number out of order (CUE-37). **Out of order** is judged in script order, separately for each act (the text under one level-1 heading), each department and each leading word of the label (A12 against A13, never against 12). A label takes part only if it has a digit. It is read as its runs of digits and its runs of letters; anything else (a point, a comma, a dash, a space) only separates them. Two labels are compared run by run: digits as whole numbers, letters without regard to capitals, digits before letters, and the label that stops first is the lower: 12, 12.5, 12.10, 12A, 12B, 13. In order are the cues of the longest series in which no label is lower than one before it; every other label that takes part is marked. Of two series equally long, the one that keeps the earlier cue is taken, so the mark falls on the later cue. With 1, 2, 7, 3, 4 only 7 is marked; with 1, 2, 4, 3, 5 only 3. A repeated number is in order. Ends, cues without a number, labels without a digit and to-do notes take no part. | D7 `[LOCKED]`; the rule for out of order `[ASSUMED]` | r0; out-of-order hint next | cue-ends, unit/cue-order |
 | CUE-6 | Departments are configurable in Settings: code, name, colour. Changing a code does not rewrite cues already in the script. A cue whose department is not in the list is shown in grey and listed in Review. | D7 `[LOCKED]` | r0 | misc |
 
 ### 2.2 On the page
@@ -99,7 +99,7 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 |---|---|---|---|---|
 | CUE-35 | The cue list is computed from the tokens, one row per cue, and never stored (C7). Columns: Dept, No., Margin, Description, Act / scene, Cue line, P. The Description column appears only when a listed cue has one. A filter narrows the list to one department. | R0.7; columns `[ASSUMED]` r1.4 | r0, r1.4 | interact, notes-todos |
 | CUE-36 | "Cue line" is two words, the cue word, two words, with `…` where the speech goes on. The word is boxed in the department colour, as on the page. A cue on its own line shows `▸` between the lines around it. | `[ASSUMED]` | r1.4 | notes-todos |
-| CUE-37 | An end is a second line on its cue's row: where it ends (page, cue line) and the end's note; for a linking cue, which cue ended it. An end that closes nothing has a row of its own, marked with a square. A number used more than once in a department is marked. | `[ASSUMED]` | r1.0, r1.3 | cue-ends |
+| CUE-37 | An end is a second line on its cue's row: where it ends (page, cue line) and the end's note; for a linking cue, which cue ended it. An end that closes nothing has a row of its own, marked with a square. A number used more than once in a department is marked: accent colour, bold. A number out of order (CUE-5) is marked the same way with `↕` before it. Hovering says which hint it is. | `[ASSUMED]` | r1.0, r1.3; out of order next | cue-ends |
 | CUE-38 | CSV export. The separator follows the system locale (`;` on Italian systems) so that Excel opens it directly. Columns never change position between releases; new ones are appended: End p., End line, End note (r1.0), Ended by, Ends, Description (r1.3). The headers are in the interface language; Act and Scene were in English in either language until r1.11. The cue word is in `[brackets]`. | R0.7, D9; review 2026-10-09, X10 | r0, r1.0, r1.3, r1.11 | interact, cue-ends |
 | CUE-39 | Per department: "By dept (.zip)" saves one CSV per department in one file; "Print by dept" prints one sheet per department. A cue ended by another department's cue says so on its own sheet. | request r1.3 `[ASSUMED]` | r1.3 | cue-ends |
 | CUE-40 | The cue list is printed from its own panel only. The Print button in the top bar offers the book and the script pages. | request r1.4 `[LOCKED]` | r1.4 | notes-todos |
@@ -124,7 +124,12 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 
 **Removing a token on its own line merges the blank lines around it.** This is a shared text edit, so since r1.6 it also applies to deleting a cue or a board: one blank line is left, not two.
 
-**Gap between requirement and build.** CUE-5 says out-of-order labels are hints. As built, duplicates are marked in the cue list; nothing marks a label that is out of order. That hint is in the backlog.
+**Out of order is a guess at what was meant (CUE-5).** The rule marks the fewest cues that would have to change for the rest to be in order, which is the cue a reader calls the odd one out: a 7 between 2 and 3, not the 3 and 4 after it. Where two readings are equal (4 and 3 swapped) the later cue is marked, because that is where a reader going down the list sees the number fall; the earlier one may be the one that is wrong. The limits follow from choosing fewer false hints:
+
+- *Acts.* Neither D7 nor any request says whether numbers run through the show or start again at each act. The order is judged within each act: a show numbered straight through is in order within each act as well, and a show that starts again at 1 gets no hint for it. The cost: a number that is wrong only against another act (a 70 at the end of the first act when the second starts at 51) is not marked. The duplicate hint is still counted over the whole show, as before, so a show that starts again at each act has its repeated numbers marked as duplicates.
+- *Points are counted, not read as decimals.* 12.10 comes after 12.9, because that is how a blank number counts on (CUE-24); a stage manager who writes 12.15 between 12.1 and 12.2 gets a mark there.
+- *Letters.* A label without a digit (`preset`, or sound cues lettered A, B, C) is never marked and does not interrupt the order of the numbers around it. A leading word makes a series of its own, so `A12` is never judged against `12`. Points and letters mixed after one number (12A against 12.5) are ordered digits first; that choice is arbitrary.
+- *Where it shows.* In the cue list on screen and on its print (colour and `↕`); the sentence is a tooltip, which a finger does not reach. Like the duplicate hint it is not listed in Review, not counted in the badge and not in the CSV. It is worked out each time the list is drawn; nothing is stored and the script is not touched.
 
 **Compatibility.**
 
@@ -134,6 +139,6 @@ ANNA: Chi è là? {LX 12 | blackout} Rispondi!
 | r1.2 and earlier | Show `6 / SND 5` as the label and the description as part of the margin text. |
 | r1.3 and earlier | Read TODO notes as ordinary cues of a department. |
 
-**Not built:** the renumber command; the out-of-order hint; dragging board tags; dropping a cue onto a line of its own; dragging the boxed word instead of the tag; fades with durations as data (D4); automatic "everything stops at blackout" rules; standbys and warnings (D5).
+**Not built:** the renumber command; dragging board tags; dropping a cue onto a line of its own; dragging the boxed word instead of the tag; fades with durations as data (D4); automatic "everything stops at blackout" rules; standbys and warnings (D5).
 
 **Not verified:** the finger hold, the pen drag and the palm behaviour during a cue drag are simulated only. Whether 0.3 s and 8 px suit a real finger is not known. Cue ends were built as assumed and never explicitly confirmed (Q25).

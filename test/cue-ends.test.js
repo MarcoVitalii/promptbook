@@ -179,5 +179,19 @@ const OUT = process.env.OUT || '.';
   const sheets = await cue(() => Array.from(document.querySelectorAll('#cuePrint section.dsec')).map(s => s.querySelector('h1').textContent.split(' · ').pop() + ':' + s.querySelectorAll('tr.cr, tr:not(:first-child)').length));
   ok(sheets.join() === 'LX:1,SND:2,VID:1', 'print has one sheet per department: ' + sheets.join());
 
+  // 9. hints on the numbers in the cue list: used twice, out of order (CUE-5)
+  const HT = 'ANNA: uno {LX 1} due {LX 2} tre {SND 5 | onda} quattro {LX 7} cinque {LX 3} sei {LX 3} sette {/SND 5} otto {LX fine} nove {SND 6} dieci {SND 2}.\n';
+  await page.evaluate(tx => PB.startMemory(tx, {}), HT);
+  if (await cue(() => PB.S.drawer) !== 'cues') await page.locator('#bList').click();
+  await page.waitForSelector('#drawer table.cl', { state: 'attached' });
+  const nos = await cue(() => Array.from(document.querySelectorAll('#drawer table.cl tr')).slice(1).map(tr => { const td = tr.children[1]; return [tr.children[0].textContent + ' ' + td.textContent, td.className, td.title, getComputedStyle(td, '::before').content]; }));
+  const no = n => nos.filter(r => r[0] === n);
+  ok(nos.map(r => r[0]).join() === 'LX 1,LX 2,SND 5,LX 7,LX 3,LX 3,LX fine,SND 6,SND 2', 'the No. column holds the numbers as written, hints or not: ' + nos.map(r => r[0]).join());
+  ok(no('LX 3').length === 2 && no('LX 3').every(r => r[1] === 'dupe' && r[2] === 'This number is used more than once'), 'a number used twice in a department is marked on both cues');
+  ok(no('LX 7')[0][1] === 'dupe outord' && no('LX 7')[0][2] === 'This number is out of order' && no('LX 7')[0][3].includes('↕'), 'the one number out of order is marked with a sign of its own: ' + JSON.stringify(no('LX 7')[0]));
+  ok(no('SND 2')[0][1] === 'dupe outord' && nos.filter(r => r[1].includes('outord')).length === 2, 'each department is judged on its own, and a cue with an end is in order: ' + nos.filter(r => r[1]).map(r => r[0]).join());
+  ok(['LX 1', 'LX 2', 'SND 5', 'LX fine', 'SND 6'].every(n => no(n)[0][1] === '' && no(n)[0][2] === '' && no(n)[0][3] === 'none'), 'numbers in order and a label in words carry no hint');
+  ok(await cue(() => PB.reviewData().count) === 0 && await text() === HT, 'the hints are not counted in Review and change nothing in the script');
+
   await done();
 })();

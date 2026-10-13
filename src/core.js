@@ -40,7 +40,7 @@ en: {
   rvNoChar: 'Not in the character list', rvNoCharHint: 'Speakers missing from “characters” at the top of the script. ALL, OTHERS, ALL BUT… are not checked.',
   rvSilent: 'Listed but never speaks', titleInScript: 'Set by “title” at the top of the script',
   all: 'All', thDept: 'Dept', thNo: 'No.', thDesc: 'Margin', thWhere: 'Act / scene', thLine: 'Cue line', thPage: 'P.', thWho: 'Character', thAct: 'Act', thScene: 'Scene',
-  csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once',
+  csv: 'CSV', noCues: 'No cues yet. Tap a word in the script.', dup: 'This number is used more than once', outOrder: 'This number is out of order',
   setTitle: 'Settings', showTitle: 'Show title', paperL: 'Paper', langL: 'Language', deptsL: 'Departments', addDept: '+ Department',
   deptHint: 'Changing a code does not rewrite cues already in the script.',
   extChanged: 'This show was changed by another program.', loadTheirs: 'Load that version', keepMine: 'Keep mine',
@@ -141,7 +141,7 @@ it: {
   rvNoChar: 'Non nell’elenco dei personaggi', rvNoCharHint: 'Nomi che mancano da «personaggi» in testa al copione. TUTTI, GLI ALTRI, TUTTI TRANNE… non sono controllati.',
   rvSilent: 'In elenco ma senza battute', titleInScript: 'Impostato da «titolo» in testa al copione',
   all: 'Tutti', thDept: 'Rep.', thNo: 'N.', thDesc: 'Margine', thWhere: 'Atto / scena', thLine: 'Battuta', thPage: 'Pag.', thWho: 'Personaggio', thAct: 'Atto', thScene: 'Scena',
-  csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte',
+  csv: 'CSV', noCues: 'Ancora nessun cue. Tocca una parola del copione.', dup: 'Questo numero è usato più volte', outOrder: 'Questo numero è fuori ordine',
   setTitle: 'Impostazioni', showTitle: 'Titolo dello spettacolo', paperL: 'Carta', langL: 'Lingua', deptsL: 'Reparti', addDept: '+ Reparto',
   deptHint: 'Cambiare una sigla non riscrive i cue già nel copione.',
   extChanged: 'Questo spettacolo è stato modificato da un altro programma.', loadTheirs: 'Carica quella versione', keepMine: 'Tieni la mia',
@@ -674,6 +674,46 @@ function pairCues() {
     lanes[k] = s.endRef.ord; s.lane = Math.min(k, 5);
   }
   S.pairs = pairs;
+}
+/* Labels out of order (CUE-5): a hint in the cue list, never a change. A label has a place in the order only
+   if it has a digit. It is read as its runs of digits and of letters; anything else only separates them.
+   Labels are judged within one act, one department and one leading word (A12 against A13, never against 12).
+   In order are the cues of the longest run, in script order, in which no label is lower than one before it;
+   of two runs equally long, the one that keeps the earlier cue. Every other numbered cue is out of order. */
+function labelKey(label) {
+  const r = /\d/.test(label) ? label.toLowerCase().match(/\d+|\p{L}+/gu) : null;
+  if (!r) return null;
+  const pre = /\d/.test(r[0]) ? '' : r.shift();
+  return { pre, runs: r.map(x => /\d/.test(x) ? +x : x) };
+}
+function cmpRuns(a, b) {   // 12 < 12.5 < 12.10 < 12A < 13: digits as whole numbers, digits before letters, the shorter label first
+  for (let i = 0; i < a.length && i < b.length; i++) {
+    const x = a[i], y = b[i];
+    if (typeof x !== typeof y) return typeof x === 'number' ? -1 : 1;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return a.length - b.length;
+}
+function cuesOutOfOrder(cues) {
+  const acts = new Map(), groups = new Map(), odd = new Set(); let a = 0;
+  for (const b of S.blocks) { if (b.type === 'h' && b.level === 1) a++; acts.set(b, a); }
+  for (const c of cues) {
+    const k = c.board || c.end || !c.label ? null : labelKey(c.label); if (!k) continue;
+    const g = acts.get(c.b) + '\u0001' + c.dept + '\u0001' + k.pre; let q = groups.get(g); if (!q) groups.set(g, q = []);
+    q.push({ c, k: k.runs });
+  }
+  for (const q of groups.values()) {
+    if (q.every((x, i) => !i || cmpRuns(q[i - 1].k, x.k) <= 0)) continue;   // the usual case: nothing out of order
+    const n = q.length, len = new Array(n).fill(1); let need = 1, last = null;
+    for (let i = n - 2; i >= 0; i--) {   // len[i]: the longest run in order that starts at cue i
+      for (let j = i + 1; j < n; j++) if (len[j] >= len[i] && cmpRuns(q[i].k, q[j].k) <= 0) len[i] = len[j] + 1;
+      if (len[i] > need) need = len[i];
+    }
+    for (let i = 0; i < n; i++) {
+      if (len[i] === need && (!last || cmpRuns(last.k, q[i].k) <= 0)) { last = q[i]; need--; } else odd.add(q[i].c);
+    }
+  }
+  return odd;
 }
 function groupBlocks() {
   const gs = []; let last = null;
