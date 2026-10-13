@@ -7,16 +7,23 @@
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
 - **Use it:** open <https://marcovitalii.github.io/promptbook/> in Chrome or Edge, or download `promptbook.html` from the [latest release](https://github.com/MarcoVitalii/promptbook/releases/latest) and open it from disk; it needs no network. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show.
+- **Learn it:** `docs/guide/index.md`: a tutorial, how-to guides for the stage manager and the author (taking in a rewrite, revisions, changed pages, the cast file, calling a show), explanations of why it works as it does, and a reference. Also in Italian: `docs/guide/it/index.md`.
 - **For the actors:** `promptbook-cast.html`, from the same places. "Send to cast…" in the tool writes a copy with a show inside.
 - **What it is meant to do, and why:** `SPEC.md`, then one file per capability in `docs/specs/`. **How it is built:** `docs/architecture.md`. **What changed:** `CHANGELOG.md`. The same documents are [on the site](https://marcovitalii.github.io/promptbook/).
 - **Pitch in:** `CONTRIBUTING.md`.
 
 ## Documents
 
-The documentation is specification-driven. Every level answers three questions in the same order: intent (why, in the client's words), requirements (what must hold, one ID each), consequences (the design that follows, its cost, what is not built and what was never verified).
+There are two sets. `docs/guide/` is for whoever uses the tool, arranged as [Diátaxis](https://diataxis.fr/) asks: a tutorial to learn by doing, how-to guides for a task at hand, explanations to understand, a reference to look things up. The rest is for whoever builds it, and is specification-driven. Every level answers three questions in the same order: intent (why, in the client's words), requirements (what must hold, one ID each), consequences (the design that follows, its cost, what is not built and what was never verified).
 
 | Path | What |
 |---|---|
+| `docs/guide/index.md` | Using the tool: where to start, by what you need |
+| `docs/guide/tutorial.md` | A first show, start to finish, with the sample scene |
+| `docs/guide/how-to/01` … `12` | One task each: start a show, find your way, cue it, take in a rewrite, mark a moment, reissue changed pages, tell actors what changed, keep a variant, send to the cast, time the show, call a show, move and back up |
+| `docs/guide/explanation/01` … `05` | Why: one text and its many readers, what survives a rewrite, revisions and variants and locks, the cast script, show mode as a clock |
+| `docs/guide/reference.md` | Script forms, cue forms, keys, Menu, Review, the show file, glossary |
+| `docs/guide/it/` | The same guide in Italian, file for file. On the site every guide page has a language selector. |
 | `SPEC.md` | Entry point: goals, constraints, assumptions, open questions, releases |
 | `docs/specs/01` … `11` | Script text, cues, ink, boards, input, pages and print, storage, history, workbench, cast, show mode |
 | `docs/decisions.md` | Every decision and conflict, with its source and its consequences |

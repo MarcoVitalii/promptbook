@@ -900,6 +900,7 @@ function buildMenu() {
   add(t('mCast'), openCast, !S.loaded);
   add(t('mExport'), exportBundle, !S.loaded);
   add(t('mImport'), importBundle);
+  add(t('guide'), openGuide);
   add(t('keys'), openKeys);
   add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
   add(t('mOpen'), () => openZipFile(), !fs);
@@ -923,7 +924,7 @@ function bindUI() {
   $('#outline').onchange = e => { const b = S.byId.get(+e.target.value); e.target.value = ''; if (b) jumpTo(b); };
   $('#search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(e.target.value.trim(), e.shiftKey ? -1 : 1); } });
   $('#search').addEventListener('input', () => { S.findAt = null; });
-  $('#bKeys').onclick = openKeys;
+  $('#bKeys').onclick = openKeys; $('#bGuide').onclick = openGuide;
   $('#bShow').onclick = showOn; $('#shPlay').onclick = showToggle; $('#shBack').onclick = showBack; $('#shLeave').onclick = showLeave;
   const pace = d => () => { showTempo(S.show.tempo + d); showTick(); };   // of the night: the line against the times
   $('#shSlow').onclick = pace(-0.05); $('#shFast').onclick = pace(0.05);
@@ -956,13 +957,13 @@ const KEYS = [
   ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
   ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
   ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['S', 'kShow'], ['?', 'keys']
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['S', 'kShow'], ['H', 'guide'], ['?', 'keys']
 ];
 /* the keys of show mode: ? lists only the ones of the mode the book is in */
 const KEYS_SHOW = [
   ['Space', 'kShPlay'], ['Enter', 'kShBack'], ['\u2193 \u2191', 'kShStep'], ['[ ]', 'kShPace'],
   ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['S', 'kShLeave'], ['?', 'keys']
+  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['S', 'kShLeave'], ['H', 'guide'], ['?', 'keys']
 ];
 let keysClose = null;
 function openKeys() {
@@ -977,12 +978,60 @@ function openKeys() {
     dlgBtn(foot, t('close'), 'pri', () => { keysClose = null; close(); });
   }, true);
 }
+/* ---------- guide ---------- */
+/* the guide for a newcomer: a number on every control in sight, and a card that says what each one does and its key.
+   A row: the control, its name (none: the words on it), what it does, its keys (none: the one in its data-k). */
+const GUIDE = [
+  ['#bMenu', 'menu', 'gMenuD'], ['#pens', 'gPens', 'gPensD', '1 2 3 4'], ['#bErase', 'eraser', 'gEraseD'], ['#bFinger', 'finger', 'fingerTip'],
+  ['#bUndo', 'undo', 'gUndoD'], ['#bRedo', 'redo', 'gRedoD'], ['#outline', 'gJump', 'jump'], ['#search', 'gFind', 'gFindD', 'Ctrl+F /'],
+  ['#bFacing', 'boards', 'gBoardsD'], ['#bCues', 'cues', 'cuesTip'], ['#bInk', 'ink', 'inkTip'],
+  ['#bReview', 'review', 'gReviewD'], ['#bList', 'cueList', 'gListD'], ['#bPrint', 'print', 'gPrintD'], ['#bShow', 'showMode', 'showTip'],
+  ['#bNight', 'night', 'gNightD'], ['#zOut', 'zoomOut'], ['#zFit', 'fit', 'kFit'], ['#zIn', 'zoomIn'], ['#bGuide', 'guide'], ['#bKeys', 'keys', 'gKeysD'],
+  ['#shNext', 'shNextBtn', 'shNextTip', '↓'], ['#shMRough', 'shRough', 'shRoughTip'], ['#shMLine', 'shByLine', 'shByLineTip'],
+  ['#shDn', null, 'shBlockTip'], ['#shUp', null, 'shBlockTip'], ['#shUndo', 'undo', 'gShUndoD'], ['#shRest', null, 'shRestTip'],
+  ['#shPlay', 'shPlay', 'gShPlayD'], ['#shSlow', 'shSlower'], ['#shFast', 'shFaster'], ['#shUse', null, 'shUseTip'], ['#shBack', 'shBack', 'gShBackD'],
+  ['#shLearn', 'shLearn', 'shLearnTip'], ['#shNight', 'night', 'gNightD'], ['#shLeave', 'shLeave', 'kShLeave'], ['#shProg', 'gShMap', 'shMapTip']
+];
+let guideEl = null;
+function closeGuide() { if (!guideEl) return; guideEl.remove(); guideEl = null; removeEventListener('resize', drawGuide); }
+function openGuide() {
+  if (guideEl) { closeGuide(); return; }
+  $('#menu').hidden = true; drawGuide(); addEventListener('resize', drawGuide);
+}
+function drawGuide() {
+  if (guideEl) guideEl.remove();
+  const g = guideEl = h('div'), card = h('div'), head = h('header'), list = h('ol'), x = h('button', 'btn', t('close')), pairs = [];
+  g.id = 'guide'; card.id = 'gcard'; list.id = 'glist'; x.type = 'button'; x.onclick = closeGuide;
+  const lit = n => pairs.forEach((p, i) => p.forEach(e => e.classList.toggle('on', i === n)));
+  for (const [sel, name, desc, ks] of GUIDE) {
+    const el = $(sel), r = el.getBoundingClientRect();
+    if (!el.getClientRects().length || !r.width || !r.height) continue;   // only what is in sight now
+    /* the number goes under the button, over it in the lower half of the window, inside what is as tall as the window */
+    const n = pairs.length, ring = h('div', 'gring' + (r.height > innerHeight / 2 ? ' in' : r.top > innerHeight / 2 ? ' up' : '')), li = h('li', 'gi'), hd = h('div');
+    ring.style.cssText = 'left:' + (r.left - 2) + 'px;top:' + (r.top - 2) + 'px;width:' + (r.width + 4) + 'px;height:' + (r.height + 4) + 'px';
+    ring.dataset.g = li.dataset.g = sel;
+    ring.appendChild(h('span', 'gnum', n + 1));
+    hd.appendChild(h('b', null, name ? t(name) : el.textContent.trim()));
+    for (const k of (ks || el.dataset.k || '').split(' ').filter(Boolean)) hd.appendChild(h('kbd', null, k));
+    li.append(h('span', 'gnum', n + 1), hd);
+    if (desc) li.appendChild(h('p', null, t(desc)));
+    ring.onclick = li.onclick = () => { lit(n); li.scrollIntoView({ block: 'nearest' }); };
+    ring.onmouseenter = li.onmouseenter = () => lit(n);
+    pairs.push([ring, li]); list.appendChild(li); g.appendChild(ring);
+  }
+  head.append(h('h2', null, t('guide')), x);
+  card.append(head, list, h('p', 'hint', t('gHint')));
+  g.insertBefore(card, g.firstChild);   // the rings stay above the card
+  g.addEventListener('pointerdown', e => e.stopPropagation());   // nothing under the guide is drawn on or pressed
+  g.onclick = e => { if (e.target === g) closeGuide(); };
+  document.body.appendChild(g);
+}
 const focusFind = () => { $('#search').focus(); $('#search').select(); };
 const press = id => () => $(id).click();
 const KEYMAP = {
   b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), e: press('#bErase'), f: press('#bFinger'),
   l: press('#bList'), r: press('#bReview'), s: press('#bShow'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
-  '/': focusFind, '?': openKeys, pagedown: () => pageStep(1), pageup: () => pageStep(-1),
+  '/': focusFind, '?': openKeys, h: () => openGuide(), pagedown: () => pageStep(1), pageup: () => pageStep(-1),
   home: () => { desk.scrollTop = 0; }, end: () => { desk.scrollTop = desk.scrollHeight; }
 };
 /* show mode has keys of its own, and of the others only those that change nothing in the show */
@@ -990,8 +1039,12 @@ const SHOWKEYS = {
   ' ': () => showToggle(), enter: () => showBack(), arrowdown: () => showStep(1), arrowup: () => showStep(-1),
   '[': () => $('#shSlow').click(), ']': () => $('#shFast').click(), s: () => showLeave()
 };
-for (const k of ['c', 'i', 'n', 'l', '+', '=', '-', '0', '?', 'pagedown', 'pageup', 'home', 'end']) SHOWKEYS[k] = KEYMAP[k];
+for (const k of ['c', 'i', 'n', 'l', 'h', '+', '=', '-', '0', '?', 'pagedown', 'pageup', 'home', 'end']) SHOWKEYS[k] = KEYMAP[k];
 document.addEventListener('keydown', e => {
+  if (guideEl) {   // the guide is over everything: no key acts under it
+    if (e.key === 'Escape' || (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey)) { e.preventDefault(); closeGuide(); }
+    return;
+  }
   if (e.key === 'Escape') {
     if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
     const q = $('#search');   // leaving Find empties it, so that it folds back to the magnifier

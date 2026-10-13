@@ -2,7 +2,15 @@
 
 ## r1.12 — not yet released
 
+- **A guide to the buttons**, for whoever is new to the tool. "Guide" in the bottom right corner, the H key or the Menu puts a number on every button on screen and opens a card that says, number by number, what the button is called, what it does and which key does the same. Press a number or a row to see which button it is. Esc, H or a press outside closes it. In show mode H gives the guide of the show buttons. It covers the buttons only, not what the pen and a tap do on the page. Checked in a simulated browser only.
+- **A guide to the tool**, in English and in Italian, on the site and in `docs/guide/`: a tutorial with the sample scene, how to take in a rewrite, mark a moment, reissue the changed pages, tell each actor what changed, keep a variant, send to the cast, time and call a show, and why it works as it does. Most of its steps were written from the specification and not walked through on a laptop.
 - Settings is in sections, listed on the left with one shown at a time: the show (title, paper), the timings of show mode, the departments for cues and notes, boards and templates, and the language, which stays with the browser. Nothing was added or removed, and a show opens as before.
+- **Timing a rehearsal** is done in one of two ways, chosen in the "Time it" box. *From time to time*: the line runs at the times known so far, and now and then a double tap says where the show really is, behind the line or ahead of it. *Line by line*: the line waits on the block being spoken until Next (Arrow down) says it is over, and the block gets exactly its time.
+- While timing, every block shows its time at the right edge of the page: `~` when it is inferred from its words, `=` when it was set by hand. Press a time to type it (`12.5`, `1:05`); an empty box infers it again. The panel says how many blocks a mark timed, how long since the last mark, and why a mark timed nothing.
+- The time between two marks is shared by the length of the blocks, except that a block set by hand keeps its time and blocks timed in a smaller stretch keep their proportions. Before, every block was stretched alike, a time set by hand included.
+- While the line runs and "Time it" is on, Arrow down goes to the block after the last mark. Before, it went to the block after the one the clock had taken the line into, and a slow speech shared its time with the next.
+
+**Compatibility.** Nothing in the show file changes: shows written by r1.11 open unchanged, and r1.11 opens a show saved by r1.12.
 
 ## r1.11 — 2026-10-13
 
