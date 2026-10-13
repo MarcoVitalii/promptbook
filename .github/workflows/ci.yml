@@ -51,6 +51,17 @@ jobs:
           { echo '### Checks failed'; echo '```'; tail -n 40 "$RUNNER_TEMP/check.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           echo "::error title=Checks failed::$(tail -n 30 "$RUNNER_TEMP/check.log" | sed 's/%/%25/g' | awk '{ printf "%s%%0A", $0 }')"
 
+      # A file that failed beside the others and passed alone leaves the run green (test/run.js): a warning, so that a flaky check is seen.
+      - name: Say what passed only on its second run
+        if: success() || failure()
+        shell: bash
+        run: |
+          [ -s "$RUNNER_TEMP/check.log" ] || exit 0
+          retried=$(awk '/ passed only on its second run; its first run said:$/ { on = 1; print; next } on && /^  / { print; next } { on = 0 }' "$RUNNER_TEMP/check.log")
+          [ -n "$retried" ] || exit 0
+          { echo '### Checks passed only on their second run'; echo '```'; echo "$retried"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning title=Checks passed only on their second run::$(echo "$retried" | sed 's/%/%25/g' | awk '{ printf "%s%%0A", $0 }')"
+
       - name: Build the site
         run: npm run site
 

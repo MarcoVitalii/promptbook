@@ -21,6 +21,7 @@ step() { out=$("$@" 2>&1) || { echo "$out" | tail -n 25; echo "check $mode FAILE
 step python3 build.py
 for f in src/core.js src/view.js src/io.js src/cast.js; do step node --check $f; done
 step node test/run.js test/unit
-[ $mode = full ] && step node test/run.js test
+# Only the last step's output is printed at the end: what this one said above its totals (a file that passed only on its second run) is printed now.
+[ $mode = full ] && { echo "$out" | sed '$d'; step node test/run.js test; }
 echo "$hash" > .cache/$mode.ok
 echo "$out"

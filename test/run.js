@@ -32,23 +32,38 @@ const run = file => new Promise(res => {
   const t0 = Date.now(), queue = files.slice(), results = [];
   await Promise.all(Array.from({ length: JOBS }, async () => { while (queue.length) results.push(await run(queue.shift())); }));
   // A file that fails beside the others gets one more run on its own: pen and touch timing is sensitive to load.
-  for (let i = 0; i < results.length; i++) if (results[i].bad.length && !results[i].nolibs && !KNOWN.has(results[i].file) && files.length > 1) results[i] = await run(path.resolve(root, results[i].file));
-  results.sort((a, b) => a.file < b.file ? -1 : 1);
+  // A pass on that second run is said, never silent: the totals name the file and the first failing lines of its first run are printed.
+  const retried = [];
+  for (let i = 0; i < results.length; i++) if (results[i].bad.length && !results[i].nolibs && !KNOWN.has(results[i].file) && files.length > 1) {
+    const first = results[i];
+    results[i] = await run(path.resolve(root, first.file));
+    if (!results[i].bad.length) retried.push(first);
+  }
+  const byFile = (a, b) => a.file < b.file ? -1 : 1;
+  results.sort(byFile); retried.sort(byFile);
   const pass = results.reduce((n, r) => n + r.pass, 0);
   const known = results.filter(r => r.bad.length && KNOWN.has(r.file)), failed = results.filter(r => r.bad.length && !KNOWN.has(r.file));
   const fixed = results.filter(r => !r.bad.length && KNOWN.has(r.file));
   const secs = ((Date.now() - t0) / 1000).toFixed(1) + ' s';
-  if (fixed.length) console.log('now passing, remove from test/KNOWN_FAILING: ' + fixed.map(r => r.file).join(', '));
-  if (!failed.length) return console.log('ok ' + pass + ' checks, ' + files.length + ' files, ' + secs + (known.length ? ', known failing: ' + known.map(r => r.file).join(', ') : ''));
-  if (results.some(r => r.nolibs)) console.log('Chromium cannot start: system libraries are missing. Run once: sudo npx playwright install-deps chromium');
-  else {
-    let left = MAX_LINES;
-    for (const r of failed) {
+  const again = retried.length ? ', passed on second run: ' + retried.map(r => r.file).join(', ') : '';
+  // At most MAX_LINES failing lines in all, the failed files first. .github/workflows/ci.yml finds the second kind by its heading.
+  let left = MAX_LINES;
+  const say = (list, most, heading) => {
+    for (const r of list) {
       if (left <= 0) break;
-      console.log(r.file);
-      for (const l of r.bad.slice(0, Math.max(1, Math.min(4, left)))) { console.log('  ' + l.slice(0, MAX_CHARS)); left--; }
+      console.log(r.file + heading);
+      for (const l of r.bad.slice(0, Math.max(1, Math.min(most, left)))) { console.log('  ' + l.slice(0, MAX_CHARS)); left--; }
     }
+  };
+  const sayRetried = () => say(retried, 2, ' passed only on its second run; its first run said:');
+  if (fixed.length) console.log('now passing, remove from test/KNOWN_FAILING: ' + fixed.map(r => r.file).join(', '));
+  if (!failed.length) {
+    sayRetried();
+    return console.log('ok ' + pass + ' checks, ' + files.length + ' files, ' + secs + (known.length ? ', known failing: ' + known.map(r => r.file).join(', ') : '') + again);
   }
-  console.log('FAILED ' + failed.length + ' of ' + files.length + ' files (' + failed.map(r => r.file).join(', ') + '), ' + pass + ' checks passed, ' + secs);
+  if (results.some(r => r.nolibs)) console.log('Chromium cannot start: system libraries are missing. Run once: sudo npx playwright install-deps chromium');
+  else say(failed, 4, '');
+  sayRetried();
+  console.log('FAILED ' + failed.length + ' of ' + files.length + ' files (' + failed.map(r => r.file).join(', ') + '), ' + pass + ' checks passed, ' + secs + again);
   process.exit(1);
 })();
