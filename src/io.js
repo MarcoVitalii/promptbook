@@ -6,14 +6,22 @@
 const onDisk = () => S.store.mode === 'zip';
 function resetStore() {
   const s = S.store;
-  s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false;
+  s.mode = 'none'; s.handle = null; s.files = null; s.name = ''; s.stamp = {}; s.conflict = false; s.lastSave = null; s.err = null; s.saving = false; s.again = false; s.bad = [];
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() };
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
-async function readJSON(name, sub) {
-  const tx = await readText(name, sub); if (tx == null) return null;
-  try { return JSON.parse(tx); } catch (e) { console.warn('Unreadable JSON: ' + name); return null; }
+/* Missing is null. There but unreadable (not JSON, not an object, or without the list "need") is null too, but the part is
+   moved, bytes untouched, to damaged/ in the show file and named in s.bad: nothing is saved until the user has chosen (showDamaged). */
+async function readJSON(name, sub, need) {
+  const s = S.store, key = sub ? sub + '/' + name : name, f = s.files.get(key); if (!f) return null;
+  let j = null;
+  try { j = JSON.parse(await f.text()); } catch (e) { /* handled below */ }
+  if (j && typeof j === 'object' && !Array.isArray(j) && (!need || Array.isArray(j[need]))) return j;
+  console.warn('Unreadable JSON: ' + key);
+  let to = 'damaged/' + key; for (let k = 2; s.files.has(to); k++) to = 'damaged/' + k + '/' + key;
+  s.files.set(to, f); s.files.delete(key); s.bad.push(key);
+  return null;
 }
 function writeBlob(sub, name, blob) { S.store.files.set(sub ? sub + '/' + name : name, blob instanceof Blob ? blob : new Blob([blob])); }
 function cfgFile() {
@@ -142,6 +150,7 @@ async function saveNow(force) {
     if (onDisk()) {
       const any = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
       if (any && force !== true) {
+        if (s.bad.length) { s.saving = false; setStatus(); return; }   // an unreadable part: nothing is written until the user has chosen
         if (!s.conflict && await zipChanged()) { s.conflict = true; showConflict(); }
         if (s.conflict) { s.saving = false; setStatus(); return; }
       }
@@ -189,11 +198,19 @@ function showBanner(text, actions) {
 function showMemBanner() {
   const s = S.store;
   if (s.conflict) return;
+  if (s.bad.length) { showDamaged(); return; }
   if (s.mode === 'memory') {
     const acts = [[t('mExport'), exportBundle]];
     if (window.showSaveFilePicker) acts.unshift([t('mSaveTo'), saveToZip]);
     showBanner(t('memBanner'), acts);
   } else if (!$('#banner').hidden) { $('#banner').hidden = true; if (S.loaded) { sizeWrap(); renderVisible(); } }
+}
+function showDamaged() {
+  const s = S.store;
+  showBanner(t('damaged', s.bad.join(', ')), [
+    [t('damagedGo'), () => { const ink = s.bad.includes('script.ink.json'); s.bad = []; showMemBanner(); markDirty('cfg'); if (ink) markDirty('ink'); toast(t('damagedKept')); return saveNow(); }],
+    [t('damagedClose'), () => { clearTimeout(saveT); resetStore(); $('#banner').hidden = true; S.loaded = false; showStart(); }]
+  ]);
 }
 function showConflict() {
   showBanner(t('extChanged'), [
@@ -276,15 +293,16 @@ const showName = handle => handle.name.replace(/(\.promptbook)?\.zip$/i, '');
 async function loadStore(handle) {
   const s = S.store;
   try {
+    s.bad = [];
     const cfg = await readJSON('config.json'), text = await readText('script.md'), ink = await readJSON('script.ink.json');
     S.boards = new Map(); S.templates = new Map(); S.urls = new Map();
     for (const n of boardNames(text || '')) {
-      const j = await readJSON(slug(n) + '.json', 'boards');
+      const j = await readJSON(slug(n) + '.json', 'boards', 'strokes');
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.boards.set(n, mkBoard(n, j)); }
     }
     for (const n of (cfg && Array.isArray(cfg.templates) ? cfg.templates : [])) {
       if (typeof n !== 'string' || !n) continue;
-      const j = await readJSON(slug(n) + '.json', 'templates');
+      const j = await readJSON(slug(n) + '.json', 'templates', 'strokes');
       if (j && Array.isArray(j.strokes)) { j.imageData = null; S.templates.set(n, mkBoard(n, j, true)); }
     }
     const imgs = new Set();
@@ -313,7 +331,7 @@ async function saveToZip() {
   catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
   const s = S.store;
   const files = new Map(s.mode === 'zip' ? s.files : []);   // keeps the images already in the show file, and the history
-  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false;
+  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false; s.bad = [];   // a new file is a choice: it gets the show as it is, and damaged/
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
       const blob = await dataURLBlob(B.imageData); writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
@@ -445,6 +463,7 @@ async function gText(commit, path) {
 }
 async function settled() {
   const s = S.store;
+  if (s.bad.length) throw new Error(t('damagedFirst'));
   for (let k = 0; k < 100; k++) {
     await saveNow();
     const d = s.dirty;
@@ -478,7 +497,7 @@ async function gCheckout(tree) {
     if (!SHOW_FILE.test(path)) continue;
     const b = new Blob([(await gGet(sha)).body]); blobSha.set(b, sha); blobs.set(path, b);
   }
-  s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT)).concat(Array.from(blobs)));
+  s.files = new Map(Array.from(s.files).filter(([k]) => k.startsWith(GIT) || k.startsWith('damaged/')).concat(Array.from(blobs)));
   await flushZip();
   clearTimeout(saveT);
   s.dirty = { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }; s.conflict = false;
@@ -522,6 +541,7 @@ const revName = c => c.msg.split('\n')[0] + (c.when ? '  ·  ' + c.when.toLocale
 function unlockPages() { S.cfg.lock = null; markDirty('cfg'); relayout(true); }
 async function openHistory() {
   if (!onDisk()) { toast(t('hiNeedFile')); return; }
+  if (S.store.bad.length) { toast(t('damagedFirst')); return; }
   const fail = e => { console.warn(e); toast(t('hiErr', (e && e.message) || e)); };
   let st;
   try { st = await histState(); } catch (e) { fail(e); return; }

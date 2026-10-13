@@ -17,6 +17,10 @@ Three later requests changed where those files sit:
 - **r1.10, only the file:** "time to prune silly or old features to keep the code light. remove support for older folders, work only on zipped show files." A show folder no longer opens (STO-6 and STO-12 withdrawn).
 - **r1.7, history:** the request for "git versioning below" put a git repository inside the show (`08-history.md`).
 
+One request came from the review of 2026-10-09 (`docs/review-2026-10-09.md`, X2), which found that a damaged settings or ink file opened as empty and was then written over:
+
+- **r1.11, a part that cannot be read:** "Tell 'missing' from 'unreadable'. On unreadable: say so, keep the damaged file under another name, and do not write over it until the user has chosen."
+
 Writing straight into a file on disk works only in Chrome and Edge (K6). The intent for any other browser, and for the moment before a file is chosen, is that the tool stays usable and nothing is lost: the show is kept in the browser and can be exported.
 
 ## 2. Requirements
@@ -93,6 +97,8 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 
 `boards/<name>.json` has the same stroke shape plus `name`, `image` (file name), `w` (always 1000), `h`, and `base` when the board is built on a template. Board coordinates are in those units, so ink scales with the board. `templates/<name>.json` has the board shape. The image file sits beside the JSON file.
 
+`damaged/` holds parts that could not be read, as they were found (STO-16). The tool writes there and never reads it; it is not part of the history.
+
 The backup is `{ "format": "promptbook", "version": 1, "when", "config", "script", "ink", "boards", "templates" }`, with each image as a data URL in `imageData`.
 
 In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `promptbook:view` (`facing`, `cues`, `ink`, `night`, `finger`, `lang`); IndexedDB database `promptbook`, store `kv`, key `dir` holds the handle of the last show.
@@ -118,6 +124,14 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 | A show folder, never saved as a show file | r1.10 and later | Cannot be opened. Zip the folder and open the zip (STO-4), or open it in r1.9 and use "Save as show file…". |
 | r1.10, with a cast department | r1.9 | Opens; notes for the cast are to-do notes; the "Cast" mark is lost when r1.9 saves the settings. |
 
+### 2.5 A part that cannot be read
+
+| ID | Requirement | Basis | Since | Checked by |
+|---|---|---|---|---|
+| STO-15 | A part of a show file that is there but cannot be read (`config.json`, `script.ink.json`, the file of a board the script places, the file of a template the settings list) is not treated as missing. The show opens without it, and a banner names each such part and says that nothing is saved until the user chooses. While the banner is up no change is written to the show file, and History refuses to open. | review X2 | r1.11 | zipshow |
+| STO-16 | "Go on without" saves the show as it is on screen and keeps every unreadable part, byte for byte, in the folder `damaged/` of the show file, under its own path (`damaged/config.json`, `damaged/boards/pianta.json`); a later one of the same name goes to `damaged/2/`, and so on. "Close the show" leaves the show file exactly as it was. | review X2 | r1.11 | zipshow |
+| STO-17 | A part that is missing stays silent: a new show, or a show from an older release without that part, opens with no message. | review X2, C8 | r1.11 | zipshow |
+
 ## 3. Consequences
 
 **A show file is rewritten whole on every save.** The files of an open show file live in memory; a save builds the archive again and replaces the file. This is simple and atomic. It also means the cost of one pen stroke is the size of the show, history included (`docs/review-2026-10-09.md`, X6).
@@ -125,6 +139,14 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 **In a show file, `script.md` cannot be edited from outside while the tool is open.** Unzip, edit, zip again; or use "Edit whole script…". The outside-edit path of STO-12 existed only for a show folder and went with it in r1.10. This is the price of D10's amendments.
 
 **The parts of a show file are read into memory when it is opened, board images included.** Until r1.5 they were read lazily from the file, which stopped working once the file had been rewritten: after a show file was opened, only the first change was saved. A user who worked in r1.2 to r1.4 on a show opened from its file may have lost what came after the first change. The checks for the show file (`test/zipshow`) were written at r1.2 and released without being run; at r1.4 the file was recorded as stopping with an error before its first check, not investigated; the defect was found and fixed in r1.5.
+
+**"Cannot be read" means: not JSON, or JSON of the wrong kind.** A part that does not parse (cut short, empty, overwritten with something else), that is not a JSON object, or, for a board or a template, that has no list of strokes, is unreadable (STO-15). Until r1.10 all three were taken as missing, and the next change wrote a new file over the old one; a board file without strokes was dropped without a word and replaced at the first stroke on that board. A part that parses and merely holds odd values is read as before (§2.3, "Read as").
+
+**The unreadable part is moved aside in memory as the show opens, and reaches the disk only with the first save.** That first save is the user's choice: "Go on without", or "Save as show file…", which writes the show and its `damaged/` folder to the new file and leaves the old file alone. With `config.json` unreadable the list of templates is unknown, so no template is loaded; their files stay in `templates/` and come back once the settings name them again. To repair by hand: unzip, mend the file in `damaged/`, put it back in its place, zip. With a history, the last revision may still hold a good copy (HIS). The tool never empties `damaged/`, and restoring a revision or changing variant keeps it.
+
+**The question is a banner, not a dialog**, like the one for a file changed by another program (STO-11), and the two can meet: when the file is also replaced from outside while changes wait, the banner of STO-11 is shown first, and "Keep mine" writes the show, `damaged/` included, over the other version; the banner of STO-15 then returns. In show mode no banner is visible (SHW); nothing is saved there either until the question is answered.
+
+**Not covered by STO-15:** the draft kept in the browser and a backup file. An unreadable draft is not offered on the start screen and is replaced by the next show kept in the browser; an unreadable backup is refused with a message and is never written to.
 
 **Storage needs Chrome or Edge (K6, A7).** In another browser the tool still works, with the in-browser fallback and backup files only.
 
