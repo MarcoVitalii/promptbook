@@ -44,6 +44,7 @@ Read only the part that is needed; do not load these whole. Each capability file
 - `docs/decisions.md`: decisions D1 to D19 and conflicts K1 to K10, with what follows from each. A row states the decision as it stands.
 - `docs/architecture.md`: C4 diagrams (context, containers, components) and the component table that maps to sections of `src/`.
 - `docs/verification.md`: check record per release (§3), test file to requirement mapping, what was never verified (§4).
+- `docs/glossary.md`: the one word for each thing, with its Italian interface word and its name in the code. §1 lists the words with several meanings (block, note, show, history, lock, line, margin) and the form to use. Check it before naming a requirement, a string or a function; add the entry in the change that introduces a new thing.
 - `CHANGELOG.md`: one entry per release, written for the user.
 - `CONTRIBUTING.md`: how a collaborator sets up, sends a change and makes a release.
 

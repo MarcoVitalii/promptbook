@@ -30,6 +30,7 @@ A change starts at the top: a request is recorded as intent, turned into require
 | `docs/decisions.md` | Every decision and conflict, with its source and what follows from it |
 | `docs/architecture.md` | How it is built: C4 context, containers, components |
 | `docs/verification.md` | What was checked, how, and what never was |
+| `docs/glossary.md` | What each thing is called: one word, one meaning, in documents, strings and code |
 | `CHANGELOG.md` | One entry per release, written for the user |
 
 ---
