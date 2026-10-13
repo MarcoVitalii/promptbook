@@ -22,6 +22,7 @@ The documentation is specification-driven. Every level answers three questions i
 | `docs/decisions.md` | Every decision and conflict, with its source and its consequences |
 | `docs/architecture.md` | C4 diagrams: system context, containers, components; how a change travels |
 | `docs/verification.md` | What was checked and how; what never was |
+| `docs/glossary.md` | What each thing is called: one word, one meaning |
 | `CHANGELOG.md` | One entry per release, written for the user |
 | `CONTRIBUTING.md` | Setting up, sending a change, making a release |
 
