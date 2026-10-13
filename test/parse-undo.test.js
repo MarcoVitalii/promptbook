@@ -1,4 +1,5 @@
 const { chromium } = require('./_pw');
+const { nameBox, popGone } = require('./_util');
 const path = require('path');
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
@@ -36,8 +37,17 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(await page.evaluate(() => /Alt! \{LX 1\}/.test(PB.serialize()) && /Chi va là\?/.test(PB.serialize()) && /ANNA: fine\.\n$/.test(PB.serialize())), 'three redos reapply them');
   // empty show: board on an empty page, then text
   await page.evaluate(() => PB.startMemory('', {}));
-  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
+  await page.locator('.addboard').first().click(); await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);
   ok(await page.evaluate(() => PB.serialize()) === '{BOARD Board 1}\n', 'board can be added to an empty show');
+  await page.locator('.addboard').first().click(); await nameBox(page);
+  const left = await page.evaluate(() => {
+    const i = document.querySelector('#pop input'), n = PB.S.hist.length;
+    i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    const out = !document.querySelector('#pop').contains(document.activeElement), added = PB.S.hist.length === n + 1;
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true }));
+    return out && added && PB.S.hist.length === n;
+  });
+  ok(left, 'a box closed with Enter gives up the focus at once, so Ctrl+Z right after it undoes');
   console.log(errs.join('\n') || 'no page errors');
   await browser.close();
 })();

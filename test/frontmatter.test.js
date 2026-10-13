@@ -1,5 +1,5 @@
 // Frontmatter: front page, title, character list and the check of speaker names against it.
-const { ok, open } = require('./_util');
+const { ok, open, nameBox, popGone } = require('./_util');
 (async () => {
   const T = await open(), page = T.page;
   const FM = '---\ntitle: Il mare\nauthor: Marco Vitali\ncompany: "Compagnia del Porto"\nyear:2026\ntags: [teatro]\ncharacters:\n  - ANNA/A - la figlia\n  - MARCO/M/MARCHINO - il pescatore\n  - SOLDATO 1\n  - NONNA\n---\n';
@@ -42,7 +42,7 @@ const { ok, open } = require('./_util');
   await page.locator('#bReview').click();
 
   // "+ Board" on the first script page must not land above the frontmatter
-  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
+  await page.locator('.addboard').first().click(); await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);
   ok(await page.evaluate(() => PB.serialize().startsWith('---\n') && !!PB.S.meta && PB.S.pages[2].boards.length === 1), 'a board added on page 1 goes below the frontmatter');
   await page.keyboard.press('Control+z');
 

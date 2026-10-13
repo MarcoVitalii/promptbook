@@ -1,4 +1,5 @@
 const { chromium } = require('./_pw');
+const { nameBox, popGone } = require('./_util');
 const path = require('path');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
@@ -111,7 +112,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(await page.evaluate(() => PB.S.ink.size) === 1 && await page.locator('.ink path').count() === 1, 'undo brings the stroke back');
 
   // 9. boards
-  await page.locator('.addboard').first().click(); await page.keyboard.press('Enter');
+  await page.locator('.addboard').first().click(); await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);
   await page.waitForSelector('.board svg');
   ok(/\{BOARD Board 1\}/.test(await text()), 'board token inserted: ' + (await text()).match(/\{BOARD[^}]*\}/)[0]);
   bb = await box('.board svg');

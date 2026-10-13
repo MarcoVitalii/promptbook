@@ -1,6 +1,6 @@
 // Boards on a facing page: one column up to two boards, two columns from three on, at most 8 through the interface.
 // Then the names and buttons of a figure, and the grid behind the ink.
-const { ok, open, serve } = require('./_util');
+const { ok, open, serve, nameBox, popGone } = require('./_util');
 const OUT = process.env.OUT || '.';
 (async () => {
   const { srv, url } = await serve();
@@ -65,20 +65,20 @@ const OUT = process.env.OUT || '.';
 
   // a page with room still takes a board
   L = await set(7);
-  const nameBox = () => ev(() => { const i = document.querySelector('#pop input'); return i ? { v: i.value, all: document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length } : { v: 'none' }; });
+  const boxNow = () => ev(() => { const i = document.querySelector('#pop input'); return i ? { v: i.value, all: document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length, why: (document.activeElement === i ? 'focused' : 'focus on ' + document.activeElement.tagName) + ', selected ' + i.selectionStart + ' to ' + i.selectionEnd } : { v: 'none' }; });
   const steps = await ev(() => PB.S.hist.length);
-  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
-  const nbx = await nameBox();
-  ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v);
+  await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
+  const nbx = await boxNow();
+  ok(/^Board \d+$/.test(nbx.v) && nbx.all && await ev(() => PB.S.pages[0].boards.length) === 7, '"+ Board" opens the name box with the next free name selected, and adds nothing yet: ' + nbx.v + ' (' + nbx.why + ', ' + await ev(() => PB.S.pages[0].boards.length) + ' boards)');
   await page.keyboard.press('Escape');
   ok(await page.locator('#pop').isHidden() && await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'Escape closes the box and no board is added');
-  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
+  await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
   await page.keyboard.type('Pianta atto 2'); await page.keyboard.press('Enter');
-  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 8);
+  await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 8); await popGone(page);
   ok(await ev(() => PB.S.pages[0].boards.length) === 8 && await ev(() => PB.S.boards.has('Pianta atto 2') && PB.serialize().includes('{BOARD Pianta atto 2}')), 'typing replaces the selected name; Enter adds the eighth board under the typed name');
   await page.keyboard.press('Control+z');
   ok(await ev(() => PB.S.pages[0].boards.length) === 7 && await ev(() => PB.S.hist.length) === steps, 'adding a named board is one undo step');
-  await page.locator('.page.facing .addboard').first().click(); await page.waitForTimeout(50);
+  await page.locator('.page.facing .addboard').first().click(); await nameBox(page);
   await page.keyboard.type('b1'); await page.locator('#pop .btn.pri').click();
   await page.waitForFunction(() => document.querySelectorAll('.page.facing .board').length === 8);
   ok(await ev(() => PB.S.pages[0].boards.length) === 8 && await ev(() => PB.serialize().split('{BOARD b1}').length) === 2, 'a name already in use is not given twice: the board gets the next free name');
