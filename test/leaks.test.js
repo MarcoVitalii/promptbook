@@ -73,6 +73,31 @@ const { ok, open, serve } = require('./_util');
   ok(await live() === 2 && await ev(() => PB.S.urls.size === 2 && !PB.S.urls.has('boards/p.png') && PB.S.urls.has('boards/' + PB.S.boards.get('Pianta').image)), 'an image replaced three times on a board leaves one object URL for that board: ' + await live());
   await shows(2, 'the new image is drawn and loads');
 
+  // 3b. an image put on a board while a save is under way stays in the show file. The save reads the drawings, waits, then drops the images none of them names:
+  //     the new image is in the show by then and its board is not written yet. One part whose text the save has to wait for holds it there, so nothing rests on timing.
+  await ev(() => {
+    const b = new Blob(['{}']), text = b.text.bind(b); let go; const gate = new Promise(r => { go = r; });
+    b.text = () => { window.HELD = true; return gate.then(text); }; window.GATE = go;
+    PB.S.store.files.set('held.json', b); PB.S.store.dirty.script = true; PB.saveNow();
+  });
+  await page.waitForFunction(() => window.HELD === true);
+  {
+    const was = await ev(() => PB.S.boards.get('Pianta').image), fc = page.waitForEvent('filechooser');
+    await act('Pianta', 'Image');
+    await (await fc).setFiles({ name: 'durante.png', mimeType: 'image/png', buffer: newPng });
+    await page.waitForFunction(w => { const i = PB.S.boards.get('Pianta').image; return i !== w && PB.S.store.files.has('boards/' + i); }, was);
+    ok(await ev(() => PB.S.store.saving), 'the save is still under way when the new image is on its board');
+    await ev(() => window.GATE()); await settle();
+    const kept = await ev(async w => {
+      const f = 'boards/' + PB.S.boards.get('Pianta').image, fh = await (await navigator.storage.getDirectory()).getFileHandle('leaks.promptbook.zip'), m = await PB.readZip(await fh.getFile());
+      PB.S.store.files.delete('held.json');
+      return { mem: PB.S.store.files.has(f), disk: m.has(f), old: m.has('boards/' + w) };
+    }, was);
+    ok(kept.mem && kept.disk, 'an image put on a board while a save was under way is in the show file after it: ' + JSON.stringify(kept));
+    ok(!kept.old && await live() === 2, 'and the image it replaced is dropped by the save that follows, with its object URL: ' + await live());
+    await page.waitForTimeout(40);
+  }
+
   // 4. revisions restored in turn
   const two = await ev(() => PB.histSave('Due', false));
   const turns = async (n, go) => {   // n times: go(k), then the count of object URLs, the image of the board, and whether both images are drawn and load

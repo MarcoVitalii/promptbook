@@ -162,11 +162,15 @@ function zipAside(files) {
   }
   return bad;
 }
+/* An image leaves the show file when nothing names it. Reading the drawings takes a moment, and an image can be put on a board meanwhile, or
+   just before, with its drawing not yet written: so only the images that were there before the wait are judged, and one that a board or a
+   template of the open show names is kept whatever the files say. */
 function pruneImages(files) {
   const refs = Array.from(files).filter(([k]) => /\.json$/.test(k)).map(([, b]) => b);
+  const had = Array.from(files.keys()).filter(k => /^(boards|templates)\/[^/]+$/.test(k) && !/\.json$/.test(k));
   return Promise.all(refs.map(b => b.text())).then(texts => {
-    const all = texts.join('\n');
-    for (const k of Array.from(files.keys())) if (/^(boards|templates)\/[^/]+$/.test(k) && !/\.json$/.test(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
+    const all = texts.join('\n'), live = new Set(Array.from(S.boards.values()).concat(Array.from(S.templates.values())).map(B => imgKey(B)));
+    for (const k of had) if (!live.has(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
   });
 }
 async function flushZip() {
