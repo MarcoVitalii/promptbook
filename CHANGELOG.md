@@ -1,6 +1,6 @@
 # Changelog
 
-## r1.12 — not yet released
+## r1.12 — 2026-10-13
 
 - **A guide to the buttons**, for whoever is new to the tool. "Guide" in the bottom right corner, the H key or the Menu puts a number on every button on screen and opens a card that says, number by number, what the button is called, what it does and which key does the same. Press a number or a row to see which button it is. Esc, H or a press outside closes it. In show mode H gives the guide of the show buttons. It covers the buttons only, not what the pen and a tap do on the page. Checked in a simulated browser only.
 - **A guide to the tool**, in English and in Italian, on the site and in `docs/guide/`: a tutorial with the sample scene, how to take in a rewrite, mark a moment, reissue the changed pages, tell each actor what changed, keep a variant, send to the cast, time and call a show, and why it works as it does. Most of its steps were written from the specification and not walked through on a laptop.

@@ -18,12 +18,12 @@ A prompt book for theatre in one self-contained HTML file. Plain JavaScript, no 
 
 | File | Lines | Content |
 |---|---|---|
-| `src/core.js` | ~1610 | `STR` strings, helpers (`h`, `sv`), constants (`PAPERS`, `GEO`, `VERSION`), state `S`, **parse** (`parseMeta`, `classify`, `parseScript`, `analyze`, `tokenize`, `reparse`, `pairCues`), text edits (`serialize`, `textWith`, `textInsertAfter`, `cutToken`), ink bookkeeping (`attachInk`, `inkFile`), undo history (`undo`, `redo`, `commitText`), compare (`lcs`, `diffBlocks`, `diffFor`), locked page numbers (`makeLock`, `lockPlan`), **layout** (`buildRow`, `measure`, `paginate`) |
-| `src/view.js` | ~1810 | Page rendering, ink drawing, facing page and boards, board templates, navigation and find, pointer handling (pen, touch, palm), popovers (`openPin`, `openCueEdit`), block editor (`editGroup`), cue list and review (`collectCues`, `reviewData`, `renderDrawer`), CSV, print |
-| `src/io.js` | ~1090 | Show file store (File System Access), zip (`buildZip`, `readZip`), save loop (`saveNow`), draft and IndexedDB, open and import, git history (`gPut`, `gSave`, `gCheckout`, `histSave`, `openHistory`, `openDiff`), dialogs, settings, `bindUI`, keyboard shortcuts (`KEYS`, `KEYMAP`, `openKeys`), `SAMPLE`, `init`, and the `window.PB` export on the last line |
+| `src/core.js` | ~1680 | `STR` strings, helpers (`h`, `sv`), constants (`PAPERS`, `GEO`, `VERSION`), state `S`, **parse** (`parseMeta`, `classify`, `parseScript`, `analyze`, `tokenize`, `reparse`, `pairCues`), text edits (`serialize`, `textWith`, `textInsertAfter`, `cutToken`), ink bookkeeping (`attachInk`, `inkFile`), undo history (`undo`, `redo`, `commitText`), compare (`lcs`, `diffBlocks`, `diffFor`), locked page numbers (`makeLock`, `lockPlan`), **layout** (`buildRow`, `measure`, `paginate`) |
+| `src/view.js` | ~1860 | Page rendering, ink drawing, facing page and boards, board templates, navigation and find, pointer handling (pen, touch, palm), popovers (`openPin`, `openCueEdit`), block editor (`editGroup`), cue list and review (`collectCues`, `reviewData`, `renderDrawer`), CSV, print |
+| `src/io.js` | ~1150 | Show file store (File System Access), zip (`buildZip`, `readZip`), save loop (`saveNow`), draft and IndexedDB, open and import, git history (`gPut`, `gSave`, `gCheckout`, `histSave`, `openHistory`, `openDiff`), dialogs, settings, `bindUI`, keyboard shortcuts (`KEYS`, `KEYMAP`, `openKeys`), `SAMPLE`, `init`, and the `window.PB` export on the last line |
 | `src/cast.js` | ~390 | The script for the actors: state `C`, show (`usePack`, `anchorOwn`), text (`blockEl`, `render`), sheets (`openPart`, `openNotes`, `openMore`), files (`readCastFile`), start, and the `window.PBC` export |
 | `src/cast.css`, `src/cast.html` | ~85, ~35 | Its styles and shell, with the `/*CSS*/`, `/*JS*/`, `/*PACK*/` placeholders |
-| `src/style.css` | ~385 | All styles, including print |
+| `src/style.css` | ~425 | All styles, including print |
 | `src/index.html` | ~100 | Shell with the `/*FONTS*/`, `/*CSS*/`, `/*JS*/` placeholders |
 | `build.py` | 27 | Joins `src/` and `fonts/` into `promptbook-cast.html`, then into `promptbook.html` |
 | `test/` | | Playwright checks, one plain Node script per area. `_util.js` holds `open()`, `ok()`, `serve()` and the pen helper. `run.js` is the runner |

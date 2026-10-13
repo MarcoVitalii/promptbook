@@ -28,7 +28,7 @@ Three properties of the method to keep in mind when reading a green result:
 
 ## 3. Record by release
 
-**r1.11, measured on 2026-10-13.** Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,137 checks pass, none fail**: 237 unit checks in 10 files and 900 browser checks in 20 files, the browser part in about 75 s. `test/KNOWN_FAILING` is empty. `test/damaged` needs `python3` for the two archives written by another program, and `git` for `git fsck`.
+**r1.12, measured on 2026-10-13.** Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,195 checks pass, none fail**: 261 unit checks in 10 files and 934 browser checks in 20 files, the browser part in about 75 s. `test/KNOWN_FAILING` is empty. `test/damaged` needs `python3` for the two archives written by another program, and `git` for `git fsck`.
 
 | Test file | Checks | Requirements it covers |
 |---|---|---|
@@ -41,10 +41,10 @@ Three properties of the method to keep in mind when reading a green result:
 | `unit/compat` | 20 | STO-15 to STO-17 |
 | `unit/images` | 7 | STO-21 |
 | `unit/cast` | 15 | CST-1, CST-2, CST-5, CST-6 |
-| `unit/show` | 59 | SHW-2, SHW-5, SHW-6, SHW-9 to SHW-14, SHW-19 to SHW-24 |
+| `unit/show` | 83 | SHW-2, SHW-5, SHW-6, SHW-9 to SHW-14, SHW-19 to SHW-24, SHW-32 to SHW-36 |
 | `parse-undo` | 10 | TXT-2, TXT-5 to TXT-7, TXT-10, BRD-3 |
 | `interact` | 33 | CUE-1 to CUE-3, CUE-24, CUE-35, CUE-38, INK-1, INK-2, INK-6, INK-7, BRD-1 to BRD-3, TXT-8, UI-1, UI-2 |
-| `misc` | 38 | INK-2, INK-3, INK-5, INK-8, INP-5 to INP-7, CUE-6, UI-3, PAG-4, STO-2, STO-8, STO-21, STO-22, STO-26 |
+| `misc` | 41 | INK-2, INK-3, INK-5, INK-8, INP-5 to INP-7, CUE-6, UI-3, PAG-4, STO-2, STO-8, STO-21, STO-22, STO-26 |
 | `palm` | 4 | INP-2, INP-3 |
 | `cuebox` | 5 | CUE-7, CUE-8, UI-4 |
 | `scale-folder` | 22 | PAG-1, PAG-5, PAG-6, INP-1, INP-4, STO-3, STO-7, STO-11, INK-4, INK-5, UI-5, UI-7 |
@@ -54,16 +54,16 @@ Three properties of the method to keep in mind when reading a green result:
 | `notes-todos` | 39 | TXT-22 to TXT-27, CUE-21 to CUE-24, CUE-35, CUE-36, CUE-40, INK-9, PAG-11 |
 | `templates` | 51 | BRD-14 to BRD-28, PAG-11, PAG-12, STO-8, STO-13, STO-27 |
 | `boards` | 82 | BRD-5, BRD-7 to BRD-13, BRD-26, BRD-28, BRD-30, UI-6, UI-12, STO-13 |
-| `cue-move` | 74 | CUE-25 to CUE-34, CUE-43, INP-8 to INP-10, TXT-28 |
+| `cue-move` | 75 | CUE-25 to CUE-34, CUE-43, INP-8 to INP-10, TXT-28 |
 | `block-move` | 34 | TXT-28 to TXT-31 |
 | `shortcuts` | 61 | UI-9 to UI-13, CUE-7, CUE-42, SHW-30 |
 | `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
 | `leaks` | 22 | STO-9; object URLs and database connections are let go |
 | `damaged` | 133 | STO-23 to STO-25, HIS-13 to HIS-15 |
 | `cast` | 57 | CST-1, CST-3 to CST-5, CST-7 to CST-16, CST-18 to CST-20, STO-22 |
-| `show` | 79 | SHW-1 to SHW-3, SHW-5, SHW-7 to SHW-15, SHW-20, SHW-22, SHW-24 to SHW-26, SHW-29, SHW-30, INP-12 |
+| `show` | 93 | SHW-1 to SHW-3, SHW-5, SHW-7 to SHW-15, SHW-20, SHW-22, SHW-24 to SHW-26, SHW-29 to SHW-32, SHW-34, SHW-36, INP-12 |
 
-The counts per file were taken by running each file on its own. Those of the browser files add up to 899, one fewer than the runner's total; the difference was not looked into.
+The counts per file were taken by running each file on its own; they add up to the runner's totals. r1.11 was measured the same day on the same machine: 1,137 checks, 237 unit and 900 browser.
 
 The mapping is by test file, not by single check. It was made by reading the sentence of every passing check against the requirement tables.
 
@@ -88,6 +88,8 @@ Nothing in this list has a recorded trial.
 - A show file with a long history (HIS); a file damaged by a real disk; archives written by Explorer, Finder or 7-Zip (STO-23 to STO-25).
 - The colours by day and in a dark room, the filled tag labels, and whether the corner dock gets under a hand or the pen. The shortcuts on a real keyboard, an Italian one in particular (/ and ? need Shift).
 - Show mode: the laptop with pen and touch, a finger scroll letting go of the line, a finger press on a call, the wake lock, the pace of 130 and the weights of SHW-6 against a real run, timing a real rehearsal, a show of 100 pages, whether a jump of the page is easy to follow from the prompt desk.
+- The guide to the buttons (UI-13) under a finger, and where the toolbar wraps under 1280 px. Timing line by line and typing a time on the page (SHW-34, SHW-36) in a real rehearsal.
+- The guide in `docs/guide/`: most of its steps were written from the specification and not walked through on a laptop.
 - The time it takes the stage manager to pin a cue; the target is under 3 seconds (CUE-4).
 - The real script. It was not shared (Q20); the parser has only seen the sample and deliberately messy test text.
 - The real limit of the browser's storage (STO-26); the policy of STO-22 outside Chromium.
