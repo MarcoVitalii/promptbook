@@ -1,6 +1,6 @@
 # Promptbook — Specification
 
-**Tool described:** r1.11, the first release (`VERSION` in `src/core.js`), 2026-10-13.
+**Tool described:** r1.12 (`VERSION` in `src/core.js`), 2026-10-13.
 **State:** every requirement with a check passes in a simulated browser. The client has used part of it on a real show (`docs/verification.md` §4). Nothing has been tried on the rehearsal laptop under a recorded trial, on a phone or on paper.
 
 ---
@@ -155,7 +155,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 | Release | Date | Content | Capability files |
 |---|---|---|---|
 | r1.11 | 2026-10-13 | The first release: everything the capability files describe | 01 to 11 |
-| r1.12 | not released | A guide to the buttons laid over the window (UI-13). The guide for whoever uses the tool, `docs/guide/`, in English and Italian. Settings in sections. Timing a rehearsal line by line or from time to time, the time of every block on the page and typed in place (SHW-31 to SHW-36) | 09, 11 |
+| r1.12 | 2026-10-13 | A guide to the buttons laid over the window (UI-13). The guide for whoever uses the tool, `docs/guide/`, in English and Italian. Settings in sections. Timing a rehearsal line by line or from time to time, the time of every block on the page and typed in place (SHW-31 to SHW-36) | 09, 11 |
 
 What a release holds for the user is in `CHANGELOG.md`. How it was checked is in `docs/verification.md`.
 
