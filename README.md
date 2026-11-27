@@ -3,7 +3,8 @@
 [![CI](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml/badge.svg)](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/MarcoVitalii/promptbook)](https://github.com/MarcoVitalii/promptbook/releases/latest)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
-[![AI:X](https://0rwx.com/static/AI-X-light.svg)](https://0rwx.com/)
+<a href="https://0rwx.com/"><img src="https://0rwx.com/static/AI-X-light.svg" alt="AI:X" height="20"></a>
+<!-- TODO: 0rwx.com publishes only a round logo (black, invisible on GitHub dark mode), no badge. Check https://0rwx.com/ for an official badge and switch to it. -->
 
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
 
