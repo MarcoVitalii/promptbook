@@ -4,6 +4,8 @@ Metti i cue sulle loro parole, chiudi quelli che finiscono, e ricava un foglio d
 
 ## Mettere un cue su una parola
 
+I cue si mettono in **Prova** (R): lì un tocco su una parola è un cue. In Scrivi, dove il copione è testo, un cue si scrive come `{LX}` dopo la sua parola, e l'elenco che si apre dopo `{` dà al reparto il suo prossimo numero.
+
 1. **Tocca la parola** su cui il cue viene chiamato.
 2. **Premi il reparto** nel riquadro che si apre (LX, SND, …). Con la tastiera, la prima lettera della sigla fa lo stesso.
 3. Il cue c'è, con il numero successivo di quel reparto già dato. **Scrivi il testo a margine** (ciò che si vede sull'etichetta: «buio») e premi Invio. Tab porta alla descrizione, un testo più lungo che compare solo nella lista cue. Per dare un altro numero, Maiusc+Tab torna indietro.

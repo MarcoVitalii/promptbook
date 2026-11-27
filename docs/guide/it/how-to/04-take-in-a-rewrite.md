@@ -12,10 +12,11 @@ Poi scegli la strada adatta alla dimensione della modifica.
 
 ## Poche battute: scrivile tu
 
-1. Trova la battuta (Ctrl+F).
-2. **Fai doppio tocco.** Il suo testo si apre, con gli eventuali segni dei cue tra graffe.
-3. Cambia le parole. Lascia ogni `{…}` dopo la parola a cui appartiene; se quella parola viene tagliata, sposta il segno sulla parola su cui il cue va chiamato ora.
-4. **Ctrl+Invio.**
+1. Premi **Scrivi** (W). Tutto il copione è un riquadro di testo, con i segni dei cue tra graffe. Trova la battuta (Ctrl+F: Invio seleziona la prossima occorrenza).
+2. **Cambia le parole.** Lascia ogni `{…}` dopo la parola a cui appartiene; se quella parola viene tagliata, sposta il segno sulla parola su cui il cue va chiamato ora. Mentre scrivi, un elenco propone ciò che ci sta: il nome di un personaggio a inizio riga, un reparto con il suo prossimo numero dopo `{`, i cue ancora aperti dopo `{/`. Invio lo prende. **Sintassi** (Y) mostra le forme accanto al testo.
+3. Fermati un attimo, o premi Esc. Ciò che hai scritto è nello spettacolo: premi **Prova** (R) per vederlo sulle pagine.
+
+In Prova una singola battuta si può ancora cambiare sul posto: tieni un dito sopra, o tocca una parola e premi **Modifica testo**; Ctrl+Invio salva.
 
 Per aggiungere una battuta, scrivila su una riga nuova nell'editor della battuta sopra. Per tagliarne una, svuotala; oppure premi **Commenta** per nasconderla dalla pagina e dalla stampa senza perderla, che va bene per un taglio che potrebbe tornare.
 

@@ -30,7 +30,7 @@ function sizeWrap() {
   spreads.style.width = nw + 'px'; spreads.style.transform = 'scale(' + z + ')';
 }
 function renderVisible() {
-  const n = S.pages.length; if (!n || S.mode === 'templates') return;   // script pages cannot be measured while hidden
+  const n = S.pages.length; if (!n || S.mode === 'templates' || S.phase === 'write') return;   // script pages cannot be measured while hidden, nor behind the text of Write
   const z = S.view.zoom, unit = (paper().h + GAP) * z, top = desk.scrollTop - wrap.offsetTop;
   const i0 = clamp(Math.floor(top / unit) - 1, 0, n - 1), i1 = clamp(Math.floor((top + desk.clientHeight) / unit) + 1, 0, n - 1);
   for (let i = i0; i <= i1; i++) renderPage(i);
@@ -40,7 +40,11 @@ function renderPage(i) {
   if (!E.done) renderScriptPage(i);
   if (!E.fdone) renderFacing(i);
 }
-function renderAll() { exitTemplates(); for (let i = 0; i < S.pages.length; i++) renderPage(i); }
+function renderAll() {   // every page, for print: in Write the pages are shown for the moment they are measured
+  exitTemplates(); const w = S.phase === 'write'; if (w) document.body.classList.remove('write');
+  for (let i = 0; i < S.pages.length; i++) renderPage(i);
+  if (w) document.body.classList.add('write');
+}
 let scrollRaf = 0;
 desk.addEventListener('scroll', () => { if (!scrollRaf) scrollRaf = requestAnimationFrame(() => { scrollRaf = 0; renderVisible(); }); }, { passive: true });
 window.addEventListener('resize', () => { if (S.loaded) { sizeWrap(); renderVisible(); if (S.mode === 'templates') renderTemplates(); } });
@@ -611,6 +615,7 @@ function rowEl(i, b) {
   return tx ? tx.closest('.simcell') || tx.closest('.row') : a.querySelector('.row[data-b="' + b.id + '"]');
 }
 function jumpTo(b, quiet) {
+  if (S.phase === 'write') { writeGoto(b); return; }   // in Write the cursor goes there
   exitTemplates();
   const [i, it] = pageIndexOf(b), z = S.view.zoom;
   const y = (i * (paper().h + GAP) + GEO.top + (it ? it.y : 0)) * z + wrap.offsetTop;
@@ -626,6 +631,7 @@ function pageStep(d) {
   renderVisible();
 }
 function findNext(q, dir) {
+  if (S.phase === 'write') { writeFind(q, dir); return; }
   if (!q || !S.blocks.length) return;
   const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const n = norm(q), bl = S.blocks, start = S.findAt == null ? (dir > 0 ? -1 : 0) : S.findAt;
@@ -757,13 +763,16 @@ function showToggle() {
   showTick();
 }
 function showStep(d) { showHere(showStepPlace(d)); showBack(); }
-/* a double tap on a word puts the line there; a single tap does nothing */
+/* a double tap on a word puts the line there, and the answer is true; a single tap does nothing here */
 function showTap(tg) {
-  const at = tg.closest('.page.script') && blockAt(tg); if (!at || !at.b) return;
+  const at = tg.closest('.page.script') && blockAt(tg); if (!at || !at.b) return false;
   const now = Date.now(), l = S.lastTap;
   S.lastTap = { id: at.b.id, t: now };
-  if (!l || l.id !== at.b.id || now - l.t > 420) return;
-  S.lastTap = null; showHere(showPlace(at.b, showByLine() ? -1 : at.wi, false)); showBack();   // line by line, a block is marked from its start
+  if (!l || l.id !== at.b.id || now - l.t > 420) return false;
+  S.lastTap = null; closePop(); showMarked(at); return true;
+}
+function showMarked(at) {
+  showHere(showPlace(at.b, showByLine() ? -1 : at.wi, false)); showBack();   // line by line, a block is marked from its start
 }
 /* cues that come within 2 s of each other are one call */
 function showCards(c) {
@@ -805,8 +814,8 @@ function renderShowMap() {
   box.append(h('div', 'done'), h('div', 'head'));
 }
 function renderShowSide(pos) {
-  const sh = S.show, c = showCalls(), m = showMeasured(), ck = showClock(), cards = sh.cards = showCards(c);
-  renderShowMap(); showTags(c);
+  const sh = S.show, c = showCalls(), m = showMeasured(), ck = showClock(), cards = sh.cards = S.phase === 'show' ? showCards(c) : [];   // no call in Rehearse (SHW-50)
+  renderShowMap(); showTags(S.phase === 'show' ? c : { go: [], standby: [], warning: [] });
   $('#shProg').style.setProperty('--p', r1(ck.total ? ck.at / ck.total * 100 : 0));
   const end = new Date(Date.now() + ck.left), hm = String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0');
   const e = sh.learn ? showAt(pos, 'at') : null, st = sh.learn ? showStats() : null;
@@ -818,7 +827,6 @@ function renderShowSide(pos) {
   showSig = sig;
   $('#shPlay').textContent = sh.playing ? '‖' : '▶'; $('#shPlay').classList.toggle('on', sh.playing);
   $('#shWpm').textContent = t('shTempo', Math.round(sh.tempo * 100));
-  $('#shLearn').classList.toggle('on', sh.learn);
   const use = $('#shUse'); use.textContent = t('shUse', Math.round(m * 100));
   use.hidden = sh.learn || !m || Math.abs(m - sh.tempo) < 0.03;   // while timing, what is measured goes to the blocks
   $('#shBack').hidden = sh.follow;
@@ -837,6 +845,7 @@ function renderShowSide(pos) {
     const rest = $('#shRest'); rest.textContent = t('shRest', st.wpm); rest.hidden = !st.wpm || Math.abs(st.wpm - S.cfg.show.wpm) < 3;
   }
   const box = $('#shCalls'); box.textContent = '';
+  if (S.phase !== 'show') return;
   for (const g of cards) {
     const card = h('div', 'call ' + g.k); card.dataset.n = box.children.length; card.title = t('shPeekTip');
     card.style.setProperty('--f', g.k === 'standby' ? r1(clamp(g.s / S.cfg.show.standby, 0, 1) * 100) / 100 : 0);
@@ -852,39 +861,73 @@ function renderShowSide(pos) {
   }
   if (!box.firstChild) box.appendChild(h('div', 'call none', t('shNoCue')));
 }
-function showOn() {
-  const sh = S.show; if (sh.on || !S.loaded) return;
-  if (S.editing) { toast(t('shBusy')); return; }
+/* The three phases (SHW-43). Write has no line. Rehearse has the line and the whole workbench, and the
+   line learns. Show has the line and the book locked. A change of phase stops the line and never moves it. */
+function setPhase(p) {
+  const sh = S.show, from = S.phase;
+  if (p === from || (!S.loaded && p !== 'write')) return;   // a show being replaced still goes back to Write
+  if (S.editing) { toast(t('shBusy')); return; }   // the text being typed would be lost
+  if (from === 'write') { writeCommit(); S.writeCaret = $('#wtext').selectionStart; }   // what was typed goes into the show first
   exitTemplates(); closePop(); cancelDrag(); $('#menu').hidden = true;
-  if (S.drawer === 'review') toggleDrawer('review');
-  Object.assign(sh, { on: true, playing: false, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, leave: false, marks: [], why: '' });
-  sh.cues = showCues(); sh.base = showPlaceAtView(); sh.t0 = Date.now();
-  sh.keep = { facing: S.view.facing, fit: S.view.fit, zoom: S.view.zoom };   // focus: the script alone, as large as the window allows
-  S.view.facing = false; S.view.fit = true;
-  document.body.classList.add('show'); $('#showside').hidden = false; $('#shProg').hidden = false;
-  applyView(); sizeWrap(); showMap = null; showSig = ''; showBack();
-  showTimer = setInterval(showTick, 100);
-  showAwake(); toast(t('shHint'));
+  if (S.drawer === 'review') toggleDrawer('review');   // Review belongs to Write
+  clearTimeout(showLeaveT);
+  S.phase = p;
+  if (p === 'show') { sh.from = from; showFocus(true); } else if (from === 'show') showFocus(false);
+  for (const [c, q] of [['write', 'write'], ['reh', 'rehearse'], ['show', 'show']]) document.body.classList.toggle(c, p === q);
+  $('#bWrite').classList.toggle('on', p === 'write'); $('#bRehearse').classList.toggle('on', p === 'rehearse'); $('#bShow').classList.toggle('on', p === 'show');
+  if (p !== 'show' && S.loaded) savePrefs();   // the browser remembers Write or Rehearse, never Show; a show being replaced passes through Write unremembered
+  if (from === 'write') { writeHide(); applyView(); sizeWrap(); const b = writeBlockAt(S.writeCaret); if (b) jumpTo(b, true); else renderVisible(); }   // the pages come back on what the cursor was in
+  lineSync();
+  if (p === 'write') writeOpen();
+  else if (p === 'show') toast(t('shHint'));
 }
-function showOff() {
-  const sh = S.show; if (!sh.on) return;
-  showPlay(false);
-  const pos = showNow(); sh.on = false;
-  clearInterval(showTimer); clearTimeout(showLeaveT);
+/* The line is there in Show and, with "Timing", in Rehearse (SHW-45). Called on every change of phase or of the toggle:
+   it brings the line, stopped, or takes it away. In Rehearse the line learns. */
+function lineSync() {
+  const sh = S.show, want = S.phase === 'show' || (S.phase === 'rehearse' && S.view.timing);
+  if (!want) { if (sh.on) lineOff(); return; }
+  if (sh.on) showPlay(false); else lineOn();
+  sh.learn = S.phase === 'rehearse';
+  Object.assign(sh, { last: null, why: '', leave: false, tempo: 1, cal: { want: 0, ms: 0 } });
+  $('#showside').hidden = $('#shProg').hidden = false;
+  applyView(); sizeWrap(); showMap = null; showSig = '';
+  if (sh.learn && showByLine()) showSnap();   // line by line: the line waits at the start of its block
+  showBack(); showAwake();
+  if (sh.learn) toast(t('rehHint'));
+}
+/* the line comes to life, stopped, on the block being read */
+function lineOn() {
+  const sh = S.show;
+  Object.assign(sh, { on: true, playing: false, played: 0, anchor: null, tl: null, marks: [] });
+  sh.cues = showCues(); sh.base = showPlaceAtView(); sh.t0 = Date.now();
+  showTimer = setInterval(showTick, 100);
+}
+/* no line: the page stays on what was being read */
+function lineOff() {
+  const sh = S.show, pos = showNow();
+  showPlay(false); sh.on = false; sh.learn = false;
+  clearInterval(showTimer); showTimer = 0;
   if (showWake) { showWake.release().catch(() => {}); showWake = null; }
-  document.body.classList.remove('show'); $('#showside').hidden = true; $('#shProg').hidden = true;
+  $('#showside').hidden = $('#shProg').hidden = true;
   showLine.hidden = showBand.hidden = true; renderShowTimes();
   for (const tg of showTagged) delete tg.dataset.st;
   showTagged = new Set();
-  if (sh.keep) { Object.assign(S.view, sh.keep); sh.keep = null; }
   applyView(); sizeWrap();
-  const at = showY(pos); if (at) desk.scrollTop = Math.max(0, showTop(at) - desk.clientHeight / 3);   // the page stays on what was being read
+  const at = showY(pos); if (at) desk.scrollTop = Math.max(0, showTop(at) - desk.clientHeight / 3);
   renderVisible();
 }
-/* leaving takes two presses, so that a stray touch does not end show mode */
+/* Show is in focus: the script alone, as large as the width left by the panel allows. Leaving puts the view back as it was */
+function showFocus(on) {
+  const sh = S.show;
+  if (on) { sh.keep = { facing: S.view.facing, fit: S.view.fit, zoom: S.view.zoom }; S.view.facing = false; S.view.fit = true; }
+  else if (sh.keep) { Object.assign(S.view, sh.keep); sh.keep = null; }
+}
+function showOn() { setPhase('show'); }
+function showOff() { setPhase('write'); }
+/* leaving takes two presses, so that a stray touch does not end show mode; it goes back to the phase Show was entered from */
 function showLeave() {
   const sh = S.show;
-  if (sh.leave) { showOff(); return; }
+  if (sh.leave) { setPhase(sh.from === 'rehearse' ? 'rehearse' : 'write'); return; }
   sh.leave = true; showTick();
   showLeaveT = setTimeout(() => { sh.leave = false; if (sh.on) showTick(); }, 3000);
 }
@@ -915,7 +958,7 @@ desk.addEventListener('pointerdown', e => {
   const tg = hit(e); if (!tg || !tg.closest) return;
   const page = tg.closest('.page'), ui = tg.closest('.pbtn,.tag');
   const isPen = e.pointerType === 'pen';
-  const draws = page && !ui && !S.editing && !S.show.on && (isPen || (S.tool.finger && (e.pointerType === 'touch' || e.button === 0)));
+  const draws = page && !ui && !S.editing && S.phase === 'rehearse' && (isPen || (S.tool.finger && (e.pointerType === 'touch' || e.button === 0)));   // the pen draws in Rehearse only
   if (draws) {
     e.preventDefault();
     if (P && P.lp) clearTimeout(P.lp);
@@ -941,7 +984,7 @@ desk.addEventListener('pointerdown', e => {
     const me = P;
     P.lp = setTimeout(() => { if (P === me && !me.moved) { P = null; longPress(me); } }, 560);
   }
-  const tag = !S.editing && !S.show.on && tg.closest('.tag,.grip');
+  const tag = !S.editing && !showLocked() && tg.closest('.tag,.grip');
   if (tag) {   // a cue tag can be dragged to another word, a grip or a board tag moves its block; a finger must hold it first, so that a swipe still scrolls
     P.tag = tag;
     if (P.lp) { clearTimeout(P.lp); P.lp = 0; }
@@ -960,7 +1003,7 @@ window.addEventListener('pointermove', e => {
       if (P.tag && !P.nearPen && (P.type !== 'touch' || P.held) && beginDrag(e)) return;
       if (P.tag) { P.tag.classList.remove('lift'); P.tag = null; }   // a finger that moved before the hold scrolls
     }
-    if (P.moved && (P.type === 'touch' || (P.type === 'pen' && S.show.on)) && !P.nearPen) {   // in show mode the pen draws nothing, so it scrolls
+    if (P.moved && (P.type === 'touch' || (P.type === 'pen' && S.phase !== 'rehearse')) && !P.nearPen) {   // where the pen draws nothing, it scrolls
       const dt = Math.max(1, e.timeStamp - P.tm), dx = e.clientX - P.x, dy = e.clientY - P.y;
       desk.scrollLeft -= dx; desk.scrollTop -= dy;
       P.vx = 0.6 * P.vx + 0.4 * dx / dt; P.vy = 0.6 * P.vy + 0.4 * dy / dt;
@@ -1250,11 +1293,11 @@ function blockAt(tg) {
 }
 function longPress(p) {
   const at = blockAt(document.elementFromPoint(p.x, p.y));
-  if (at && at.b && !S.editing && !S.show.on) editGroup(at.b.g);
+  if (at && at.b && !S.editing && !showLocked()) editGroup(at.b.g);
 }
 function handleTap(tg, x, y) {
   if (!tg || !tg.closest || S.editing || !tg.closest('.page')) return;
-  if (S.show.on) { showTap(tg); return; }   // show mode is read only: a tap pins and opens nothing
+  if (S.show.on && (showTap(tg) || showLocked())) return;   // a double tap is the mark of the line; in Show a tap pins and opens nothing
   const act = tg.closest('[data-act]'); if (act) { boardAction(act, x, y); return; }
   if (tg.closest('.grip')) return;   // a grip is only for dragging
   const tag = tg.closest('.tag');
@@ -1267,10 +1310,8 @@ function handleTap(tg, x, y) {
   const flag = tg.closest('.flag'); if (flag) { const b = S.byId.get(+flag.dataset.b); if (b) openFlagPop(b, x, y); return; }
   if (tg.closest('.page.facing')) return;
   const at = blockAt(tg); if (!at || !at.b) return;
-  const now = Date.now();
-  if (S.lastTap && S.lastTap.id === at.b.id && now - S.lastTap.t < 420) { S.lastTap = null; editGroup(at.b.g); return; }
-  S.lastTap = { id: at.b.id, t: now };
-  openPin(at.b, at.wi, x, y);
+  if (S.phase === 'write') { editGroup(at.b.g, at.b, at.wi); return; }   // Write: a tap on a word opens its text, the cursor on the word
+  openPin(at.b, at.wi, x, y);   // Rehearse: the cue pin
 }
 
 /* =====================================================================
@@ -1566,9 +1607,149 @@ function openFlagPop(b, x, y) {
 }
 
 /* ---------- in-place text editor ---------- */
-function editGroup(g) {
+/* the text of a group in a box over its place; with a block and a word, the cursor is put on that word */
+let editClose = null;
+/* ---------- write: the whole script as text (SHW-44), the forms beside it, and what fits offered under the cursor (TXT-32) ---------- */
+const WRITE_PAUSE = 1500;
+let writeT = 0, writeLast = '', writeItems = null, writeSel = 0, writeFrom = 0;
+function writeOpen() {
+  const ta = $('#wtext'); writeLast = ta.value = serialize(); $('#wsyntax').textContent = t('fmtHelp');
+  writeSyntax(S.view.syntax);
+  const c = Math.min(S.writeCaret || 0, ta.value.length);
+  ta.focus(); ta.setSelectionRange(c, c); writeReveal(ta, c);
+}
+function writeSyntax(on) { S.view.syntax = !!on; $('#wsyntax').hidden = !on; $('#bSyntax').classList.toggle('on', !!on); }
+/* what was typed goes into the show: after a pause, on blur, before a save and before a change of phase */
+function writeCommit() {
+  clearTimeout(writeT); writeT = 0;
+  const ta = $('#wtext'); if (S.phase !== 'write' || ta.value === writeLast) return false;
+  writeLast = ta.value;
+  return commitText(ta.value);
+}
+/* the block the text at offset off belongs to, and the offset a block starts at: the text is the blocks, their gaps and a newline each */
+function writeBlockAt(off) {
+  let n = 0;
+  for (const b of S.blocks) { n += b.gap; const e = n + b.raw.length + 1; if (off < e) return b; n = e; }
+  return S.blocks[S.blocks.length - 1] || null;
+}
+function writeOffsetOf(b) {
+  let n = 0;
+  for (const q of S.blocks) { n += q.gap; if (q === b) return n; n += q.raw.length + 1; }
+  return -1;
+}
+/* the line of the cursor is put a third of the way down the box */
+function writeReveal(ta, off) {
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 24, line = ta.value.slice(0, off).split('\n').length - 1;
+  const y = line * lh + 28;
+  if (y < ta.scrollTop + lh || y > ta.scrollTop + ta.clientHeight - 2 * lh) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+function writeGoto(b) {
+  const ta = $('#wtext'); let off = writeOffsetOf(b);
+  if (off < 0 || ta.value.slice(off, off + b.raw.length) !== b.raw) off = ta.value.indexOf(b.raw);   // the box has moved on since the last commit
+  if (off < 0) return;
+  ta.focus(); ta.setSelectionRange(off, off + b.raw.length); writeReveal(ta, off);
+}
+/* Find in the box: the next match after the selection, without regard to case or accents, selected */
+function writeFind(q, dir) {
+  const ta = $('#wtext'); if (!q) return;
+  const base = s => Array.from(s, ch => ch.normalize('NFD')[0].toLowerCase()).join(''), v = base(ta.value), n = base(q);
+  let i = dir > 0 ? v.indexOf(n, ta.selectionEnd) : v.lastIndexOf(n, Math.max(0, ta.selectionStart - 1));
+  if (i < 0) i = dir > 0 ? v.indexOf(n) : v.lastIndexOf(n);
+  if (i < 0) { toast(t('notFound')); return; }
+  ta.setSelectionRange(i, i + n.length); writeReveal(ta, i);
+}
+/* where the cursor is on screen: the text up to it is laid out again in a hidden copy of the box */
+function writeCaretXY(ta, pos) {
+  const d = h('div'), cs = getComputedStyle(ta);
+  for (const p of ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'paddingTop', 'paddingLeft', 'paddingRight', 'borderWidth', 'boxSizing', 'tabSize']) d.style[p] = cs[p];
+  d.style.cssText += ';position:fixed;top:0;left:0;visibility:hidden;white-space:pre-wrap;overflow-wrap:break-word;overflow:hidden'; d.style.width = ta.clientWidth + 'px';
+  d.textContent = ta.value.slice(0, pos); const sp = h('span', null, '\u200b'); d.appendChild(sp);
+  document.body.appendChild(d);
+  const r = ta.getBoundingClientRect(), x = r.left + sp.offsetLeft - ta.scrollLeft, y = r.top + sp.offsetTop - ta.scrollTop + sp.offsetHeight;
+  d.remove(); return [x, y];
+}
+/* the next number of a department at a place of the text: the last one before it, plus one */
+function writeNext(code, before) {
+  const re = new RegExp(TOKEN_SRC, 'g'); let last = '', m;
+  while ((m = re.exec(before))) if (m[1] === code && m[2]) last = m[2].split(/\s\/\s+/)[0].trim();
+  if (!last) return '1';
+  m = /^(.*?)(\d+)$/.exec(last); if (m) return m[1] + (+m[2] + 1);
+  m = /^(\d+)/.exec(last); return m ? String(+m[1] + 1) : '';
+}
+/* the cues open at a place of the text, newest first: started before it and not ended before it */
+function writeOpenCues(before) {
+  const re = new RegExp(TOKEN_SRC, 'g'), open = []; let m;
+  while ((m = re.exec(before))) {
+    const end = m[1][0] === '/', dept = end ? m[1].slice(1) : m[1], label = (m[2] || '').split(/\s\/\s+/)[0].trim(), name = dept + (label ? ' ' + label : '');
+    if (isReview(dept)) continue;
+    if (!end) open.push(name); else { const i = open.lastIndexOf(name); if (i >= 0) open.splice(i, 1); else { const j = open.map(x => x.split(' ')[0]).lastIndexOf(dept); if (j >= 0) open.splice(j, 1); } }
+  }
+  return Array.from(new Set(open.reverse()));
+}
+/* every character: the list at the top of the script, then every name that speaks */
+function writeNames() {
+  const out = [], seen = new Set(), add = n => { if (n && !seen.has(n)) { seen.add(n); out.push(n); } };
+  if (S.meta) for (const c of S.meta.chars) add(c.name);
+  for (const b of S.blocks) if (b.type === 'speech') add(b.name);
+  return out;
+}
+/* what fits at the cursor: a character at the start of a line, a department after {, an open cue after {/ */
+function writeOffer() {
+  const ta = $('#wtext'), v = ta.value, c = ta.selectionStart;
+  if (ta.selectionEnd !== c) return writeHide();
+  const ls = v.lastIndexOf('\n', c - 1) + 1, line = v.slice(ls, c); let items = null, m;
+  if ((m = /\{(\/?)([^{}|\s]*)$/.exec(line))) {
+    const pre = m[2].toUpperCase(), before = v.slice(0, ls + m.index);
+    writeFrom = ls + m.index + 1 + m[1].length;
+    items = m[1] ? writeOpenCues(before).filter(n => n.startsWith(pre)).map(n => ({ text: n, ins: n + '}', back: 0 }))
+      : S.cfg.departments.filter(d => d.code.startsWith(pre)).map(d => { const nx = d.review ? '' : writeNext(d.code, before); return { text: d.code, note: d.review ? d.name : t('wNext', nx), ins: d.code + (nx ? ' ' + nx : '') + ' | }', back: 1 }; });
+  } else if ((m = /^(&\s*)?(\p{L}[\p{L}' ]*)$/u.exec(line))) {
+    const pre = m[2].toUpperCase(); writeFrom = ls + (m[1] || '').length;
+    items = writeNames().filter(n => n.toUpperCase().startsWith(pre) && n.toUpperCase() !== pre).map(n => ({ text: n, ins: n + ': ', back: 0 }));
+  }
+  if (!items || !items.length) return writeHide();
+  writeItems = items.slice(0, 8); writeSel = 0; writeDraw();
+}
+function writeDraw() {
+  const box = $('#wcomp'), ta = $('#wtext'); box.textContent = '';
+  writeItems.forEach((it, i) => {
+    const d = h('div', i === writeSel ? 'on' : ''); d.append(it.text); if (it.note) d.appendChild(h('small', null, it.note));
+    d.onmousedown = ev => { ev.preventDefault(); writeSel = i; writeTake(); };
+    box.appendChild(d);
+  });
+  const [x, y] = writeCaretXY(ta, ta.selectionStart);
+  box.hidden = false;
+  box.style.left = Math.min(x, innerWidth - box.offsetWidth - 8) + 'px'; box.style.top = Math.min(y + 2, innerHeight - box.offsetHeight - 8) + 'px';
+}
+function writeHide() { writeItems = null; $('#wcomp').hidden = true; }
+function writeTake() {
+  const ta = $('#wtext'), it = writeItems && writeItems[writeSel]; if (!it) return;
+  ta.setRangeText(it.ins, writeFrom, ta.selectionStart, 'end');
+  const c = ta.selectionStart - it.back; ta.setSelectionRange(c, c);
+  writeHide(); writeInput();
+}
+function writeInput() { clearTimeout(writeT); writeT = setTimeout(writeCommit, WRITE_PAUSE); writeOffer(); }
+function writeKey(ev) {
+  if (writeItems) {
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); writeSel = (writeSel + (ev.key === 'ArrowDown' ? 1 : writeItems.length - 1)) % writeItems.length; writeDraw(); return; }
+    if (ev.key === 'Enter' || ev.key === 'Tab') { ev.preventDefault(); writeTake(); return; }
+    if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); writeHide(); return; }
+  } else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); writeCommit(); ev.target.blur(); return; }   // out of the box: the single keys act
+  if (/^(Arrow(Left|Right)|Home|End|Page(Up|Down))$/.test(ev.key)) writeHide();
+}
+function bindWrite() {
+  const ta = $('#wtext');
+  ta.addEventListener('input', writeInput);
+  ta.addEventListener('keydown', writeKey);
+  ta.addEventListener('blur', () => { writeHide(); writeCommit(); });
+  ta.addEventListener('pointerdown', writeHide);
+  ta.addEventListener('wheel', writeHide);   // not 'scroll': the box scrolls by itself as the typing reaches its bottom
+}
+function editGroup(g, b, wi) {
   closePop();
   const bs = gBlocks(g), i0 = S.blocks.indexOf(bs[0]);
+  let caret = -1;
+  if (b && wi >= 0 && bs.includes(b)) { const w = b.tokens[wi]; if (w && w.k === 'w') caret = bs.slice(0, bs.indexOf(b)).reduce((n, q) => n + q.raw.length + 1, 0) + w.s; }
   jumpTo(bs[0], true);
   const [pi] = pageIndexOf(bs[0]), row = rowEl(pi, bs[0]);
   const rr = (row ? (row.closest('.row') || row) : S.els[pi].a).getBoundingClientRect();
@@ -1588,7 +1769,8 @@ function editGroup(g) {
   const fit = () => { ta.style.height = 'auto'; ta.style.height = clamp(ta.scrollHeight + 4, 70, window.innerHeight * 0.6) + 'px'; };
   fit();
   ed.style.top = clamp(rr.top - 9, 8, Math.max(8, window.innerHeight - ed.offsetHeight - 8)) + 'px';
-  const close = () => { ed.hidden = true; ed.textContent = ''; S.editing = false; };
+  const close = () => { ed.hidden = true; ed.textContent = ''; S.editing = false; editClose = null; };
+  editClose = close;   // Escape closes the editor from wherever the focus went (a refused button, say)
   cancel.onclick = close;
   cm.onclick = () => { const v = ta.value; close(); commitText(textWith(i0, bs.length, isNote ? uncomment(v) : commentOut(v))); };
   save.onclick = () => { const v = ta.value; close(); commitText(textWith(i0, bs.length, v)); };
@@ -1596,8 +1778,14 @@ function editGroup(g) {
   ta.addEventListener('keydown', ev => {
     if (ev.key === 'Escape') { ev.preventDefault(); close(); }
     else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); save.onclick(); }
+    else if ((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && (ev.ctrlKey || ev.metaKey)) {   // save, and open the next or the previous block
+      ev.preventDefault();
+      const ng = S.groups[S.groups.indexOf(g) + (ev.key === 'ArrowDown' ? 1 : -1)], nid = ng ? gBlocks(ng)[0].id : 0;
+      save.onclick();
+      const nb = nid && S.byId.get(nid); if (nb) editGroup(nb.g);
+    }
   });
-  ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  ta.focus(); ta.setSelectionRange(caret < 0 ? ta.value.length : caret, caret < 0 ? ta.value.length : caret);
 }
 
 /* =====================================================================

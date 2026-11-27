@@ -37,9 +37,11 @@ const { ok, open, nameBox, popGone } = require('./_util');
   const rv = await page.evaluate(() => { const r = PB.reviewData(); return { no: r.noChar.map(o => o.name + '×' + o.n), silent: r.silent, count: r.count }; });
   ok(JSON.stringify(rv.no) === '["MARCA×1","LUCA×2"]', 'only names missing from the list are reported: ' + JSON.stringify(rv.no));
   ok(JSON.stringify(rv.silent) === '["NONNA"]' && rv.count === 2, 'group names (ALL, ALL BUT x, OTHERS, TUTTI TRANNE x, GLI ALTRI) are not checked; unused character listed');
+  await page.evaluate(() => PB.setPhase('write'));   // Review is a panel of Write
   await page.locator('#bReview').click();
   ok(await page.locator('#drawer h3', { hasText: 'Not in the character list (2)' }).count() === 1 && await page.locator('#drawer h3', { hasText: 'Listed but never speaks (1)' }).count() === 1, 'Review panel shows both lists');
   await page.locator('#bReview').click();
+  await page.evaluate(() => PB.setPhase('rehearse'));
 
   // "+ Board" on the first script page must not land above the frontmatter
   await page.locator('.addboard').first().click(); await nameBox(page); await page.keyboard.press('Enter'); await popGone(page);

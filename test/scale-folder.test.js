@@ -1,5 +1,5 @@
 const { chromium } = require('playwright');
-const { nameBox, popGone } = require('./_util');
+const { nameBox, popGone, rehearseFirst } = require('./_util');
 const path = require('path'), fs = require('fs'), http = require('http');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
@@ -31,7 +31,7 @@ function big() {
   const url = 'http://localhost:' + srv.address().port + '/promptbook.html';
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 950 }, locale: 'it-IT', hasTouch: true });
-  const page = await ctx.newPage();
+  const page = await ctx.newPage(); await rehearseFirst(page);
   const errs = [];
   page.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack));
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });

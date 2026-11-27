@@ -13,10 +13,9 @@ Run a performance from the book: the line follows the show, the panel tells you 
 ## Start
 
 1. Scroll to the top of the show.
-2. Press **Show** (or S). The toolbar and the boards go; the script fills the window; the panel on the right shows the clock and the first calls.
-3. Leave **Time it** off. On a show night nothing should be learned.
-4. **Double-tap the first word.** The line is there, stopped.
-5. On the first word spoken (or on your own go for the opening cue), press **Space**.
+2. Press **Show** at the top (or S). The toolbar and the boards go; the script fills the window; the panel on the right shows the clock and the first calls. In Show nothing is learned and nothing can be changed, and this is the only phase that calls the cues. (If you come from Rehearse with Timing on, the line is where the rehearsal left it.)
+3. **Double-tap the first word.** The line is there, stopped.
+4. On the first word spoken (or on your own go for the opening cue), press **Space**.
 
 ## While it runs
 
@@ -52,9 +51,9 @@ Press Space as the act ends. The clock stops with the line. Double-tap the first
 
 ## After the show
 
-Press **Leave** twice, or S twice. The toolbar, the boards and your zoom are back.
+Press **Leave** twice, or S twice. You are back where you came from, Write or Rehearse, with the toolbar, the boards and your zoom.
 
-Nothing in the book has changed. If you saw something to fix (a cue a word late), fix it now, outside show mode, and save a revision.
+Nothing in the book has changed. If you saw something to fix (a cue a word late), fix it now, in Rehearse, and save a revision.
 
 ## The keys
 
@@ -67,12 +66,14 @@ Nothing in the book has changed. If you saw something to fix (a cue a word late)
 | C, I, N | Cues, ink, night mode |
 | L | The cue list |
 | + − 0 | Zoom |
-| H | Guide to the buttons of show mode |
+| H | Guide to the buttons of Show |
 | S, twice | Leave |
+
+W and R do nothing in Show: a stray key cannot unlock the book.
 
 ## If something is off
 
-- **I cannot change anything.** Right: that is show mode. Leave it to edit.
+- **I cannot change anything.** Right: that is Show. Leave it, and press Rehearse or Write.
 - **A single tap does nothing.** By design, so a brush of the hand does not move the line. Double-tap.
 - **The line is far from the show after a jump.** Double-tap where they are. It is one gesture however far.
 - **The screen dimmed.** The tool asks the browser to keep it awake; not every browser agrees. Set the laptop not to sleep.

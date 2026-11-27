@@ -4,7 +4,7 @@ You have the script as a Word or text file and want it in a prompt book, saved a
 
 ## Before you start
 
-- Chrome or Edge on a computer. Other browsers open the tool but cannot save show files.
+- Chrome or Edge on a computer. Other browsers open the tool and a show file, but you save by downloading the file yourself ([Move and back up](12-move-and-back-up.md)).
 - The script as text you can copy. From Word: select all, copy.
 
 ## Steps
@@ -41,6 +41,6 @@ A show file with the script paged as it will print, a clean Review, and a first 
 - **Whole pages are "not recognised".** The names are probably not in capitals. The tool takes `NAME:` as a speech only when the name has no lower-case letters. Ask the author for the names in capitals, or correct them with find and replace in an editor before pasting.
 - **A speech swallowed the next one.** A line that does not start with `NAME:` continues the block above. Put the name and colon back.
 - **An act does not start a new page.** Its heading needs `#` in front, or one of the words the tool knows (ACT, SCENE, PROLOGUE and their Italian forms) at the start of the line.
-- **"This browser cannot save show files."** You are not in Chrome or Edge. The show stays in the browser; use **Export backup** to get it out, then open the tool in Chrome or Edge and **Import a backup file…**.
+- **"This browser cannot write into a show file by itself."** You are not in Chrome or Edge. Work as usual, then press **Download show file** in the Menu or in the banner; until you do, the changes are in this browser only.
 
 The exact forms the tool reads are in the [Reference](../reference.md#writing-the-script).

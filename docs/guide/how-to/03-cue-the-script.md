@@ -4,6 +4,8 @@ Pin cues on their words, close the ones that end, and get a cue sheet for each o
 
 ## Pin a cue on a word
 
+Cues are pinned in **Rehearse** (R): there a tap on a word is a cue. In Write, where the script is text, a cue is typed as `{LX}` after its word, and the list that opens after `{` gives the department its next number.
+
 1. **Tap the word** the cue is called on.
 2. **Press the department** in the box that opens (LX, SND, …). With a keyboard, the first letter of its code does the same.
 3. The cue is there, with the next number of that department already given. **Type the margin text** (what shows on the tag: "blackout") and press Enter. Tab takes you to the description, a longer text that appears only in the cue list. To give another number, Shift+Tab goes back to it.

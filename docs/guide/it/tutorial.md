@@ -50,9 +50,9 @@ Ora l'elenco ha una revisione, e sopra una riga dice che i numeri di pagina sono
 
 ## 6. Riscrivi una battuta
 
-Fai doppio clic (o doppio tocco) sulla battuta su cui hai scritto al passo 4. Il suo testo si apre in un editor.
+Premi **Scrivi** in alto (o W): è la fase del testo, e tutto il copione è ora un riquadro. Trova la battuta su cui hai scritto al passo 4 (Ctrl+F, le sue prime parole, Invio).
 
-Cambia qualche parola e aggiungi una frase. Premi Ctrl+Invio.
+Cambia qualche parola e aggiungi una frase. Inizia la riga seguente con le prime lettere del nome di un personaggio: un elenco propone il nome, e Invio lo prende. Poi premi **Prova** (R): le pagine sono tornate.
 
 Sono successe tre cose, e conviene trovarle tutte:
 
@@ -82,15 +82,15 @@ Apri quel file in una nuova scheda del browser. È ciò che vede un attore: il t
 
 ## 9. Fallo andare
 
-Di nuovo nel copione di scena, premi **Spettacolo** (o S).
+Di nuovo nel copione di scena, premi **Spettacolo** in alto (o S).
 
 La barra è sparita e il copione è grande. Un pannello a destra mostra un orologio e le prime chiamate. Premi Spazio.
 
 Una riga comincia a scendere lungo il copione. Quando si avvicina al tuo cue il pannello dice **ATTENZIONE**, poi **PRONTI** con un conto alla rovescia, poi **VIA**. Fai doppio clic su una parola più in basso: la riga salta lì, come faresti quando gli attori saltano avanti. Premi Spazio per fermarla.
 
-Prova a disegnare o a toccare una parola: non succede niente. In modalità spettacolo il copione non si può modificare.
+Prova a disegnare o a toccare una parola: non succede niente. In Spettacolo il copione non si può modificare.
 
-Premi **Esci** due volte (o S due volte). È tornato tutto.
+Premi **Esci** due volte (o S due volte). È tornato tutto com'era. Le tre parole in alto, **Scrivi**, **Prova** e **Spettacolo**, sono le tre fasi del copione: il testo, il lavoro delle prove, la replica.
 
 ## 10. Torna indietro
 

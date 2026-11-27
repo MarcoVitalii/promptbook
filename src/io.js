@@ -11,6 +11,7 @@ function resetStore() {
   s.bfiles = new Map();   // every drawing in boards/: file name -> the board name written in it, null when it has none
   s.gone = [];            // templates the settings name that had no file when the show was opened (STO-27)
   s.draft = 0;            // what the last draft in the browser lacks: 0 nothing, 1 the images of the boards, 2 it was not written (STO-26)
+  s.unsent = false;       // a show file without a handle (STO-28): changed since it was opened or last downloaded
 }
 const readFile = (name, sub) => S.store.files.get(sub ? sub + '/' + name : name) || null;
 async function readText(name, sub) { const f = readFile(name, sub); return f ? f.text() : null; }
@@ -173,8 +174,11 @@ function pruneImages(files) {
     for (const k of had) if (!live.has(k) && !all.includes(k.slice(k.indexOf('/') + 1))) files.delete(k);
   });
 }
+/* A browser that cannot write into a file on disk holds the show file in memory, without a handle. A save then goes to the draft in
+   the browser, and the file itself leaves as a download when the user asks (STO-28 to STO-30). */
 async function flushZip() {
   const s = S.store;
+  if (!s.handle) { s.unsent = true; try { saveDraft(await fullBundle()); } finally { setStatus(); showMemBanner(); } return; }   // the history comes here too, past saveNow
   await pruneImages(s.files);
   const blob = await buildZip(s.files);
   const w = await s.handle.createWritable(); await w.write(blob); await w.close();
@@ -197,6 +201,7 @@ function markDirty(what, name) {
 const errText = e => String((e && e.message) || e);
 function saveError(e) { const s = S.store; if (!s.err || errText(s.err) !== errText(e)) toast(t('errSave', errText(e))); s.err = e; console.error(e); setStatus(); }
 async function saveNow(force) {
+  if (S.phase === 'write') writeCommit();   // what is still only in the box goes with the save
   const s = S.store, d = s.dirty;
   if (s.saving) { s.again = true; return; }
   clearTimeout(saveT);
@@ -237,9 +242,9 @@ function bundle(withImages) {
 /* The draft is the whole show in one value of localStorage, which has a quota. Over it the draft is written without the images
    of the boards; when that fails too nothing is written, and the save has failed (STO-3). Either is said when it starts, in a message
    and in the banner, not at every save (STO-26). */
-function saveDraft() {
+function saveDraft(full) {
   const s = S.store, was = s.draft;
-  try { localStorage.setItem('promptbook:draft', JSON.stringify(bundle(true))); s.draft = 0; }
+  try { localStorage.setItem('promptbook:draft', JSON.stringify(full || bundle(true))); s.draft = 0; }
   catch (e) { try { const b = bundle(false); if (b.config.defaultBoard) delete b.config.defaultBoard.imageData; localStorage.setItem('promptbook:draft', JSON.stringify(b)); s.draft = 1; } catch (e2) { s.draft = 2; } }
   if (s.draft !== was) { showMemBanner(); if (s.draft === 1) toast(t('draftNoImg')); }
   if (s.draft === 2) throw new Error(t('draftNone'));
@@ -250,11 +255,11 @@ function setStatus() {
   const pending = d.script || d.ink || d.cfg || d.boards.size > 0 || d.tpls.size > 0;
   el.classList.toggle('err', !!s.err); el.title = s.err ? String(s.err.message || s.err) : '';
   if (s.err) el.textContent = t('stErr');
-  else if (onDisk()) el.textContent = s.saving ? t('stSaving') : pending ? t('stPending') : s.lastSave ? t('stSaved', s.lastSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : s.name;
+  else if (onDisk()) el.textContent = s.saving ? t('stSaving') : pending ? t('stPending') : s.unsent ? t('stUnsent') : s.lastSave ? t('stSaved', s.lastSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : s.name;
   else el.textContent = s.mode === 'memory' ? t('stMem') : '';
 }
 function showBanner(text, actions) {
-  const bn = $('#banner'); bn.textContent = ''; bn.hidden = false;
+  const bn = $('#banner'); bn.textContent = ''; bn.hidden = false; delete bn.dataset.k;
   bn.appendChild(h('span', null, text));
   for (const [label, fn] of actions) { const b = h('button', 'btn sm', label); b.type = 'button'; b.onclick = fn; bn.appendChild(b); }
   if (S.loaded) { sizeWrap(); renderVisible(); }
@@ -264,9 +269,11 @@ function showMemBanner() {
   if (s.conflict) return;
   if (s.bad.length) { showDamaged(); return; }
   if (s.mode === 'memory') {
-    const acts = [[t('mExport'), exportBundle]];
-    if (window.showSaveFilePicker) acts.unshift([t('mSaveTo'), saveToZip]);
+    const acts = [[t(window.showSaveFilePicker ? 'mSaveTo' : 'mDownload'), saveToZip], [t('mExport'), exportBundle]];
     showBanner(s.draft === 1 ? t('draftNoImg') : s.draft ? t('errSave', t('draftNone')) : t('memBanner'), acts);
+  } else if (onDisk() && !s.handle && s.unsent) {   // said once, not at every save
+    const bn = $('#banner'), k = 'dl' + s.draft;
+    if (bn.hidden || bn.dataset.k !== k) { showBanner(s.draft === 2 ? t('errSave', t('draftNone')) : t('dlBanner'), [[t('mDownload'), saveToZip]]); bn.dataset.k = k; }
   } else if (!$('#banner').hidden) { $('#banner').hidden = true; if (S.loaded) { sizeWrap(); renderVisible(); } }
 }
 function showDamaged() {
@@ -298,7 +305,7 @@ document.addEventListener('visibilitychange', checkExternal);
 window.addEventListener('focus', checkExternal);
 window.addEventListener('beforeunload', e => {
   const s = S.store, d = s.dirty;
-  if (s.err || (onDisk() && (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size))) { e.preventDefault(); e.returnValue = ''; }   // s.err without a show file: the draft could not be written
+  if (s.err || s.unsent || (onDisk() && (d.script || d.ink || d.cfg || d.boards.size || d.tpls.size))) { e.preventDefault(); e.returnValue = ''; }   // s.err without a show file: the draft could not be written
 });
 
 function idb() {
@@ -338,6 +345,7 @@ function loadShow(cfg, text, inkF) {
   S.loaded = true; $('#start').hidden = true;
   relayout(true); desk.scrollTop = 0; renderVisible();
   updUndo(); setStatus(); showMemBanner(); relWarn();
+  if (openPhase !== 'write') setPhase(openPhase); else writeOpen();   // the box shows the show just opened
 }
 async function grant(handle) {
   if (!handle.queryPermission) return true;
@@ -345,16 +353,31 @@ async function grant(handle) {
   if (p !== 'granted') p = await handle.requestPermission({ mode: 'readwrite' });
   return p === 'granted';
 }
-async function openZipFile(handle) {
-  try {
+/* With a file and no handle, the show file came through the browser's own file box: it is held in memory and cannot be written back */
+async function openZipFile(handle, file) {
+  if (!file) try {
     if (!handle) [handle] = await window.showOpenFilePicker({ id: 'promptbook', types: ZIP_TYPES });
     if (!(await grant(handle))) throw new Error(t('errPerm'));
   } catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return false; }
-  let files, file;
-  try { file = await handle.getFile(); files = await readZip(file); } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); return false; }
+  let files;
+  try { if (!file) file = await handle.getFile(); files = await readZip(file); } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); return false; }
   clearTimeout(saveT); resetStore();
-  const s = S.store; s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp.zip = file.lastModified;
+  const s = S.store; s.mode = 'zip'; s.handle = handle || null; s.files = files; s.name = showName(handle || file);
+  if (handle) s.stamp.zip = file.lastModified;
   return loadStore(handle);
+}
+function pickZip() {
+  const fp = $('#filePick'); fp.accept = '.zip,application/zip'; fp.value = '';
+  fp.onchange = () => { const f = fp.files[0]; if (f) openZipFile(null, f); };
+  fp.click();
+}
+const openShow = () => window.showOpenFilePicker ? openZipFile() : pickZip();
+/* the show file leaves as a download: everything in it, the history too */
+async function downloadZip() {
+  const s = S.store;
+  try { await pruneImages(s.files); download((s.name || 'show') + '.promptbook.zip', await buildZip(s.files)); }
+  catch (e) { saveError(e); return; }
+  s.unsent = false; s.lastSave = new Date(); setStatus(); showMemBanner(); toast(t('downloaded'));
 }
 async function reloadZip() { return openZipFile(S.store.handle); }
 const ZIP_TYPES = [{ description: 'Promptbook', accept: { 'application/zip': ['.zip'] } }];
@@ -395,7 +418,7 @@ async function loadStore(handle) {
     if (cfg && cfg.defaultBoard && cfg.defaultBoard.image) imgs.add('boards/' + cfg.defaultBoard.image);
     for (const key of imgs) { const blob = s.files.get(key); if (blob) setURL(key, blob); }
     loadShow(cfg, text || '', ink);
-    idbSet('dir', handle);
+    if (handle) idbSet('dir', handle);
     if (text == null && !relNewer(S.cfg) && !s.bad.includes('script.md')) openTextDialog(true);   // the box would take the place of the warning; a script set aside is not a show without a script
   } catch (e) { console.error(e); toast(t('errOpen', (e && e.message) || '')); resetStore(); showStart(); return false; }
   return true;
@@ -410,12 +433,14 @@ function startMemory(text, cfg, inkF, boards, templates) {
 function loadBundle(b) { startMemory(b.script || '', b.config, b.ink, b.boards, b.templates); }
 async function dataURLBlob(u) { return (await fetch(u)).blob(); }
 async function saveToZip() {
-  let handle;
-  try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
-  catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
+  let handle = null;
   const s = S.store;
+  if (window.showSaveFilePicker) {
+    try { handle = await window.showSaveFilePicker({ id: 'promptbook', suggestedName: slug(titleOf() || S.store.name || 'show') + '.promptbook.zip', types: ZIP_TYPES }); if (!(await grant(handle))) return; }
+    catch (e) { if (!e || e.name !== 'AbortError') toast(t('errOpen', (e && e.message) || '')); return; }
+  } else if (onDisk()) { await saveNow(); if (!s.bad.length) await downloadZip(); return; }   // already a show file held in memory: it is downloaded as it is
   const files = new Map(s.mode === 'zip' ? s.files : []);   // keeps the images already in the show file, and the history
-  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = showName(handle); s.stamp = {}; s.err = null; s.conflict = false; s.bad = [];   // a new file is a choice: it gets the show as it is, and damaged/
+  s.mode = 'zip'; s.handle = handle; s.files = files; s.name = handle ? showName(handle) : slug(titleOf() || s.name || 'show'); s.stamp = {}; s.err = null; s.conflict = false; s.bad = [];   // a new file is a choice: it gets the show as it is, and damaged/
   try {
     for (const B of Array.from(S.boards.values()).concat(Array.from(S.templates.values()))) if (B.imageData && B.image) {
       const blob = await dataURLBlob(B.imageData); writeBlob(B.tpl ? 'templates' : 'boards', B.image, blob);
@@ -426,18 +451,27 @@ async function saveToZip() {
   } catch (e) { saveError(e); }
   s.dirty.script = s.dirty.ink = s.dirty.cfg = true; S.boards.forEach(B => s.dirty.boards.add(B.name)); S.templates.forEach(T => s.dirty.tpls.add(T.name));
   await saveNow(true);
-  idbSet('dir', handle);
-  try { localStorage.removeItem('promptbook:draft'); } catch (e) { /* ignore */ }
+  if (handle) { idbSet('dir', handle); try { localStorage.removeItem('promptbook:draft'); } catch (e) { /* ignore */ } }
   showMemBanner(); updPanels(); refreshFacing();
+  if (!handle) await downloadZip();
 }
-async function exportBundle() {
+/* An image read from a show file has no type of its own; it gets the one its name gives, or the backup would hold
+   something that is not a picture and would be dropped when read (STO-21). */
+const IMG_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml' };
+const imgData = (f, name) => blobToDataURL(/^image\//.test(f.type) ? f : new Blob([f], { type: IMG_MIME[String(name).split('.').pop().toLowerCase()] || 'image/png' }));
+/* the whole show as one value, the images of a show file read back into it */
+async function fullBundle() {
   const b = bundle(true);
   if (onDisk()) {
-    for (const o of b.boards) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'boards'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
-    for (const o of b.templates) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'templates'); if (f) o.imageData = await blobToDataURL(f); } catch (e) { /* skip image */ } }
+    for (const o of b.boards) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'boards'); if (f) o.imageData = await imgData(f, o.image); } catch (e) { /* skip image */ } }
+    for (const o of b.templates) if (o.image && !o.imageData) { try { const f = readFile(o.image, 'templates'); if (f) o.imageData = await imgData(f, o.image); } catch (e) { /* skip image */ } }
     const db = b.config.defaultBoard;
-    if (db && db.image && !db.imageData) { try { const f = readFile(db.image, 'boards'); if (f) db.imageData = await blobToDataURL(f); } catch (e) { /* skip */ } }
+    if (db && db.image && !db.imageData) { try { const f = readFile(db.image, 'boards'); if (f) db.imageData = await imgData(f, db.image); } catch (e) { /* skip */ } }
   }
+  return b;
+}
+async function exportBundle() {
+  const b = await fullBundle();
   const d = new Date(), p = n => String(n).padStart(2, '0');
   const stamp = d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
   download(slug(titleOf() || S.store.name || 'show') + '-' + stamp + '.promptbook.json', new Blob([JSON.stringify(b)], { type: 'application/json' }));
@@ -872,12 +906,17 @@ function applyPaper() {
   st.setProperty('--tfade', S.cfg.templateFade || 0.4);
   $('#pageRule').textContent = '@page{size:' + pp.css + ';margin:0}@page cues{size:' + pp.css + ';margin:12mm}@media print{#cuePrint{page:cues;padding:0!important}}';
 }
-function savePrefs() { try { localStorage.setItem('promptbook:view', JSON.stringify({ facing: (S.show.keep || S.view).facing, cues: S.view.cues, ink: S.view.ink, night: S.view.night, finger: S.tool.finger, lang: LANG })); } catch (e) { /* ignore */ } }
+let openPhase = 'write';
+function savePrefs() {
+  openPhase = S.phase === 'show' ? S.show.from || 'write' : S.phase;
+  try { localStorage.setItem('promptbook:view', JSON.stringify({ facing: (S.show.keep || S.view).facing, cues: S.view.cues, ink: S.view.ink, night: S.view.night, timing: S.view.timing, syntax: S.view.syntax, finger: S.tool.finger, lang: LANG, phase: openPhase })); } catch (e) { /* ignore */ }
+}
 function applyView() {
   const c = document.body.classList, v = S.view;
   c.toggle('facing', v.facing); c.toggle('nocues', !v.cues); c.toggle('noink', !v.ink); c.toggle('night', v.night);
   $('#bFacing').classList.toggle('on', v.facing); $('#bCues').classList.toggle('on', v.cues); $('#bInk').classList.toggle('on', v.ink);
   $('#bNight').classList.toggle('on', v.night); $('#zFit').classList.toggle('on', v.fit);
+  $('#bTiming').classList.toggle('on', v.timing);
   $('#bFinger').classList.toggle('on', S.tool.finger && S.tool.mode !== 'erase'); $('#bErase').classList.toggle('on', S.tool.mode === 'erase');
   $$('#pens .sw').forEach(b => b.classList.toggle('on', S.tool.mode === 'pen' && b.dataset.c === S.tool.colour));
 }
@@ -902,9 +941,9 @@ function buildMenu() {
   add(t('mImport'), importBundle);
   add(t('guide'), openGuide);
   add(t('keys'), openKeys);
-  add(t('mSaveTo'), saveToZip, !window.showSaveFilePicker || !S.loaded);
-  add(t('mOpen'), () => openZipFile(), !fs);
-  add(t('mClose'), async () => { await saveNow(); S.loaded = false; showStart(); }, !S.loaded);
+  add(t(window.showSaveFilePicker ? 'mSaveTo' : 'mDownload'), saveToZip, !S.loaded);
+  add(t('mOpen'), openShow);
+  add(t('mClose'), async () => { await saveNow(); S.loaded = false; showOff(); showStart(); }, !S.loaded);   // closed first, so that Write is not what the browser remembers
 }
 function bindUI() {
   const pens = $('#pens');
@@ -919,17 +958,20 @@ function bindUI() {
   $('#bUndo').onclick = undo; $('#bRedo').onclick = redo;
   const tog = (id, key, after) => { $(id).onclick = () => { S.view[key] = !S.view[key]; savePrefs(); applyView(); if (after) after(); }; };
   tog('#bFacing', 'facing', () => { sizeWrap(); renderVisible(); });
+  tog('#bTiming', 'timing', lineSync);   // the line in Rehearse comes and goes with it
+  $('#bSyntax').onclick = () => { writeSyntax(!S.view.syntax); savePrefs(); };
+  bindWrite();
   tog('#bCues', 'cues'); tog('#bInk', 'ink'); tog('#bNight', 'night');
   $('#zOut').onclick = () => setZoom(1 / 1.15); $('#zIn').onclick = () => setZoom(1.15); $('#zFit').onclick = () => setZoom(0);
   $('#outline').onchange = e => { const b = S.byId.get(+e.target.value); e.target.value = ''; if (b) jumpTo(b); };
   $('#search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(e.target.value.trim(), e.shiftKey ? -1 : 1); } });
   $('#search').addEventListener('input', () => { S.findAt = null; });
   $('#bKeys').onclick = openKeys; $('#bGuide').onclick = openGuide;
-  $('#bShow').onclick = showOn; $('#shPlay').onclick = showToggle; $('#shBack').onclick = showBack; $('#shLeave').onclick = showLeave;
+  $('#bWrite').onclick = () => setPhase('write'); $('#bRehearse').onclick = () => setPhase('rehearse'); $('#bShow').onclick = () => setPhase('show');
+  $('#shPlay').onclick = showToggle; $('#shBack').onclick = showBack; $('#shLeave').onclick = showLeave;
   const pace = d => () => { showTempo(S.show.tempo + d); showTick(); };   // of the night: the line against the times
   $('#shSlow').onclick = pace(-0.05); $('#shFast').onclick = pace(0.05);
   $('#shUse').onclick = () => { showTempo(showMeasured()); S.show.cal = { want: 0, ms: 0 }; showTick(); };
-  $('#shLearn').onclick = () => { showSet(showNow()); S.show.learn = !S.show.learn; showMode(S.show.opt.mode); };
   $('#shMRough').onclick = () => showMode('rough'); $('#shMLine').onclick = () => showMode('line'); $('#shNext').onclick = () => showStep(1);
   $('#shDn').onclick = () => { showNudge(-5); showTick(); }; $('#shUp').onclick = () => { showNudge(5); showTick(); };
   $('#shUndo').onclick = () => { showUnlearn(); showTick(); };
@@ -952,29 +994,28 @@ function bindUI() {
   };
 }
 /* ---------- keys ---------- */
-/* the shortcuts dialog: keys, then the string that says what they do */
-const KEYS = [
-  ['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'],
-  ['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip'],
-  ['B', 'boardsTip'], ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['R', 'review'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['Del', 'kDel'], ['Esc', 'kEsc'], ['S', 'kShow'], ['H', 'guide'], ['?', 'keys']
-];
-/* the keys of show mode: ? lists only the ones of the mode the book is in */
-const KEYS_SHOW = [
-  ['Space', 'kShPlay'], ['Enter', 'kShBack'], ['\u2193 \u2191', 'kShStep'], ['[ ]', 'kShPace'],
-  ['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'],
-  ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds'], ['S', 'kShLeave'], ['H', 'guide'], ['?', 'keys']
-];
+/* the shortcuts dialog: keys, then the string that says what they do. ? lists the keys of the phase the book is in (SHW-48) */
+const KEYS_PHASE = [['W', 'kWrite'], ['R', 'kRehearse'], ['S', 'kShow']];
+const KEYS_LINE = [['Space', 'kShPlay'], ['Enter', 'kShBack'], ['\u2193 \u2191', 'kShStep']];
+const KEYS_EDIT = [['Ctrl+F /', 'kFind'], ['Ctrl+Z', 'undo'], ['Ctrl+Y', 'redo'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print']];
+const KEYS_PENS = [['1 2 3 4', 'kPens'], ['E', 'eraser'], ['F', 'fingerTip']];
+const KEYS_VIEW = [['C', 'cuesTip'], ['I', 'inkTip'], ['N', 'night'], ['L', 'cueList'], ['+ \u2212', 'kZoom'], ['0', 'kFit'], ['PgDn PgUp', 'kPage'], ['Home End', 'kEnds']];
+const KEYS_END = [['Del', 'kDel'], ['Esc', 'kEsc'], ['H', 'guide'], ['?', 'keys']];
+const KEYS = {
+  write: [...KEYS_PHASE, ['Ctrl+F /', 'kFind'], ['Ctrl+S', 'kSave'], ['Ctrl+P', 'print'], ['Y', 'syntaxTip'], ['V', 'review'], ['L', 'cueList'], ['N', 'night'], ['Esc', 'kWriteEsc'], ['H', 'guide'], ['?', 'keys']],
+  rehearse: [...KEYS_PHASE, ['T', 'timingTip'], ...KEYS_LINE, ...KEYS_EDIT, ...KEYS_PENS, ['B', 'boardsTip'], ...KEYS_VIEW, ...KEYS_END],
+  show: [...KEYS_LINE, ['[ ]', 'kShPace'], ...KEYS_VIEW, ['S', 'kShLeave'], ['H', 'guide'], ['?', 'keys']]
+};
 let keysClose = null;
 function openKeys() {
   keysClose = openDlg(t('keys'), (body, foot, close) => {
     const tb = h('table', 'keys');
-    for (const [ks, s] of (S.show.on ? KEYS_SHOW : KEYS)) {
+    for (const [ks, s] of KEYS[S.phase]) {
       const r = h('tr'), d = h('td');
       for (const x of ks.split(' ')) d.appendChild(h('kbd', null, x));
       r.append(d, h('td', null, t(s))); tb.appendChild(r);
     }
-    body.append(tb, h('p', 'hint', t(S.show.on ? 'kShHint' : 'kHint')));
+    body.append(tb, h('p', 'hint', t({ write: 'kWrHint', rehearse: 'kRehHint', show: 'kShHint' }[S.phase])));
     dlgBtn(foot, t('close'), 'pri', () => { keysClose = null; close(); });
   }, true);
 }
@@ -982,15 +1023,16 @@ function openKeys() {
 /* the guide for a newcomer: a number on every control in sight, and a card that says what each one does and its key.
    A row: the control, its name (none: the words on it), what it does, its keys (none: the one in its data-k). */
 const GUIDE = [
-  ['#bMenu', 'menu', 'gMenuD'], ['#pens', 'gPens', 'gPensD', '1 2 3 4'], ['#bErase', 'eraser', 'gEraseD'], ['#bFinger', 'finger', 'fingerTip'],
-  ['#bUndo', 'undo', 'gUndoD'], ['#bRedo', 'redo', 'gRedoD'], ['#outline', 'gJump', 'jump'], ['#search', 'gFind', 'gFindD', 'Ctrl+F /'],
-  ['#bFacing', 'boards', 'gBoardsD'], ['#bCues', 'cues', 'cuesTip'], ['#bInk', 'ink', 'inkTip'],
-  ['#bReview', 'review', 'gReviewD'], ['#bList', 'cueList', 'gListD'], ['#bPrint', 'print', 'gPrintD'], ['#bShow', 'showMode', 'showTip'],
+  ['#bMenu', 'menu', 'gMenuD'], ['#bWrite', 'phWrite', 'phWriteTip'], ['#bRehearse', 'phRehearse', 'phRehearseTip'], ['#bShow', 'showMode', 'showTip'],
+  ['#pens', 'gPens', 'gPensD', '1 2 3 4'], ['#bErase', 'eraser', 'gEraseD'], ['#bFinger', 'finger', 'fingerTip'],
+  ['#bUndo', 'undo', 'gUndoD'], ['#bRedo', 'redo', 'gRedoD'], ['#bSyntax', 'syntax', 'syntaxTip'], ['#outline', 'gJump', 'jump'], ['#search', 'gFind', 'gFindD', 'Ctrl+F /'],
+  ['#bFacing', 'boards', 'gBoardsD'], ['#bCues', 'cues', 'cuesTip'], ['#bInk', 'ink', 'inkTip'], ['#bTiming', 'timing', 'timingTip'],
+  ['#bReview', 'review', 'gReviewD'], ['#bList', 'cueList', 'gListD'], ['#bPrint', 'print', 'gPrintD'],
   ['#bNight', 'night', 'gNightD'], ['#zOut', 'zoomOut'], ['#zFit', 'fit', 'kFit'], ['#zIn', 'zoomIn'], ['#bGuide', 'guide'], ['#bKeys', 'keys', 'gKeysD'],
   ['#shNext', 'shNextBtn', 'shNextTip', '↓'], ['#shMRough', 'shRough', 'shRoughTip'], ['#shMLine', 'shByLine', 'shByLineTip'],
   ['#shDn', null, 'shBlockTip'], ['#shUp', null, 'shBlockTip'], ['#shUndo', 'undo', 'gShUndoD'], ['#shRest', null, 'shRestTip'],
   ['#shPlay', 'shPlay', 'gShPlayD'], ['#shSlow', 'shSlower'], ['#shFast', 'shFaster'], ['#shUse', null, 'shUseTip'], ['#shBack', 'shBack', 'gShBackD'],
-  ['#shLearn', 'shLearn', 'shLearnTip'], ['#shNight', 'night', 'gNightD'], ['#shLeave', 'shLeave', 'kShLeave'], ['#shProg', 'gShMap', 'shMapTip']
+  ['#shNight', 'night', 'gNightD'], ['#shLeave', 'shLeave', 'kShLeave'], ['#shProg', 'gShMap', 'shMapTip']
 ];
 let guideEl = null;
 function closeGuide() { if (!guideEl) return; guideEl.remove(); guideEl = null; removeEventListener('resize', drawGuide); }
@@ -1028,13 +1070,19 @@ function drawGuide() {
 }
 const focusFind = () => { $('#search').focus(); $('#search').select(); };
 const press = id => () => $(id).click();
+/* the keys of Write and Rehearse alike: the view, the panels, the phases */
 const KEYMAP = {
-  b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), e: press('#bErase'), f: press('#bFinger'),
-  l: press('#bList'), r: press('#bReview'), s: press('#bShow'), '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
+  b: press('#bFacing'), c: press('#bCues'), i: press('#bInk'), n: press('#bNight'), l: press('#bList'),
+  w: () => setPhase('write'), r: () => setPhase('rehearse'), s: () => setPhase('show'),
+  '+': () => setZoom(1.15), '=': () => setZoom(1.15), '-': () => setZoom(1 / 1.15), '0': () => setZoom(0),
   '/': focusFind, '?': openKeys, h: () => openGuide(), pagedown: () => pageStep(1), pageup: () => pageStep(-1),
   home: () => { desk.scrollTop = 0; }, end: () => { desk.scrollTop = desk.scrollHeight; }
 };
-/* show mode has keys of its own, and of the others only those that change nothing in the show */
+/* Write has the box; out of it, the phases, the panels, the syntax and the help */
+const WRITEKEYS = { w: KEYMAP.w, r: KEYMAP.r, s: KEYMAP.s, y: press('#bSyntax'), v: press('#bReview'), l: KEYMAP.l, n: KEYMAP.n, h: KEYMAP.h, '?': KEYMAP['?'], '/': focusFind };
+/* Rehearse has the pens and the line as well */
+const REHKEYS = Object.assign({ e: press('#bErase'), f: press('#bFinger'), t: press('#bTiming'), ' ': () => S.show.on && showToggle(), enter: () => S.show.on && showBack(), arrowdown: () => S.show.on && showStep(1), arrowup: () => S.show.on && showStep(-1) }, KEYMAP);
+/* Show has keys of its own, and of the others only those that change nothing in the show */
 const SHOWKEYS = {
   ' ': () => showToggle(), enter: () => showBack(), arrowdown: () => showStep(1), arrowup: () => showStep(-1),
   '[': () => $('#shSlow').click(), ']': () => $('#shFast').click(), s: () => showLeave()
@@ -1049,7 +1097,9 @@ document.addEventListener('keydown', e => {
     if (keysClose && !$('#dlg').hidden) { keysClose(); keysClose = null; return; }
     const q = $('#search');   // leaving Find empties it, so that it folds back to the magnifier
     if (document.activeElement === q) { e.preventDefault(); q.value = ''; S.findAt = null; q.blur(); return; }
-    cancelDrag(); if (POP) { if (POP.esc) POP.esc(); closePop(); e.preventDefault(); } $('#menu').hidden = true; return;
+    cancelDrag(); if (POP) { if (POP.esc) POP.esc(); closePop(); e.preventDefault(); } $('#menu').hidden = true;
+    if (S.editing && editClose && $('#dlg').hidden && !(document.activeElement && document.activeElement.tagName === 'TEXTAREA')) { e.preventDefault(); editClose(); }   // the text box has its own Escape; this one serves when the focus left it
+    return;
   }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && !e.altKey && !e.shiftKey && S.loaded && $('#dlg').hidden) {
@@ -1062,7 +1112,7 @@ document.addEventListener('keydown', e => {
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
   if (!S.loaded || !$('#dlg').hidden) return;
   if (POP && POP.key && POP.key(e)) { e.preventDefault(); return; }
-  if (S.show.on) {
+  if (S.phase === 'show') {
     const fn = !mod && !e.altKey && !e.isComposing && SHOWKEYS[k];
     if (fn) { e.preventDefault(); if (a && a.blur && a !== document.body) a.blur(); fn(); }   // Space must not press the button that has the focus
     return;
@@ -1073,12 +1123,12 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (mod || e.altKey || e.isComposing || POP || S.editing) return;
-  const pen = /^[1-9]$/.test(k) && $$('#pens .sw')[+k - 1];
-  const fn = pen ? () => pen.click() : KEYMAP[k];
-  if (fn) { e.preventDefault(); $('#menu').hidden = true; fn(); }
+  const reh = S.phase === 'rehearse', pen = reh && /^[1-9]$/.test(k) && $$('#pens .sw')[+k - 1];
+  const fn = pen ? () => pen.click() : (reh ? REHKEYS : WRITEKEYS)[k];
+  if (fn) { e.preventDefault(); $('#menu').hidden = true; if (a && a.blur && a !== document.body) a.blur(); fn(); }
 });
 document.addEventListener('paste', e => {
-  if (!S.loaded || S.editing || S.show.on || S.mode === 'templates' || !$('#dlg').hidden) return;
+  if (!S.loaded || S.editing || S.phase === 'show' || S.mode === 'templates' || !$('#dlg').hidden) return;
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return;
   const it = Array.from((e.clipboardData && e.clipboardData.items) || []).find(i => i.kind === 'file' && i.type.startsWith('image/'));
@@ -1124,7 +1174,7 @@ async function showStart() {
   const last = fs ? await idbGet('dir') : null;
   const again = last && last.kind === 'file';   // a show folder remembered by an older release is not offered
   if (again) add(t('reopen', showName(last)), () => openZipFile(last), true);
-  add(t('openFile'), () => openZipFile(), !again).disabled = !fs;
+  add(t('openFile'), openShow, !again);
   const dr = loadDraft();
   if (dr) add(t('contDraft', new Date(dr.when).toLocaleString()), () => loadBundle(dr));
   add(t('trySample'), () => startMemory(SAMPLE, { title: 'Il molo' }));
@@ -1139,15 +1189,15 @@ async function showStart() {
 async function init() {
   let pv = {};
   try { pv = JSON.parse(localStorage.getItem('promptbook:view') || '{}') || {}; } catch (e) { /* ignore */ }
-  for (const k of ['facing', 'cues', 'ink', 'night']) if (typeof pv[k] === 'boolean') S.view[k] = pv[k];
-  S.tool.finger = pv.finger === true;
+  for (const k of ['facing', 'cues', 'ink', 'night', 'timing', 'syntax']) if (typeof pv[k] === 'boolean') S.view[k] = pv[k];
+  S.tool.finger = pv.finger === true; openPhase = pv.phase === 'rehearse' ? 'rehearse' : 'write';   // a show opens in the phase this browser was left in, never in Show
   LANG = pv.lang === 'it' || pv.lang === 'en' ? pv.lang : (/^it/i.test(navigator.language || '') ? 'it' : 'en');
   S.cfg = defaultConfig();
-  bindUI(); applyLang(); applyPaper(); applyView(); updUndo();
+  bindUI(); applyLang(); applyPaper(); applyView(); updUndo(); $('#bWrite').classList.add('on');
   try { await Promise.all(['400 15px PB', 'italic 400 15px PB', '700 15px PB', '700 13px PB', '700 20px PB'].map(f => document.fonts.load(f))); } catch (e) { /* falls back to system font */ }
   showStart();
 }
-window.PB = { S, VERSION, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, zipAside, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
+window.PB = { S, VERSION, setPhase, showLocked, parseScript, analyze, stripTokens, serialize, commitText, openZipFile, saveToZip, readZip, zipAside, buildZip, startMemory, loadBundle, saveNow, bundle, inkFile, collectCues, reviewData, parseMeta, castCheck, fullName, relayout, renderAll, jumpTo, enterTemplates, exitTemplates, t,
   showOn, showOff, showLeave, showNow, showSet, showPlay, showHere, showCalls, showTick, showBack, showMeasured, showSeg, showTl, showT, showP, showClock, showStats, showTempo, showMode, showSince,
   openHistory, openDiff, histSave, histVariant, histSwitch, histRestore, histState, unlockPages, parseBlocks, diffBlocks, diffFor, doPrint, textMoveBlocks, castPack, castHTML, openCast };
 init();

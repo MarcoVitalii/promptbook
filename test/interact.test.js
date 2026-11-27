@@ -1,12 +1,12 @@
 const { chromium } = require('playwright');
-const { nameBox, popGone } = require('./_util');
+const { nameBox, popGone, editBlock, rehearseFirst } = require('./_util');
 const path = require('path');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 950 }, locale: 'en-GB' });
-  const page = await ctx.newPage();
+  const page = await ctx.newPage(); await rehearseFirst(page);
   const errs = [];
   page.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack));
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
@@ -91,8 +91,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   await page.locator('#pop .depts .dbtn', { hasText: 'LX' }).click();
   await page.keyboard.press('Escape');
   ok(await page.locator('.flag').count() === 0 && await page.locator('.ink path').count() === 1, 'adding a cue keeps the ink and raises no flag');
-  await page.locator('.w', { hasText: 'anni' }).first().dblclick();
-  await page.waitForSelector('#editor textarea');
+  await editBlock(page, page.locator('.w', { hasText: 'anni' }).first());
   const raw = await page.locator('#editor textarea').inputValue();
   ok(raw.startsWith('ANNA: Tu. Dopo tre anni {LX 13}'), 'editor shows the raw line: ' + raw);
   await page.locator('#editor textarea').fill(raw.replace('senza una parola', 'senza nemmeno una parola, come un ladro'));

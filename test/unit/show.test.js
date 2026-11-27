@@ -221,3 +221,32 @@ ok(C.serialize() === t0, 'outside show mode undo works again');
   S.show.learn = false;
   ok(!C.showByLine() && C.showNow(51000) > L()[4].at, 'without "Time it" the line runs, whatever the way of timing');
 }
+
+// SHW-38, 41, 42: rehearsal. The book is written in while "Time it" is on; a time and the line survive an edit
+{
+  C.load(['ANNA: uno due tre quattro cinque sei sette otto', 'MARCO: uno due tre quattro cinque sei sette otto nove dieci', 'ANNA: fine {LX 9}', ''].join('\n'));
+  S.cfg = C.normCfg({}); S.cfg.show.wpm = 120; reset();
+  const L = () => C.showTl().list, k1 = L()[1].key;
+  C.showFix(k1, 12, 0);
+  ok(L()[1].own && L()[1].d === 12000 && L()[1].w === 12, 'a block of 12 is timed at 12 s');
+  ok(C.commitText(C.serialize().replace(' nove dieci', '')) === true && L()[1].own && L()[1].w === 10 && L()[1].d === 10000, 'its words change and its time goes with it, by its new length: ' + L()[1].d);
+  ok(S.cfg.show.times[k1] === 12 && Object.keys(S.cfg.show.times).length === 2, 'the time under the old words is kept');
+  C.undo();
+  ok(L()[1].key === k1 && L()[1].d === 12000, 'and undo gives it back');
+  ok(!L()[0].own && !L()[2].own, 'a block that was not timed is still inferred');
+  S.show.on = true; S.show.learn = false;
+  const t1 = C.serialize();
+  ok(C.commitText(t1.replace('fine', 'fine davvero')) === false, 'in show mode without "Time it" the text is locked');
+  S.show.learn = true; S.show.cues = C.showCues();
+  C.showSet(L()[2].at + 1.5, 0); S.show.anchor = { pos: L()[1].at + 6, played: 0 };
+  const cue0 = S.show.cues[0].at;
+  ok(C.commitText(t1.replace('ANNA: uno', 'ANNA: zero zero zero zero uno')) === true, 'with "Time it" on, in rehearsal, the text can be changed');
+  ok(L()[2].at === 26 && near(S.show.base, 27.5) && near(S.show.anchor.pos, 20), 'four words added above: the line and the last mark stay in their blocks, as far in: ' + S.show.base + ' ' + S.show.anchor.pos);
+  ok(near(S.show.cues[0].at, cue0 + 4) && S.blocks.includes(S.show.cues[0].b), 'and the calls follow the cues as they are now');
+  ok(L()[1].own && L()[1].d === 12000, 'the timed block below keeps its time');
+  C.undo();
+  ok(C.serialize() === t1 && near(S.show.base, 23.5), 'undo works in rehearsal, and the line stays in its block again');
+  S.show.learn = false; C.redo();
+  ok(C.serialize() === t1, 'and does nothing once "Time it" is off');
+  S.show.on = false;
+}

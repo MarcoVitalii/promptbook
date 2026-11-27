@@ -28,6 +28,8 @@ Three properties of the method to keep in mind when reading a green result:
 
 ## 3. Record by release
 
+**r1.13, measured on 2026-11-27.** Node 24.21.0, Playwright 1.64.1 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,301 checks pass, none fail**: 273 unit checks in 10 files and 1,028 browser checks in 23 files, the browser part in 45 to 85 s from one run to the next. `test/KNOWN_FAILING` is empty. The table below is of this release.
+
 **r1.12, measured on 2026-10-13.** Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,195 checks pass, none fail**: 261 unit checks in 10 files and 934 browser checks in 20 files, the browser part in about 75 s. `test/KNOWN_FAILING` is empty. `test/damaged` needs `python3` for the two archives written by another program, and `git` for `git fsck`.
 
 | Test file | Checks | Requirements it covers |
@@ -41,7 +43,10 @@ Three properties of the method to keep in mind when reading a green result:
 | `unit/compat` | 20 | STO-15 to STO-17 |
 | `unit/images` | 7 | STO-21 |
 | `unit/cast` | 15 | CST-1, CST-2, CST-5, CST-6 |
-| `unit/show` | 83 | SHW-2, SHW-5, SHW-6, SHW-9 to SHW-14, SHW-19 to SHW-24, SHW-32 to SHW-36 |
+| `unit/show` | 95 | SHW-2, SHW-5, SHW-6, SHW-9 to SHW-14, SHW-19 to SHW-24, SHW-32 to SHW-36, SHW-38, SHW-41, SHW-42 |
+| `rehearse` | 29 | SHW-38 to SHW-40, SHW-42, SHW-45 to SHW-47 |
+| `phases` | 44 | SHW-43 to SHW-48, UI-8, UI-14, TXT-8, INP-7, INP-12 |
+| `portable` | 19 | STO-28 to STO-30 |
 | `parse-undo` | 10 | TXT-2, TXT-5 to TXT-7, TXT-10, BRD-3 |
 | `interact` | 33 | CUE-1 to CUE-3, CUE-24, CUE-35, CUE-38, INK-1, INK-2, INK-6, INK-7, BRD-1 to BRD-3, TXT-8, UI-1, UI-2 |
 | `misc` | 41 | INK-2, INK-3, INK-5, INK-8, INP-5 to INP-7, CUE-6, UI-3, PAG-4, STO-2, STO-8, STO-21, STO-22, STO-26 |
@@ -56,12 +61,12 @@ Three properties of the method to keep in mind when reading a green result:
 | `boards` | 82 | BRD-5, BRD-7 to BRD-13, BRD-26, BRD-28, BRD-30, UI-6, UI-12, STO-13 |
 | `cue-move` | 75 | CUE-25 to CUE-34, CUE-43, INP-8 to INP-10, TXT-28 |
 | `block-move` | 34 | TXT-28 to TXT-31 |
-| `shortcuts` | 61 | UI-9 to UI-13, CUE-7, CUE-42, SHW-30 |
+| `shortcuts` | 61 | UI-9 to UI-14, CUE-7, CUE-42, SHW-30, SHW-48 |
 | `history` | 31 | HIS-1 to HIS-3, HIS-5 to HIS-11, PAG-13 to PAG-19 |
 | `leaks` | 22 | STO-9; object URLs and database connections are let go |
 | `damaged` | 133 | STO-23 to STO-25, HIS-13 to HIS-15 |
 | `cast` | 57 | CST-1, CST-3 to CST-5, CST-7 to CST-16, CST-18 to CST-20, STO-22 |
-| `show` | 93 | SHW-1 to SHW-3, SHW-5, SHW-7 to SHW-15, SHW-20, SHW-22, SHW-24 to SHW-26, SHW-29 to SHW-32, SHW-34, SHW-36, INP-12 |
+| `show` | 95 | SHW-1 to SHW-3, SHW-5, SHW-7 to SHW-15, SHW-20, SHW-22, SHW-24 to SHW-26, SHW-29 to SHW-32, SHW-34, SHW-36, SHW-46, INP-12 |
 
 The counts per file were taken by running each file on its own; they add up to the runner's totals. r1.11 was measured the same day on the same machine: 1,137 checks, 237 unit and 900 browser.
 
@@ -88,6 +93,8 @@ Nothing in this list has a recorded trial.
 - A show file with a long history (HIS); a file damaged by a real disk; archives written by Explorer, Finder or 7-Zip (STO-23 to STO-25).
 - The colours by day and in a dark room, the filled tag labels, and whether the corner dock gets under a hand or the pen. The shortcuts on a real keyboard, an Italian one in particular (/ and ? need Shift).
 - Show mode: the laptop with pen and touch, a finger scroll letting go of the line, a finger press on a call, the wake lock, the pace of 130 and the weights of SHW-6 against a real run, timing a real rehearsal, a show of 100 pages, whether a jump of the page is easy to follow from the prompt desk.
+- Rehearsal (SHW-38 to SHW-42): writing with the pen while the line runs, a resting hand taken for a mark, the cue pin under the double tap of a real finger, typing a note with the on-screen keyboard while the page jumps.
+- The three phases (SHW-43 to SHW-48): whether a stage manager reaches for W, R and S or for the buttons; the pen scrolling in Write under a real hand; a tap on a word opening the text where a finger meant to scroll; the toolbar of Rehearse at 1280 px on the laptop.
 - The guide to the buttons (UI-13) under a finger, and where the toolbar wraps under 1280 px. Timing line by line and typing a time on the page (SHW-34, SHW-36) in a real rehearsal.
 - The guide in `docs/guide/`: most of its steps were written from the specification and not walked through on a laptop.
 - The time it takes the stage manager to pin a cue; the target is under 3 seconds (CUE-4).

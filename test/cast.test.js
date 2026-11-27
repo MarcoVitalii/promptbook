@@ -48,9 +48,11 @@ const OUT = process.env.OUT || path.resolve(__dirname, '..', '.cache', 'out');
   await page.evaluate(() => PB.commitText(PB.serialize().replace('non gridare.', 'non gridare. {NOTE | pausa prima}').replace('Coro finale.', 'Coro finale. {NOTE | guarda il pubblico}').replace('Si sente il mare.)', 'Si sente il mare.) {NOTE | silenzio in quinta}')));
   const r2 = await ev(() => [PB.collectCues().map(o => o.c.dept).join(), PB.collectCues(true).map(o => o.c.dept).join()]);
   ok(r2[0] === 'LX' && r2[1] === 'NOTE,NOTE,NOTE,NOTE,TODO', 'notes for the cast are not cues; they are listed under Review: ' + r2.join(' | '));
+  await page.evaluate(() => PB.setPhase('write'));   // Review is a panel of Write
   await page.locator('#bReview').click();
   ok((await page.locator('#drawer h3').allTextContents()).some(s => s.startsWith('Notes for the cast (4)')), 'Review lists them under a heading of their own');
   await page.locator('#bReview').click();
+  await page.evaluate(() => PB.setPhase('rehearse'));
 
   // 3. the cast file: the reader with the show inside
   await menu('Send to cast');

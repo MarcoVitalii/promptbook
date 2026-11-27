@@ -1,5 +1,5 @@
 const { ok, open, serve, nameBox, popGone } = require('./_util');
-const OUT = process.env.OUT || '.';
+const OUT = process.env.OUT;
 (async () => {
   const { srv, url } = await serve();
   const { page, pen, text, done } = await open({ url });

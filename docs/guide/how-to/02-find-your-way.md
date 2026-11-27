@@ -41,16 +41,19 @@ These choices belong to the machine, not to the show: they are remembered in thi
 
 ## Touch, pen and mouse
 
-Each does one thing, with no mode to switch.
+Each does one thing. The book is always in one of three phases, lit at the top: **Write**, **Rehearse** or **Show** (W, R, S). In Write there are no pages: the whole script is one box of text, and the keyboard does the work. On the pages, in Rehearse and in Show:
 
-| | On the script |
-|---|---|
-| Pen tip | Writes |
-| Pen eraser end, or its button | Rubs out |
-| Finger tap on a word | Opens the box to pin a cue |
-| Finger drag | Scrolls |
-| Double tap, or a long press, on a speech | Opens its text to edit |
-| Mouse | Does what a finger does |
+| | In Rehearse | In Show |
+|---|---|---|
+| Pen tip | Writes | Scrolls |
+| Pen eraser end, or its button | Rubs out | — |
+| Finger tap on a word | Opens the box to pin a cue | Nothing |
+| Finger drag | Scrolls | Scrolls |
+| Double tap on a word | Puts the running line there, with **Timing** on | Puts the running line there |
+| A long press on a speech | Opens its text | Nothing |
+| Mouse | Does what a finger does | Does what a finger does |
+
+Write is for the text, Rehearse for cues, ink, boards and, with **Timing** (T) on, the line that learns the times, Show for calling the performance. The top bar changes with the phase: Write has **Syntax** and **Review**, Rehearse the pens and the four toggles; Show has no bar.
 
 No pen on this machine? Press **Finger** (F): finger and mouse draw. Press it again to get tapping and scrolling back.
 
@@ -59,5 +62,7 @@ The single-letter keys work when you are not typing in a field and no cue box is
 ## When you cannot find a button
 
 - **Review has no number.** Then nothing needs a look. The panel still opens, with the characters and what is commented out.
-- **The top bar is gone.** You are in show mode. Press **Leave** twice, or S twice.
+- **The top bar is gone.** You are in Show. Press **Leave** twice, or S twice.
+- **The pens are gone, and so are the pages.** You are in Write. Press **Rehearse** (R).
+- **The single keys do nothing.** In Write the cursor is in the box: Esc takes it out.
 - **The toolbar is in two rows.** The window is narrower than about 1280 px. Everything is still there.

@@ -137,6 +137,7 @@ These are the words that have caused, or can cause, a misreading. Always use the
 | part | — | One file inside a show file. | — | STO-18 |
 | missing, unreadable | — | A part that is not there stays silent; a part that is there and cannot be read is said, and kept. Never use one word for the other. | `damaged/` | STO-18 to STO-20 |
 | draft | — | The copy of a show the browser keeps when it is not on disk. | `promptbook:draft` | STO-8, STO-26 |
+| download (of a show file) | scaricare | How a show file is saved where the browser cannot write into it: the whole file, handed to the browser's downloads. | `downloadZip`, `store.unsent` | STO-29, STO-30 |
 | backup | backup | The whole show as one file, for moving it without a show file. | `.promptbook.json` | STO-8 |
 | settings | — | Of the show: travel with it and with every revision. Of the browser (view settings): stay with the machine. | `config.json`; `promptbook:view` | UI-3, UI-8 |
 | release mark | — | Which release saved a show last and which is the oldest that opens it without loss. | `release.made`, `release.needs`, `READABLE_FROM` | STO-15 |
@@ -186,14 +187,19 @@ These are the words that have caused, or can cause, a misreading. Always use the
 
 | Term | Italian | Meaning | In the files | Defined in |
 |---|---|---|---|---|
-| show mode | — ("Show" on the button) | The book read only, for calling the show. | `showOn`, `showOff` | SHW-1, SHW-2 |
+| phase | fase | What the book is for at the moment: **Write**, **Rehearse** or **Show**. Always exactly one; picked in the top bar or with W, R, S. | `S.phase`, `setPhase` | SHW-43 |
+| Write | Scrivi | The phase for the text: the whole script in one box, nothing drawn. | `S.phase === 'write'`, body class `write`, `#wtext` | SHW-44 |
+| Rehearse | Prova | The phase of the rehearsals: the workbench; with **Timing** on, the line in it, and marks teach times. | `S.phase === 'rehearse'`, body class `reh` | SHW-45 |
+| Timing | Tempi | The toggle of Rehearse that brings the line, the panel, the map and the times on the page. Say "Timing", not "Time it". | `S.view.timing`, `lineSync` | SHW-45 |
+| completion | — | The list Write offers under the cursor: characters, departments with their next number, open cues. | `writeOffer` | TXT-32 |
+| show mode, Show | Spettacolo | The phase for calling the show: the book read only, the line, the calls; nothing learned. | `S.phase === 'show'`, `showOn`, `showOff` | SHW-1, SHW-2, SHW-46 |
 | running line | riga | The mark of where the show is. A clock, not a listener. | `showNow` | SHW-5 |
 | place | — | Where the line is: a count of words from the top. | `showP` | SHW-6 |
 | block time | — | How long a block takes: its words at the pace of the show until it is **timed**, then the time measured. | `show.times` | SHW-19 |
-| "Time it" | Cronometra | The switch that lets marks teach block times. Off every time show mode is entered. | `showLearn` | SHW-20 |
+| rehearsal | prova | What happens in Rehearse: the line runs, marks teach times, and the book is written in. Do not say "Time it": that switch is gone. | `showLearn`, `showLocked` (its opposite) | SHW-20, SHW-38 to SHW-42 |
 | mark | — | A double tap on a word, or an arrow key, that says where the show is. | — | SHW-9 |
 | chunk | — | The blocks between two marks while the line runs; its real time is shared among them. | — | SHW-20, SHW-21 |
-| correction | — | A mark with "Time it" off: it moves the line and teaches nothing that is kept. | — | SHW-11 |
+| correction | — | A mark in Show: it moves the line and teaches nothing that is kept. | — | SHW-11 |
 | pace of the show | — | Words a minute for blocks not timed. Kept. | `show.wpm` | SHW-19 |
 | pace of the night | — | A percentage on the block times, 50 to 200. Not kept. | — | SHW-10 |
 | call | — | A cue the line is about to reach, shown as a card. | `showCalls` | SHW-12 to SHW-15 |

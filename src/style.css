@@ -20,8 +20,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 #desk,.dbody,.dbox>.body{scrollbar-width:thin;scrollbar-color:var(--ui-b) transparent}
 
 /* ---------- toolbar ---------- */
-#bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
-#bar button,#dock button{background:transparent;color:var(--ui-ink);border:0;border-radius:7px;min-height:36px;min-width:36px;padding:0 10px;cursor:pointer;white-space:nowrap}
+#bar{display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--ui);border-bottom:1px solid var(--ui-b);flex-wrap:wrap;position:relative;z-index:5}
+#bar button,#dock button{background:transparent;color:var(--ui-ink);border:0;border-radius:7px;min-height:36px;min-width:36px;padding:0 9px;cursor:pointer;white-space:nowrap}
 @media (hover:hover){#bar button:hover:not(:disabled),#dock button:hover{background:color-mix(in srgb,var(--ui-ink) 9%,transparent)}}
 #bar button:disabled{opacity:.35;cursor:default}
 /* a lit toggle is a tint, not a black block: three of them are lit most of the time */
@@ -38,10 +38,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 #bar .sw.on{background:var(--c);box-shadow:0 0 0 2px var(--ui-ink)}
 .sep{width:1px;height:22px;background:var(--ui-b);margin:0 3px}
 .grow{flex:1}
-#who{display:flex;flex-direction:column;justify-content:center;line-height:1.25;max-width:200px;min-width:0;margin-right:4px}
+#who{display:flex;flex-direction:column;justify-content:center;line-height:1.25;max-width:120px;min-width:0;margin-right:2px}
 #showName{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #outline,#search{min-height:36px;border:1px solid transparent;border-radius:7px;background-color:var(--ui2);color:var(--ui-ink);padding:0 10px}
-#outline{max-width:150px;cursor:pointer}
+#outline{max-width:110px;cursor:pointer}
 /* find is a magnifier until it is used */
 #search{width:42px;padding:0 0 0 40px;transition:width .15s;background-repeat:no-repeat;background-position:12px 50%;background-size:16px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238a857a' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.6'/%3E%3Cpath d='M10.6 10.6L14 14'/%3E%3C/svg%3E")}
@@ -56,7 +56,20 @@ button,input,select,textarea{font:inherit;color:inherit}
 body.night #banner{background:color-mix(in srgb,var(--sel) 40%,var(--ui))}
 
 /* ---------- work area ---------- */
-/* show mode: focus. Nothing that edits; a rail of calls on the right and a map of the show down the edge */
+/* the three phases: Write has the text and no pen, Rehearse the whole bench and the line, Show the line and nothing that edits */
+.grp.phase button{font-weight:600;padding:0 7px}
+body.write .ed,body.write .rh,body.reh .wr,body.write #zOut,body.write #zFit,body.write #zIn{display:none!important}
+body.reh .pace,body.reh #shUse,body.reh #shMore,body.reh #shCalls{display:none!important}
+/* Write: the whole script as text, the forms beside it on request, and a list of what fits under the cursor */
+#writer{display:none;flex:1;min-width:0;min-height:0}
+@media screen{body.write #desk{display:none}body.write #writer{display:flex}}
+#wtext{flex:1;min-width:0;height:100%;resize:none;border:0;outline:0;padding:28px 44px 40vh;background:var(--paper);color:var(--tx);font:15px/24px "PB","Segoe UI",Arial,sans-serif;tab-size:4;white-space:pre-wrap;overflow-wrap:break-word}
+#wsyntax{flex:none;width:340px;margin:0;border-radius:0;border-left:1px solid var(--ui-b);padding:16px 18px;overflow:auto;font-size:12.5px;background:var(--ui)}
+#wcomp{position:fixed;z-index:30;min-width:170px;max-height:230px;overflow:auto;padding:4px;background:var(--ui);color:var(--ui-ink);border:1px solid var(--ui-b);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.25);font-size:14px}
+#wcomp div{padding:5px 10px;border-radius:5px;cursor:pointer;white-space:nowrap}
+#wcomp div.on{background:color-mix(in srgb,var(--acc) 15%,var(--ui));color:var(--acc)}
+#wcomp small{color:var(--muted);margin-left:8px}
+/* show mode: focus. A rail of calls on the right and a map of the show down the edge */
 body.show{--go:#2f8f4e}
 body.show.night{--go:#49b36b}
 body.show #bar,body.show #banner,body.show #dock,body.show .grip,body.show .pbtn{display:none!important}
@@ -394,7 +407,7 @@ pre.fmt{background:var(--ui2);border-radius:6px;padding:8px 10px;font:12px/1.5 u
 @media print{
   :root,body.night{--paper:#fff;--tx:#000;--tx2:#333;--muted:#666;--rule:#bbb;--sel:transparent}
   html,body{height:auto;overflow:visible;background:#fff;display:block}
-  #bar,#banner,#showside,#shProg,#showTimes,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#guide,#start,#toast,#menu,#tpl,#dock,.noprint,.flag,.ghost{display:none!important}
+  #bar,#banner,#showside,#shProg,#showTimes,#showLine,#showBand,#drawer,#pop,#editor,#dlg,#guide,#start,#toast,#menu,#tpl,#dock,#writer,.noprint,.flag,.ghost{display:none!important}
   #work,#deskwrap{display:block}
   #desk{overflow:visible;padding:0;height:auto}
   #zoomwrap{width:auto!important;height:auto!important;margin:0}

@@ -2,7 +2,7 @@
 
 **Covers:** what pen, finger, mouse and keyboard do; the palm rule.
 **Code:** `src/view.js` (INPUT: the `pointerdown`, `pointermove`, `pointerup` handlers, `beginInk`, `eraseAt`, the cue drag, `handleTap`), `src/io.js` (keyboard, paste).
-**Checks:** `test/palm`, `test/misc`, `test/interact`, `test/scale-folder`, `test/cue-move`.
+**Checks:** `test/palm`, `test/misc`, `test/interact`, `test/scale-folder`, `test/cue-move`, `test/rehearse`, `test/phases`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -35,12 +35,12 @@ That laptop reports pen, finger and mouse as different pointers. The intent is t
 | INP-4 | Because the page must not scroll under the pen, finger scrolling is done by the tool itself, not by the browser. Pinch-zoom is replaced by the zoom buttons. | D14 | scale-folder |
 | INP-5 | The pen can tap margin tags, the ink flag, the comment marker and board buttons. | as built | misc, cue-move |
 | INP-6 | A toolbar toggle, "Finger", lets finger and mouse draw, for machines without a pen. A toolbar "Eraser" makes the active drawing pointer erase. The two are never lit together: choosing one leaves the other. | D14 | misc |
-| INP-7 | Double-tap, double-click or long press on a block opens its text for editing. A second pin on the same line straight after the first is not taken for a double tap. | as built | misc |
+| INP-7 | In Write there is no page: the text is typed (SHW-44). In Rehearse a tap opens the cue pin and a long press the text of the block (TXT-8, SHW-38). A second pin on the same line straight after the first is not taken for a double tap. | as built; request 2026-11-16 | misc, phases |
 | INP-8 | Finger hold on a tag: a finger that rests on a cue tag for 0.3 s within 8 px lifts it; only then does moving drag the cue. A finger that moves sooner scrolls and never lifts. A quick finger tap on a tag opens the cue editor. Board tags lift too: they move their line (TXT-28). | `[ASSUMED]` | cue-move |
 | INP-9 | The palm rule covers the drag: a touch that lands while the pen hovers gets no hold timer, and a tag already lifted is not dragged once the pen comes near. During a drag every other pointer is ignored, so a palm landing in mid-drag neither stops it nor starts anything. | as built | cue-move |
 | INP-10 | Escape cancels a drag and closes the open popover or menu. A system `pointercancel` ends a drag with no change. | as built | cue-move |
 | INP-11 | Keyboard: Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z redo, Ctrl+F find, and with the cue pin open the first letter of a department code pins at the tapped word. The single-key shortcuts are UI-9 (`09-workbench.md`); they are off while the cue pin is open, so the department letters keep their meaning. | as built | interact |
-| INP-12 | In show mode (`11-show.md`) none of the editing gestures above does anything: pen and finger scroll, a double tap on a word puts the running line there (SHW-2, SHW-9), and the keyboard has its own keys (Space, Enter, arrows, `[` `]`, S to enter and to leave; SHW-30). | request 2026-10-11 `[LOCKED]` | show |
+| INP-12 | The gestures follow the phase (`11-show.md`, SHW-43). In Write there is no page. In Rehearse every gesture above works, and with "Timing" on a double tap on a word is the mark of the running line (SHW-39). In Show none of them does anything: pen and finger scroll, a double tap puts the line (SHW-2, SHW-9), and the keyboard has the keys of the line (Space, Enter, arrows, `[` `]`, S to leave; SHW-30, SHW-48). | request 2026-10-11 `[LOCKED]`; request 2026-11-16 | show, phases |
 
 ## 3. Consequences
 

@@ -81,30 +81,35 @@ Departments, their codes and colours are in **Settings**. A new show has LX, SND
 
 In the tool, **Guide** (H) labels every button and **?** lists every key. Full rules: `docs/specs/09-workbench.md`, `docs/specs/05-input.md`.
 
-Single keys act when no field has the cursor and no cue box is open.
+Single keys act when no field has the cursor and no cue box is open. The book is always in one of three phases, lit at the top; a key that belongs to another phase does nothing.
 
 | Key | Does |
 |---|---|
+| W, R, S | The phase: Write, Rehearse, Show (in Write, after Esc) |
+| Y | Syntax: the forms beside the text (Write) |
+| T | Timing: the line and its panel (Rehearse) |
 | H | Guide to the buttons |
 | ? | The list of keys |
 | Ctrl+F, `/` | Find. Enter next, Shift+Enter previous, Esc leaves. |
 | Ctrl+Z, Ctrl+Y | Undo, redo |
 | Ctrl+S | Save now |
 | Ctrl+P | Print |
-| 1 2 3 4 | Pen colour |
-| E, F | Eraser; let the finger draw |
+| 1 2 3 4 | Pen colour (Rehearse) |
+| E, F | Eraser; let the finger draw (Rehearse) |
 | B, C, I | Show or hide boards, cues, ink |
 | N | Night mode |
-| L, R | Cue list, Review |
+| L, V | Cue list, Review (Review in Write) |
 | + − 0 | Zoom in, out, fit |
 | Page Down, Page Up | Next, previous page |
 | Home, End | Start, end of the script |
 | Delete | Delete the cue or board whose box is open |
 | Esc | Close the box or the menu |
-| S | Show mode |
-| Ctrl+Enter, Esc | In a text editor: save, cancel |
+| Space, ↓ ↑, Enter | In Rehearse with Timing: start or stop the line; line to the next or previous block; back to the line |
+| ↓ ↑, Enter, Tab, Esc | In the list that Write offers while typing: move, take, close |
+| Ctrl+Enter, Esc | In the text box of a speech (Rehearse): save, cancel |
+| Ctrl+↓, Ctrl+↑ | In that box: save and open the next, the previous block |
 
-In show mode:
+In Show:
 
 | Key | Does |
 |---|---|
@@ -113,14 +118,14 @@ In show mode:
 | Enter | Back to the line |
 | `[` `]` | Pace of the night: slower, faster |
 | C, I, N, L, + − 0, Page keys, Home, End, H, ? | As above |
-| S, twice | Leave |
+| S, twice | Leave, back to Write or Rehearse |
 
 ## The Menu
 
 | Entry | Does | Guide |
 |---|---|---|
-| Edit whole script… | The full text, with its cue marks | [Take in a rewrite](how-to/04-take-in-a-rewrite.md) |
-| Settings… | Title, paper, language, departments, template strength, board grid, the times of show mode | |
+| Edit whole script… | The full text in a box, from Rehearse; in Write the full text is the phase itself | [Take in a rewrite](how-to/04-take-in-a-rewrite.md) |
+| Settings… | Title, paper, language, departments, template strength, board grid, the times of the show | |
 | Templates… | The backgrounds boards are drawn on | |
 | History… | Revisions, variants, locked pages, changes | [Mark a moment](how-to/05-mark-a-moment.md) |
 | Send to cast… | The file for the actors | [Send to the cast](how-to/09-send-to-the-cast.md) |
@@ -184,5 +189,6 @@ Other files the tool writes:
 | Variant | A line of the show with revisions of its own |
 | Lock | Page numbers fixed to the paper of one revision |
 | Cast file | The script and notes for the actors |
-| Show mode | The read-only view for calling a performance |
-| The line | The place of the show in show mode |
+| Phase | What the book is for at the moment: Write (the whole script as text), Rehearse (cues, ink, boards, and with Timing the line) or Show (calling a performance, read only) |
+| Timing | The toggle of Rehearse that brings the line, its panel and the times on the page |
+| The line | The place of the show, in Rehearse and in Show |

@@ -2,7 +2,7 @@
 
 **Covers:** where a show is kept, the show file, the in-browser fallback, autosave, changes made outside the tool, the shapes of the saved data, compatibility between releases.
 **Code:** `src/io.js` (STORE, zip, draft and IndexedDB, open and import, `relStamp`, `relWarn`), `src/core.js` (`normCfg`, `dataImg`, `inkFile`, `attachInk`, `READABLE_FROM`, `relCmp`, `relMark`, `relNewer`).
-**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`, `test/damaged`, `test/unit/compat`, `test/unit/images`.
+**Checks:** `test/zipshow`, `test/scale-folder`, `test/misc`, `test/templates`, `test/boards`, `test/history`, `test/damaged`, `test/portable`, `test/unit/compat`, `test/unit/images`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -15,6 +15,7 @@ Requests that settled where those files sit:
 
 - **One file:** a folder of loose files is awkward to move between machines. A show is one `.zip` file holding those files.
 - **Only the file:** "time to prune silly or old features to keep the code light. remove support for older folders, work only on zipped show files." A show kept as a folder does not open.
+- **Every browser:** request of 2026-11-14, "the core principles is portability: needs to be portable to run everywhere: Mobile, mac, linux and windows." A review of that day found that a show file could be opened in Chrome and Edge on a computer and nowhere else; asked for the next gap to close, the client took it. Read as `[ASSUMED]`: the show file is the one thing that moves a show, so it must open, and be written, in any browser; where the browser cannot write into a file, the file is taken in through its own file box and handed back as a download (STO-28 to STO-30).
 - **History:** the request for "git versioning below" put a git repository inside the show (`08-history.md`).
 
 A review of the code (2026-10-09) added five needs:
@@ -40,6 +41,9 @@ Writing straight into a file on disk works only in Chrome and Edge (K6). The int
 | STO-5 | A file that is not a zip is refused with a message, and the open show stays open. | as built | zipshow |
 | STO-7 | The start screen offers to reopen the last show file with one click. Anything remembered that is not a show file is not offered. | as built | scale-folder |
 | STO-8 | A show that is not on disk is kept in the browser: a banner says so and offers "Save as show file…" and "Export backup". The start screen offers to continue that draft. "Export backup" and "Import backup…" move the whole show as one `.promptbook.json` file, images included. What the browser can keep has a limit: STO-26. | K6, as built | misc, templates |
+| STO-28 | In a browser that cannot write into a file on disk, "Open show file…" takes the file through the browser's own file box. The show opens whole, with its images and its history, under the checks of STO-23 to STO-25, and everything a show file allows is there: the history, images kept as files. The file on disk is never written to. | request 2026-11-14 `[ASSUMED]` | portable |
+| STO-29 | There the Menu and the banner say "Download show file" in place of "Save as show file…". It downloads the show file as it is now, history included, under the name of the file that was opened; for a show that was only in the browser, under its title, and that show is a show file from then on. | same | portable |
+| STO-30 | Between two downloads every change is kept in the tool and, as the draft of STO-8, in the browser, images included within the limit of STO-26. The status says "Not downloaded", a banner says that the changes are in this browser only and offers the download, and leaving the page asks first. After a download the status says "Saved hh:mm", the banner goes and leaving asks nothing. In Chrome and Edge nothing of this shows: the file is written into as in STO-3. | same | portable |
 | STO-9 | Images no board or template uses are dropped from a show file on save. An image that a board or a template of the open show names is never dropped, even when its drawing is not written yet. | as built | leaks |
 | STO-10 | Nothing generated is stored as a source. Cue lists are computed on screen and exported on demand (C7). | D9 | — |
 
@@ -163,6 +167,14 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 
 **A show file is rewritten whole on every save.** The files of an open show file live in memory; a save builds the archive again and replaces the file. This is simple and atomic. It also means the cost of one pen stroke is the size of the show, history included (`08-history.md` §3).
 
+**Where the browser cannot write into a file, saving is a thing the user does (STO-28 to STO-30).** The show file is held in memory without a handle to it, and a save goes to the draft in the browser. The file on disk is as old as the last download, and each download is a new file: the browser names it `name (1).promptbook.zip` beside the one before, and which is the newest is for the user to know. Nothing looks at the file on disk again, so a change made to it elsewhere is not noticed (STO-11 does not apply).
+
+**The draft is the only copy between two downloads, and it has no history.** It is one show per browser (STO-8): opening a second show file and changing it replaces the draft of the first. A page closed before the download leaves the draft; "Continue the unsaved draft" gives the show back as a show in the browser, without its history, which is in the last downloaded file only. The draft is not removed by a download, since the tool cannot know that the browser kept the file.
+
+**Each save there reads every image of the show again**, to put it in the draft. A show with many photographs saves slowly in such a browser, and reaches the limit of STO-26 early; the draft is then kept without the images, and says so.
+
+**An image in a backup is typed by its name.** An image read back from a show file has no type of its own; exported as it was, it was not a picture to STO-21 and the backup opened without it. It is given the type of its extension.
+
 **In a show file, `script.md` cannot be edited from outside while the tool is open.** Unzip, edit, zip again; or use "Edit whole script…". This is the price of keeping the show in one file (D10).
 
 **The parts of a show file are read into memory when it is opened, board images included.** They cannot be read later from the file: every save replaces it.
@@ -194,6 +206,8 @@ In the browser: `localStorage` holds `promptbook:draft` (a backup object) and `p
 **The policy is the only guard for colours.** A department colour or an ink colour written by hand as `url(http://…)` in a backup or a show file would also make the browser ask that host. Colours are not cleaned when read; the policy refuses the request and the browser's console names it. STO-21 cleans `imageData` as well so that the value is not kept and written back into a later backup.
 
 **A later change that needs a new kind of resource must widen the policy**, or it fails in the page with only a console message: a web worker, a frame, `fetch` of a `blob:` URL, a font or image from anywhere but `data:` and `blob:`. The checks load the built file, so they catch it.
+
+**Not verified (STO-28 to STO-30):** Firefox, Safari, a phone or a tablet. The checks run in Chromium with its file dialogs taken away. Never tried: the file box of iOS and Android with a `.promptbook.zip`, where a download lands on a phone, and how long the draft of such a browser lives when the tool is not opened for days.
 
 **Not verified (STO-26):** the real limit of a browser (the check makes the browser's write refuse a draft over a length it chooses; no storage was filled), and a browser whose storage is switched off.
 
