@@ -1,7 +1,7 @@
 // Boards on a facing page: one column up to two boards, two columns from three on, at most 8 through the interface.
 // Then the names and buttons of a figure, and the grid behind the ink.
 const { ok, open, serve, nameBox, popGone } = require('./_util');
-const OUT = process.env.OUT || '.';
+const OUT = process.env.OUT;
 (async () => {
   const { srv, url } = await serve();
   const { page, pen, done } = await open({ url });

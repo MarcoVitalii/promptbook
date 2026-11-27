@@ -1,5 +1,5 @@
 // r1.4: %% comments, review departments (TODO), cue list columns and cue word, automatic numbers.
-const { ok, open } = require('./_util');
+const { ok, open, editBlock } = require('./_util');
 (async () => {
   const { page, pen, text, done } = await open();
   await page.getByText('Try the sample scene').click();
@@ -29,8 +29,7 @@ const { ok, open } = require('./_util');
   let bb = await page.locator('.w', { hasText: 'Seconda' }).boundingBox();
   await pen([[bb.x, bb.y + 20], [bb.x + 60, bb.y + 22]]);
   await page.waitForTimeout(450);
-  await page.locator('.w', { hasText: 'Seconda' }).dblclick();
-  await page.waitForSelector('#editor textarea');
+  await editBlock(page, page.locator('.w', { hasText: 'Seconda' }));
   await page.locator('#editor .btn', { hasText: 'Comment out' }).click();
   ok((await text()) === 'ANNA: Prima battuta.\n%%\nMARCO: Seconda battuta da tagliare.\n%%\nANNA: Terza battuta.\n', 'Comment out wraps the block: ' + JSON.stringify(await text()));
   ok(await ev(() => PB.S.orphans.length === 1 && PB.S.ink.size === 0), 'its ink is set aside');
@@ -43,7 +42,7 @@ const { ok, open } = require('./_util');
   ok((await text()).includes('%%\nMARCO'), 'undo comments it out again');
   await page.keyboard.press('Control+z');
   ok(!(await text()).includes('%%'), 'a second undo removes the comment');
-  await page.locator('.w', { hasText: 'Seconda' }).dblclick();
+  await editBlock(page, page.locator('.w', { hasText: 'Seconda' }));
   await page.locator('#editor .btn', { hasText: 'Comment out' }).click();
   await page.locator('.cmk').click();
   await page.locator('#pop .btn', { hasText: 'Edit text' }).click();
@@ -63,6 +62,7 @@ const { ok, open } = require('./_util');
   ok(csv === '[Uno] due tre … | … tre sei [cinque.]', 'cue line: the word in brackets with two words each side: ' + csv);
   ok((await page.locator('#drawer .cw').allTextContents()).join() === 'Uno,cinque.', 'the cue word is marked in the list');
   await page.locator('#bList').click();
+  await page.evaluate(() => PB.setPhase('write'));   // Review is a panel of Write
   await page.locator('#bReview').click();
   ok(await page.locator('#drawer h3', { hasText: 'To do (2)' }).count() === 1 && (await page.locator('#drawer .todo .it').first().textContent()).includes('controllare il buio — troppo lento ieri'), 'Review lists the notes with both texts');
   await page.locator('#drawer .todo .btn').first().click();
@@ -70,6 +70,7 @@ const { ok, open } = require('./_util');
   await page.keyboard.press('Control+z');
   ok((await text()).includes('{TODO | controllare il buio | troppo lento ieri}'), 'one undo brings it back');
   await page.locator('#bReview').click();
+  await page.evaluate(() => PB.setPhase('rehearse'));
   await page.locator('.w', { hasText: 'Quattro' }).click();
   const ends = await page.locator('#pop .ends .ebtn').allTextContents();
   ok(ends.join() === 'SND 1,LX 1', 'a note is never offered as something to end: ' + ends.join());

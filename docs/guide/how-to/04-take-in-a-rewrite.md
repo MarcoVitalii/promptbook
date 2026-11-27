@@ -12,10 +12,11 @@ Then pick the way that fits the size of the change.
 
 ## A few lines: type them in
 
-1. Find the speech (Ctrl+F).
-2. **Double-tap it.** Its text opens, with any cue marks in braces.
-3. Change the words. Leave each `{…}` after the word it belongs to; if that word is cut, move the mark to the word the cue should now be called on.
-4. **Ctrl+Enter.**
+1. Press **Write** (W). The whole script is one box of text, with the cue marks in braces. Find the speech (Ctrl+F: Enter selects the next match).
+2. **Change the words.** Leave each `{…}` after the word it belongs to; if that word is cut, move the mark to the word the cue should now be called on. As you type, a list offers what fits: a character's name at the start of a line, a department and its next number after `{`, the cues still open after `{/`. Enter takes it. **Syntax** (Y) shows the forms beside the text.
+3. Pause, or press Esc. What you typed is in the show: press **Rehearse** (R) to see it on the pages.
+
+In Rehearse a single speech can still be changed in place: hold a finger on it, or tap a word and press **Edit text**; Ctrl+Enter saves.
 
 To add a speech, type it on a new line in the editor of the speech above. To cut one, empty it; or press **Comment out** to hide it from the page and from print without losing it, which suits a cut that may come back.
 

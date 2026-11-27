@@ -1,6 +1,9 @@
 // Shared helpers for the browser checks.
 const pw = require('playwright');
 const path = require('path'), fs = require('fs'), http = require('http');
+// Screenshots and PDFs go to $OUT, .cache/out when it is not set: a file run on its own never writes into the repository.
+process.env.OUT = process.env.OUT || path.resolve(__dirname, '..', '.cache', 'out');
+fs.mkdirSync(process.env.OUT, { recursive: true });
 exports.ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 exports.file = path.resolve(__dirname, '..', 'promptbook.html');
 exports.serve = () => new Promise(res => {
@@ -10,11 +13,17 @@ exports.serve = () => new Promise(res => {
 // The name box of a board takes the focus, with its text selected, a moment after it opens, and the focus leaves it a moment after it closes.
 // A person sees both; a script is faster and must wait, or its Enter and its Ctrl+Z go nowhere on a slow machine.
 exports.nameBox = page => page.waitForFunction(() => { const i = document.querySelector('#pop input'); return !!i && document.activeElement === i && i.selectionStart === 0 && i.selectionEnd === i.value.length; });
+// In Rehearse a double tap is the mark of the line (SHW-39): the text of a block is opened through the cue pin.
+exports.editBlock = async (page, loc) => { await loc.click(); await page.locator('#pop button', { hasText: 'Edit text' }).click(); await page.waitForSelector('#editor textarea'); };
 exports.popGone = page => page.waitForFunction(() => { const p = document.querySelector('#pop'); return p.hidden && !p.contains(document.activeElement); });
+/* The book opens in the phase the browser was left in, Write the first time (SHW-43). Most checks pin cues and draw,
+   which is Rehearse, so a check starts there unless it asks for Write: open({ phase: 'write' }). */
+exports.rehearseFirst = page => page.addInitScript(() => { try { const v = JSON.parse(localStorage.getItem('promptbook:view') || '{}') || {}; if (!('phase' in v)) { v.phase = 'rehearse'; localStorage.setItem('promptbook:view', JSON.stringify(v)); } } catch (e) { /* no storage */ } });
 exports.open = async (opts = {}) => {
   const browser = await pw.chromium.launch();
   const ctx = await browser.newContext(Object.assign({ viewport: { width: 1500, height: 900 }, locale: 'en-GB', acceptDownloads: true }, opts.ctx || {}));
   const page = await ctx.newPage();
+  if (opts.phase !== 'write') await exports.rehearseFirst(page);
   const errs = [];
   page.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack));
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });

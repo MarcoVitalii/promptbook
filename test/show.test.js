@@ -1,4 +1,4 @@
-// r1.11: show mode. Read only, focus, the line, the page in steps, timing in rehearsal, the calls, the map (SHW-1 to 26).
+// Show mode. Read only, focus, the line, the page in steps, timing in Rehearse, the calls, the map (SHW-1 to 26, SHW-46).
 const { open, ok } = require('./_util');
 const OUT = process.env.OUT;
 (async () => {
@@ -21,12 +21,14 @@ const OUT = process.env.OUT;
   const t0 = await text(), z0 = await ev(() => PB.S.view.zoom);
 
   // SHW-1, SHW-3: entering, focus
-  ok(await page.locator('#showside').isHidden() && await page.locator('#shProg').isHidden() && await page.locator('#showLine').isHidden(), 'outside show mode there is no panel, no map and no line');
+  const phase = () => ev(() => PB.S.phase);
+  await key('t'); const z1 = await ev(() => PB.S.view.zoom);
+  ok(await phase() === 'rehearse' && await page.locator('#bar').isVisible() && await page.locator('#showside').isVisible() && await page.locator('#shCalls').isHidden(), 'the book opens in Rehearse; T brings the panel, without calls');
   ok(await ev(() => PB.S.view.facing) === true, 'the facing page is shown before the show');
   await page.click('#bShow'); await page.waitForTimeout(80);
   ok((await sh()).on && await page.locator('#showside').isVisible() && await page.locator('#shProg').isVisible(), '"Show" enters show mode and brings the panel and the map');
   ok(await page.locator('#bar').isHidden() && await page.locator('#dock').isHidden() && await page.locator('#banner').isHidden(), 'the top bar, the corner dock and the banner are gone');
-  ok(await ev(() => PB.S.view.facing) === false && await page.locator('.page.facing').first().isHidden() && await ev(() => PB.S.view.zoom) > z0, 'the facing page is gone and the script is larger: ' + await ev(() => PB.S.view.zoom));
+  ok(await ev(() => PB.S.view.facing) === false && await page.locator('.page.facing').first().isHidden() && await ev(() => PB.S.view.zoom) >= z0, 'the facing page is gone and the script is as large as the window allows: ' + await ev(() => PB.S.view.zoom));
   ok(await page.locator('#showLine').isVisible() && !(await sh()).playing && (await sh()).pos === 0, 'the line is on the first block, stopped');
   const bd = await box('#showBand'), ln = await box('#showLine'), r0 = await page.locator('.page.script .row').nth(1).boundingBox();
   ok(await page.locator('#showBand').isVisible() && Math.abs(bd.y - r0.y) < 10 && Math.abs(bd.height - r0.height) < 10 && bd.width > 900 && ln.width < 60 && ln.x === bd.x, 'the block the line is in is lit across the page, and the line is a small mark on its left edge: ' + JSON.stringify([bd, ln, r0]));
@@ -44,8 +46,8 @@ const OUT = process.env.OUT;
   ok(await text() === t0, 'a cue tag cannot be dragged');
   await pen([[b.x - 40, b.y + 60], [b.x + 20, b.y + 70], [b.x + 90, b.y + 62]]);
   ok(await ev(() => PB.S.ink.size) === 0 && await ev(() => document.querySelectorAll('.page.script svg.ink path').length) === 0, 'the pen draws no ink');
-  await key('e'); await key('f'); await key('b'); await key('r'); await key('2');
-  ok(await ev(() => PB.S.tool.mode) === 'pen' && await ev(() => PB.S.tool.finger) === false && await ev(() => PB.S.view.facing) === false && await ev(() => PB.S.drawer) === null, 'the keys of the editing tools, of the facing page and of Review do nothing');
+  await key('e'); await key('f'); await key('b'); await key('v'); await key('2'); await key('w'); await key('r');
+  ok(await ev(() => PB.S.tool.mode) === 'pen' && await ev(() => PB.S.tool.finger) === false && await ev(() => PB.S.view.facing) === false && await ev(() => PB.S.drawer) === null && await phase() === 'show', 'the keys of the editing tools, of the facing page, of Review and of the other phases do nothing');
   await page.keyboard.press('Control+z');
   ok(await text() === t0 && await ev(() => PB.S.hist.length) === 0, 'nothing was changed and nothing is there to undo');
 
@@ -139,8 +141,10 @@ const OUT = process.env.OUT;
   await key(']'); await key(']');
 
   // SHW-20, 22: timing in rehearsal
-  ok(!(await ev(() => PB.S.show.learn)) && await page.locator('#shLearnBox').isHidden(), '"Time it" is off when show mode is entered');
-  await page.click('#shLearn');
+  ok(!(await ev(() => PB.S.show.learn)) && await page.locator('#shLearnBox').isHidden(), 'nothing is learned in Show: the timing box is not there');
+  const p0 = (await sh()).pos;
+  await ev(() => PB.setPhase('rehearse')); await page.waitForTimeout(80);
+  ok(await phase() === 'rehearse' && (await sh()).pos === p0 && !(await sh()).playing && await page.locator('#shCalls').isHidden(), 'Rehearse with Timing keeps the line where it was, stopped, and shows no call');
   ok(await page.locator('#shLearnBox').isVisible() && /^This block: ~7\.4 s, estimated$/.test(await page.locator('#shBlk').textContent()) && await page.locator('#shShare').textContent() === '0% of the show timed', 'with it on, the panel shows the time of the block the line is in and how much is timed: ' + await page.locator('#shBlk').textContent());
   await put(await ev(() => PB.showTl().list[10].at)); await ev(() => { PB.S.show.anchor = null; }); await key(' ');   // the line is started where the chunk starts
   await later(30); await key('ArrowDown'); await key(' ');   // the show is only at the start of the next block but one
@@ -188,8 +192,8 @@ const OUT = process.env.OUT;
   ok(await page.locator('#shNext').isHidden() && await ev(() => PB.S.show.opt.mode) === 'rough', '"From time to time" hides it again');
   await ev(() => { PB.S.cfg.show.times = {}; PB.S.show.fine = {}; PB.S.show.tl = null; PB.showTick(); });
   await page.click('#shUp');
-  await page.click('#shLearn');
-  ok(await page.locator('#shLearnBox').isHidden() && await page.locator('#showTimes i').count() === 0, '"Time it" off hides its box and the times on the page');
+  await ev(() => PB.setPhase('show')); await page.waitForTimeout(80);
+  ok(await phase() === 'show' && await page.locator('#shLearnBox').isHidden() && await page.locator('#showTimes i').count() === 0 && await page.locator('#bar').isHidden(), 'back in Show the box and the times on the page are gone, and so is the top bar');
 
   // SHW-29: a press on a call shows its place
   await put(snd - 130 * 5);
@@ -197,7 +201,8 @@ const OUT = process.env.OUT;
   await page.locator('#shCalls .call').first().click(); await page.waitForTimeout(150);
   const tb = await page.locator('.page.script .tag', { hasText: 'SND 7' }).first().boundingBox();
   ok(await top() > s5 + 500 && tb && tb.y > 0 && tb.y < 800 && !(await sh()).follow && await page.locator('#shBack').isVisible(), 'a press on a call shows the place of its cue: ' + (await top() - s5));
-  ok((await sh()).playing && Math.abs((await sh()).pos - p8) < 1 && p8 > p7 && Object.keys(await ev(() => PB.S.cfg.show.times)).length === 1, 'the line runs on from where it was, and nothing is timed');
+  const p9 = (await sh()).pos;   // the line is running: a second of it is two words, a jump to the cue would be hundreds
+  ok((await sh()).playing && p9 >= p8 && p9 - p8 < 6 && p8 > p7 && Object.keys(await ev(() => PB.S.cfg.show.times)).length === 1, 'the line runs on from where it was, and nothing is timed: ' + (p9 - p8).toFixed(2) + ' words on');
   await key(' '); await key('Enter');
 
   // SHW-26: the rail
@@ -218,25 +223,29 @@ const OUT = process.env.OUT;
   // SHW-30: ? lists the keys of show mode only
   await key('?');
   let kt = await page.locator('#dlg table.keys').textContent();
-  ok(kt.includes('Start or stop the line') && kt.includes('Leave show mode') && !kt.includes('Undo') && !kt.includes('Eraser') && !kt.includes('Find'), 'in show mode ? lists the keys of show mode and none of the editing ones: ' + kt);
+  ok(kt.includes('Start or stop the line') && kt.includes('Leave Show') && !kt.includes('Undo') && !kt.includes('Eraser') && !kt.includes('Find'), 'in Show ? lists the keys of Show and none of the editing ones: ' + kt);
   await key('s');
   ok((await sh()).on && !(await ev(() => PB.S.show.leave)), 'no key acts behind that list');
   await key('Escape');
   await key('s');
   ok((await sh()).on && (await page.locator('#shLeave').textContent()) === 'Press again to leave', 'S asks to leave, as one press on "Leave" does');
   await key('s'); await page.waitForTimeout(80);
-  ok(!(await sh()).on, 'S again leaves show mode');
+  ok(await phase() === 'rehearse', 'S again leaves Show, back to the phase it was entered from');
+  await key('w'); await page.waitForTimeout(80); await key('Escape');
   await key('?'); kt = await page.locator('#dlg table.keys').textContent();
-  ok(kt.includes('Undo') && kt.includes('Show mode') && !kt.includes('Start or stop the line'), 'outside show mode ? lists the editing keys, S among them, and none of show mode');
+  ok(kt.includes('forms the script') && kt.includes('Show: read only') && !kt.includes('Start or stop the line'), 'in Write ? lists the keys of the text, S among them, and none of the line');
   await key('Escape'); await key('s'); await page.waitForTimeout(80);
-  ok((await sh()).on && await page.locator('#showside').isVisible(), 'S enters show mode');
+  ok((await sh()).on && await page.locator('#showside').isVisible() && await page.locator('#bar').isHidden(), 'S enters Show from Write too');
+  await key('s'); await key('s'); await page.waitForTimeout(80);
+  ok(await phase() === 'write' && await page.locator('#showside').isHidden() && await page.locator('#shProg').isHidden() && await page.locator('#showLine').isHidden(), 'and leaving goes back to Write, where there is no panel, no map and no line');
+  await key('Escape'); await key('r'); await page.waitForTimeout(80); await key('s'); await page.waitForTimeout(80);
 
   // SHW-1: leaving takes two presses
   await page.click('#shLeave');
   ok((await sh()).on && (await page.locator('#shLeave').textContent()) === 'Press again to leave', 'one press on "Leave" only asks for a second one');
   await page.click('#shLeave'); await page.waitForTimeout(80);
-  ok(!(await sh()).on && await page.locator('#showside').isHidden() && await page.locator('#shProg').isHidden() && await page.locator('#showLine').isHidden() && await page.locator('#bar').isVisible(), 'the second press leaves show mode');
-  ok(await ev(() => PB.S.view.facing) === true && await ev(() => PB.S.view.zoom) === z0, 'the facing page and the zoom are as they were');
+  ok(await phase() === 'rehearse' && await page.locator('#bar').isVisible() && await page.locator('#bMenu').isVisible() && await page.locator('#dock').isVisible(), 'the second press leaves Show, back to Rehearse with the whole top bar');
+  ok(await ev(() => PB.S.view.facing) === true && await ev(() => PB.S.view.zoom) === z1, 'the facing page and the zoom are as they were');
   await page.waitForTimeout(450);
   await key('Home'); await page.waitForTimeout(150);
   b = await word('Rispondi!');

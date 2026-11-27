@@ -50,9 +50,9 @@ The list now has one revision, and above it a line says that page numbers are lo
 
 ## 6. Rewrite a line
 
-Double-click (or double-tap) the speech you wrote on in step 4. Its text opens in an editor.
+Press **Write** at the top (or W): this is the phase for the text, and the whole script is now one box. Find the speech you wrote on in step 4 (Ctrl+F, its first words, Enter).
 
-Change a few words and add a sentence. Press Ctrl+Enter.
+Change a few words and add a sentence. Start the next line with the first letters of a character's name: a list offers the name, and Enter takes it. Then press **Rehearse** (R): the pages are back.
 
 Three things have happened, and each is worth finding:
 
@@ -82,15 +82,15 @@ Open that file in a new browser tab. This is what an actor sees: the text with n
 
 ## 9. Run it
 
-Back in the prompt book, press **Show** (or S).
+Back in the prompt book, press **Show** at the top (or S).
 
 The toolbar is gone and the script is large. A panel on the right shows a clock and the first calls. Press Space.
 
 A line starts down the script. As it comes near your cue the panel says **WARNING**, then **STANDBY** with a countdown, then **GO**. Double-click a word further down: the line jumps there, as you would do when the actors skip ahead. Press Space to stop.
 
-Try to draw or tap a word: nothing happens. In show mode the book cannot be changed.
+Try to draw or tap a word: nothing happens. In Show the book cannot be changed.
 
-Press **Leave** twice (or S twice). Everything is back.
+Press **Leave** twice (or S twice). Everything is back as it was. The three words at the top, **Write**, **Rehearse** and **Show**, are the three phases of the book: the text, the work of the rehearsals, the performance.
 
 ## 10. Go back
 

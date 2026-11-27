@@ -1,12 +1,12 @@
 # A clock, not an ear
 
-*What show mode knows about the show, and what it has to be told.*
+*What the line knows about the show, and what it has to be told.*
 
 ## What it is for
 
 On a show night the book has one job: tell the stage manager what is coming, early enough to say "stand by". On paper that is done by reading ahead with a finger on the line. Show mode does the reading ahead: a line runs down the script, and the cues it will reach are called, **WARNING** two minutes out, **STANDBY** thirty seconds out, **GO** as it passes.
 
-It also makes the book safe. In show mode nothing can be changed: the pen draws nothing, a tap pins nothing, no key edits. A sleeve on the screen during Act Two cannot move a cue.
+It also makes the book safe. In Show nothing can be changed: the pen draws nothing, a tap pins nothing, no key edits. A sleeve on the screen during Act Two cannot move a cue.
 
 ## What it does not know
 
@@ -20,13 +20,13 @@ Every block of the script (a speech, an action) has a time.
 
 To begin with it is a guess: its number of words at 130 words a minute, with a little added for an action, since "they fight" is two words and two minutes. A guess of that kind is good enough to get warnings roughly right and not good enough to trust.
 
-Rehearsal makes it better. With **Time it** switched on, each time you double tap to say "the show is here" while the line runs, the real time since your last mark is kept and shared among the blocks in between. Mark often and each speech gets its own time; mark once a page and the page's time is spread across its speeches. A silent sequence can be set by hand, five seconds at a time.
+Rehearsal makes it better. In **Rehearse**, each time you double tap to say "the show is here" while the line runs, the real time since your last mark is kept and shared among the blocks in between. Mark often and each speech gets its own time; mark once a page and the page's time is spread across its speeches. A silent sequence can be set by hand, five seconds at a time.
 
 After one timed run the line follows the show closely, and the countdown to a cue means something.
 
 ```mermaid
 flowchart LR
-  A["Words of a block<br>at 130 a minute"] -->|"a rehearsal with Time it"| B["The time it really took"]
+  A["Words of a block<br>at 130 a minute"] -->|"a run in Rehearse"| B["The time it really took"]
   B -->|"the words change"| A
   B --> C["The line, the countdowns,<br>the length of the show"]
   A --> C
@@ -34,17 +34,17 @@ flowchart LR
 
 Three things keep this from going wrong:
 
-- **Time it is off every time you enter show mode.** A show night never changes the times by accident.
-- **A time belongs to the words.** Rewrite a speech and its time is forgotten; it goes back to the guess until it is timed again. A rewritten scene does not carry a stale time.
+- **Show learns nothing.** Timing is what the line does in Rehearse; in Show a double tap only moves the line, so a show night never changes the times by accident.
+- **A time belongs to the words.** Change a speech on its own and its time follows, longer or shorter as the speech is; rewrite a scene and the times of its speeches are forgotten, back to the guess until they are timed again. A rewritten scene does not carry a stale time.
 - **Nonsense is not learned.** A mark made while the line is stopped, a jump backwards, a chunk impossibly fast or slow: these move the line and are not kept as times.
 
 ## The pace of the night
 
 Some nights run fast. The audience is cold, or the lead has a train to catch. The times are not wrong; tonight is.
 
-So there is a second, smaller control: the pace of the night. − and + make the line run a little slower or faster than the times say, for this run only. It is back at 100% the next time you enter show mode. If you correct the line for a minute, the panel offers the pace your corrections add up to, and one press takes it.
+So there is a second, smaller control: the pace of the night. − and + make the line run a little slower or faster than the times say, for this run only. It is back at 100% the next time you enter Show. If you correct the line for a minute, the panel offers the pace your corrections add up to, and one press takes it.
 
-Keep the two apart in your head. *Time it* teaches the book how long the show is. *The pace of the night* tells it how this performance is going.
+Keep the two apart in your head. *Rehearse* teaches the book how long the show is. *The pace of the night*, in Show, tells it how this performance is going.
 
 ## Why the page stands still
 

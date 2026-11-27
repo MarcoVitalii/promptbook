@@ -1,11 +1,12 @@
 const { chromium } = require('playwright');
+const { rehearseFirst } = require('./_util');
 const path = require('path');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 900 }, locale: 'en-GB', deviceScaleFactor: 2 });
-  const page = await ctx.newPage();
+  const page = await ctx.newPage(); await rehearseFirst(page);
   const errs = []; page.on('pageerror', e => errs.push(e.message + e.stack)); page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
   await page.goto('file://' + path.resolve('promptbook.html'));
   await page.getByText('Try the sample scene').click();

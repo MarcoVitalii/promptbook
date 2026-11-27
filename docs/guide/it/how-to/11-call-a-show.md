@@ -13,10 +13,9 @@ Conduci una replica dal copione: la riga segue lo spettacolo, il pannello ti dic
 ## Cominciare
 
 1. Scorri all'inizio dello spettacolo.
-2. Premi **Spettacolo** (o S). La barra e le tavole spariscono; il copione riempie la finestra; il pannello a destra mostra l'orologio e le prime chiamate.
-3. Lascia **Cronometra** spento. Una sera di spettacolo non si deve imparare niente.
-4. **Fai doppio tocco sulla prima parola.** La riga è lì, ferma.
-5. Alla prima parola detta (o al tuo via per il cue di apertura), premi **Spazio**.
+2. Premi **Spettacolo** in alto (o S). La barra e le tavole spariscono; il copione riempie la finestra; il pannello a destra mostra l'orologio e le prime chiamate. In Spettacolo non si impara niente e non si può cambiare niente, ed è l'unica fase che chiama i cue. (Se vieni dalla Prova con Tempi acceso, la riga è dove l'ha lasciata la prova.)
+3. **Fai doppio tocco sulla prima parola.** La riga è lì, ferma.
+4. Alla prima parola detta (o al tuo via per il cue di apertura), premi **Spazio**.
 
 ## Mentre va
 
@@ -52,9 +51,9 @@ Premi Spazio quando finisce l'atto. L'orologio si ferma con la riga. Fai doppio 
 
 ## Dopo lo spettacolo
 
-Premi **Esci** due volte, o S due volte. La barra, le tavole e il tuo zoom sono tornati.
+Premi **Esci** due volte, o S due volte. Sei di nuovo da dove venivi, Scrivi o Prova, con la barra, le tavole e il tuo zoom.
 
-Nel copione non è cambiato niente. Se hai visto qualcosa da sistemare (un cue in ritardo di una parola), sistemalo adesso, fuori dalla modalità spettacolo, e salva una revisione.
+Nel copione non è cambiato niente. Se hai visto qualcosa da sistemare (un cue in ritardo di una parola), sistemalo adesso, in Prova, e salva una revisione.
 
 ## I tasti
 
@@ -67,12 +66,14 @@ Nel copione non è cambiato niente. Se hai visto qualcosa da sistemare (un cue i
 | C, I, N | Cue, tratti, modalità notte |
 | L | La lista cue |
 | + − 0 | Zoom |
-| H | Guida ai pulsanti della modalità spettacolo |
+| H | Guida ai pulsanti dello Spettacolo |
 | S, due volte | Esci |
+
+W e R non fanno niente in Spettacolo: un tasto sfiorato non può sbloccare il copione.
 
 ## Se qualcosa non va
 
-- **Non riesco a cambiare niente.** Giusto: è la modalità spettacolo. Esci per modificare.
+- **Non riesco a cambiare niente.** Giusto: è lo Spettacolo. Esci, e premi Prova o Scrivi.
 - **Un tocco singolo non fa niente.** È voluto, così uno sfioramento non sposta la riga. Doppio tocco.
 - **Dopo un salto la riga è lontana dallo spettacolo.** Doppio tocco dove sono. È un gesto solo, per quanto lontano.
 - **Lo schermo si è abbassato.** Lo strumento chiede al browser di tenerlo acceso; non tutti i browser lo fanno. Imposta il portatile perché non vada in sospensione.

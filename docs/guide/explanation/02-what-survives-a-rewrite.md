@@ -47,7 +47,7 @@ The drawing itself is kept under the board's name. Templates (the bare stage, th
 
 ## Times: they are remembered by the words
 
-Show mode keeps, for each block timed in rehearsal, how long it takes. A time is tied to the words of its block. Change the words and that block's time is forgotten: it falls back to an estimate from its length, until it is timed again. Everything else keeps its time. So a rewrite of one scene costs the timing of that scene and no more.
+The line keeps, for each block timed in Rehearse, how long it takes. A time is tied to the words of its block. Change the words and that block's time is forgotten: it falls back to an estimate from its length, until it is timed again. Everything else keeps its time. So a rewrite of one scene costs the timing of that scene and no more.
 
 ## Pages: they move, unless you have fixed them
 
@@ -63,7 +63,7 @@ That is what locking is for. Once page numbers are locked, a page starts where i
 | Ink | The block it was written on | There; flagged **!** if the words changed; set aside if the block is gone | Review: "Ink to check", "Ink whose text was removed" |
 | Board | A line of the script | Between the same two blocks | Facing page |
 | Template | The show's settings | Untouched | Menu → Templates… |
-| Timed block | The words of the block | Forgotten for changed blocks only | Show mode, "Time it" |
+| Timed block | The words of the block | Goes with a block changed on its own, longer or shorter as the block is; forgotten for blocks rewritten together | Rehearse |
 | Page number | Nothing, or the lock | Shifts; or holds, with A pages and marks | History |
 
 ## The limits

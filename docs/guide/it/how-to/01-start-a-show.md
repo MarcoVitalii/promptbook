@@ -4,7 +4,7 @@ Hai il copione come file di Word o di testo e lo vuoi in un copione di scena, sa
 
 ## Prima di cominciare
 
-- Chrome o Edge su un computer. Gli altri browser aprono lo strumento ma non possono salvare i file spettacolo.
+- Chrome o Edge su un computer. Gli altri browser aprono lo strumento e un file spettacolo, ma salvi scaricando tu il file ([Spostare e fare copie](12-move-and-back-up.md)).
 - Il copione come testo che puoi copiare. Da Word: seleziona tutto, copia.
 
 ## Passi
@@ -41,6 +41,6 @@ Un file spettacolo con il copione impaginato come verrà stampato, un Rivedi pul
 - **Pagine intere sono «non riconosciute».** Probabilmente i nomi non sono in maiuscolo. Lo strumento prende `NOME:` come battuta solo quando il nome non ha lettere minuscole. Chiedi all'autore i nomi in maiuscolo, o correggili con trova e sostituisci in un editor prima di incollare.
 - **Una battuta ha inghiottito la successiva.** Una riga che non comincia con `NOME:` continua il blocco sopra. Rimetti nome e due punti.
 - **Un atto non comincia su una pagina nuova.** Al suo titolo serve `#` davanti, o una delle parole che lo strumento conosce (ATTO, SCENA, PROLOGO e le forme inglesi) a inizio riga.
-- **«Questo browser non può salvare i file dello spettacolo.»** Non sei in Chrome o Edge. Lo spettacolo resta nel browser; usa **Esporta backup** per tirarlo fuori, poi apri lo strumento in Chrome o Edge e **Importa un file di backup…**.
+- **«Questo browser non può scrivere da solo nel file dello spettacolo.»** Non sei in Chrome o Edge. Lavora come sempre, poi premi **Scarica il file spettacolo** nel Menu o nella fascia; finché non lo fai, le modifiche sono solo in questo browser.
 
 Le forme esatte che lo strumento legge sono nel [Riferimento](../reference.md#scrivere-il-copione).

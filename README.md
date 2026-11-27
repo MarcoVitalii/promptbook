@@ -3,8 +3,11 @@
 [![CI](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml/badge.svg)](https://github.com/MarcoVitalii/promptbook/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/MarcoVitalii/promptbook)](https://github.com/MarcoVitalii/promptbook/releases/latest)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+[![AI:X](https://0rwx.com/static/AI-X-light.svg)](https://0rwx.com/)
 
 A prompt book in one HTML file: script, cues, ink and blocking boards, with generated cue lists and print. No install, no server, no libraries.
+
+The code and the documents are mostly written by AI, from human prompting: hence AI:X on the [0rwx](https://0rwx.com/) scale.
 
 - **Use it:** open <https://marcovitalii.github.io/promptbook/> in Chrome or Edge, or download `promptbook.html` from the [latest release](https://github.com/MarcoVitalii/promptbook/releases/latest) and open it from disk; it needs no network. A show is one `.zip` file: start from the sample or pasted text, then Menu → “Save as show file…”. Copy that file to move the show.
 - **Learn it:** `docs/guide/index.md`: a tutorial, how-to guides for the stage manager and the author (taking in a rewrite, revisions, changed pages, the cast file, calling a show), explanations of why it works as it does, and a reference. Also in Italian: `docs/guide/it/index.md`.

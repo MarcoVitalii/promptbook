@@ -81,30 +81,35 @@ Reparti, sigle e colori sono in **Impostazioni**. Uno spettacolo nuovo ha LX (Lu
 
 Nello strumento, **Guida** (H) dà un nome a ogni pulsante e **?** elenca ogni tasto. Regole complete: `docs/specs/09-workbench.md`, `docs/specs/05-input.md`.
 
-I tasti singoli agiscono quando nessun campo ha il cursore e nessun riquadro dei cue è aperto.
+I tasti singoli agiscono quando nessun campo ha il cursore e nessun riquadro dei cue è aperto. Il copione è sempre in una di tre fasi, accesa in alto; un tasto di un'altra fase non fa niente.
 
 | Tasto | Fa |
 |---|---|
+| W, R, S | La fase: Scrivi, Prova, Spettacolo (in Scrivi, dopo Esc) |
+| Y | Sintassi: le forme accanto al testo (Scrivi) |
+| T | Tempi: la riga e il suo pannello (Prova) |
 | H | Guida ai pulsanti |
 | ? | L'elenco dei tasti |
 | Ctrl+F, `/` | Cerca. Invio successivo, Maiusc+Invio precedente, Esc esce. |
 | Ctrl+Z, Ctrl+Y | Annulla, ripeti |
 | Ctrl+S | Salva subito |
 | Ctrl+P | Stampa |
-| 1 2 3 4 | Colore della penna |
-| E, F | Gomma; fa disegnare il dito |
+| 1 2 3 4 | Colore della penna (Prova) |
+| E, F | Gomma; fa disegnare il dito (Prova) |
 | B, C, I | Mostra o nascondi tavole, cue, tratti |
 | N | Modalità notte |
-| L, R | Lista cue, Rivedi |
+| L, V | Lista cue, Rivedi (Rivedi in Scrivi) |
 | + − 0 | Ingrandisci, riduci, adatta |
 | Pag giù, Pag su | Pagina successiva, precedente |
 | Home, Fine | Inizio, fine del copione |
 | Canc | Elimina il cue o la tavola del riquadro aperto |
 | Esc | Chiude il riquadro o il menu |
-| S | Modalità spettacolo |
-| Ctrl+Invio, Esc | In un editor di testo: salva, annulla |
+| Spazio, ↓ ↑, Invio | In Prova con Tempi: avvia o ferma la riga; riga al blocco successivo o precedente; torna alla riga |
+| ↓ ↑, Invio, Tab, Esc | Nell'elenco che Scrivi propone mentre scrivi: sposta, prendi, chiudi |
+| Ctrl+Invio, Esc | Nel riquadro del testo di una battuta (Prova): salva, annulla |
+| Ctrl+↓, Ctrl+↑ | In quel riquadro: salva e apre il blocco successivo, precedente |
 
-In modalità spettacolo:
+In Spettacolo:
 
 | Tasto | Fa |
 |---|---|
@@ -113,14 +118,14 @@ In modalità spettacolo:
 | Invio | Torna alla riga |
 | `[` `]` | Ritmo della serata: più lento, più veloce |
 | C, I, N, L, + − 0, tasti di pagina, Home, Fine, H, ? | Come sopra |
-| S, due volte | Esci |
+| S, due volte | Esci, di nuovo in Scrivi o in Prova |
 
 ## Il Menu
 
 | Voce | Fa | Guida |
 |---|---|---|
 | Modifica tutto il testo… | Il testo intero, con i segni dei cue | [Accogliere una riscrittura](how-to/04-take-in-a-rewrite.md) |
-| Impostazioni… | Titolo, carta, lingua, reparti, intensità dei modelli, griglia delle tavole, i tempi della modalità spettacolo | |
+| Impostazioni… | Titolo, carta, lingua, reparti, intensità dei modelli, griglia delle tavole, i tempi dello spettacolo | |
 | Modelli… | Gli sfondi su cui si disegnano le tavole | |
 | Cronologia… | Revisioni, varianti, pagine bloccate, modifiche | [Segnare un momento](how-to/05-mark-a-moment.md) |
 | Invia agli attori… | Il file per gli attori | [Inviare agli attori](how-to/09-send-to-the-cast.md) |
@@ -184,5 +189,6 @@ Altri file che lo strumento scrive:
 | Variante | Un ramo dello spettacolo con revisioni sue |
 | Numeri bloccati | I numeri di pagina fissati alla carta di una revisione |
 | File per gli attori | Il copione e le note per gli attori |
-| Modalità spettacolo | La vista in sola lettura per chiamare una replica |
-| La riga | Il punto dello spettacolo in modalità spettacolo |
+| Fase | A che cosa serve il copione in questo momento: Scrivi (tutto il copione come testo), Prova (cue, tratti, tavole, e con Tempi la riga) o Spettacolo (chiamare una replica, sola lettura) |
+| Tempi | L'interruttore della Prova che porta la riga, il suo pannello e i tempi sulla pagina |
+| La riga | Il punto dello spettacolo, in Prova e in Spettacolo |

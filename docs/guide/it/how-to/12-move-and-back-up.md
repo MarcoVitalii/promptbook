@@ -52,7 +52,13 @@ Manda lo `.zip`. Lo apre con `promptbook.html`. Mettetevi d'accordo su chi tiene
 
 ## Da un browser che non può salvare file
 
-In un browser diverso da Chrome o Edge lo spettacolo resta dentro il browser. Per tirarlo fuori: **Esporta backup** (nella fascia, o nel Menu) scrive un solo file `.promptbook.json` con tutto tranne la cronologia. In Chrome o Edge: **Importa un file di backup…** nella schermata iniziale, poi **Salva come file spettacolo…**.
+In un browser diverso da Chrome o Edge (Firefox, Safari, un tablet, un telefono):
+
+1. Premi **Apri il file dello spettacolo…** e scegli il `.promptbook.zip`. Lo spettacolo si apre intero, con la sua cronologia.
+2. Lavora. Lo stato dice **Non scaricato** e una fascia dice che le modifiche sono solo in questo browser.
+3. Premi **Scarica il file spettacolo**, nella fascia o nel Menu. Il browser mette un nuovo `.promptbook.zip` tra i suoi download; quel file è ora lo spettacolo. Tieni il più recente e spostalo come ogni file spettacolo.
+
+Se chiudi la pagina prima di scaricare, le modifiche ci sono ancora al prossimo avvio, sotto **Riprendi la bozza non salvata**, ma senza la cronologia: scarica prima.
 
 ## Se qualcosa non va
 

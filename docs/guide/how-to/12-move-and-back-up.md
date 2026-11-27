@@ -52,7 +52,13 @@ Send the `.zip`. They open it with `promptbook.html`. Agree who holds the pen: t
 
 ## From a browser that cannot save files
 
-In a browser other than Chrome or Edge the show stays inside the browser. To get it out: **Export backup** (in the banner, or in the Menu) writes one `.promptbook.json` file with everything except the history. In Chrome or Edge: **Import a backup file…** on the start screen, then **Save as show file…**.
+In a browser other than Chrome or Edge (Firefox, Safari, a tablet, a phone):
+
+1. Press **Open show file…** and choose the `.promptbook.zip`. The show opens whole, with its history.
+2. Work. The status says **Not downloaded** and a banner says the changes are in this browser only.
+3. Press **Download show file**, in the banner or in the Menu. The browser puts a new `.promptbook.zip` in its downloads; that file is the show now. Keep the newest and move it as you would any show file.
+
+Close the page before downloading and the changes are still there at the next start, under **Continue the unsaved draft**, but without the history: download first.
 
 ## If something is off
 

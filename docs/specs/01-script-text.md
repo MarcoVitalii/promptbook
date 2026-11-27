@@ -2,7 +2,7 @@
 
 **Covers:** the script format, editing, undo, the frontmatter with its character list, comments.
 **Code:** `src/core.js` (PARSE, frontmatter, comments, text edits, history), `src/view.js` (in-place text editor).
-**Checks:** `test/unit/parse`, `test/parse-undo`, `test/frontmatter`, `test/notes-todos`.
+**Checks:** `test/unit/parse`, `test/parse-undo`, `test/frontmatter`, `test/notes-todos`, `test/phases`.
 **Columns and tags:** explained in `SPEC.md`, "How to read this specification".
 
 ---
@@ -50,8 +50,9 @@ MARCO: Sono io.
 
 | ID | Requirement | Basis | Checked by |
 |---|---|---|---|
-| TXT-8 | Any block's text is edited in place: double-tap, double-click or long press on the block, or "Edit text" in the tap popover. Ctrl+Enter saves, Esc cancels. | original scope | interact, misc |
-| TXT-9 | "Edit whole script…" in the menu opens the full text. A new show can start from pasted text. | original scope | — |
+| TXT-8 | In Write the whole script is the editor (SHW-44). In Rehearse a block's text is edited in place: a long press, or "Edit text" in the cue pin (a double tap there is the mark, SHW-39). Ctrl+Enter saves, Esc cancels; Ctrl+Arrow down and Ctrl+Arrow up save and open the next or the previous block. | original scope; request 2026-11-16 | interact, misc, phases |
+| TXT-32 | In Write, as the text is typed, a list under the cursor offers what fits: at the start of a line, after one letter or more, the characters (the list at the top of the script, then every name that speaks), inserted as `NAME: `; after `{`, the departments, each with its next number at that place (`LX 13 | `), the cursor left before the `}`; after `{/`, the cues open at that place, newest first, inserted as `/LX 12}`. Arrow down and up move in the list, Enter or Tab take the entry, Escape closes it, typing on narrows it; with nothing fitting there is no list. | request 2026-11-16 `[LOCKED]`; what is offered `[ASSUMED]` | phases |
+| TXT-9 | "Edit whole script…" in the menu opens the full text in a box, in Rehearse; in Write the full text is the phase itself. A new show can start from pasted text. | original scope | — |
 | TXT-10 | Every change to the text is one undo step, and undo returns the text exactly. Undo and redo: toolbar, Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z. | original scope | unit/parse, parse-undo, interact |
 | TXT-28 | A block is moved by pressing the grip in its left gutter, dragging, and releasing between two blocks. Every row has one grip: speech, action, heading, unrecognised line, a cue or board on its own line; speeches said together move as one. None on the frontmatter, on a comment, or on the part of a block carried over from the page before. The grip is faint (shown on hover with a mouse), never printed, and the pen draws no ink on it. A board is also moved by dragging its tag in the margin. | request 2026-10-10 `[ASSUMED]` | block-move, cue-move |
 | TXT-29 | The gestures are those of a cue tag (CUE-26, CUE-29, CUE-31, CUE-34, INP-8 to INP-10): mouse and pen drag after 8 px, a finger holds 0.3 s first and otherwise scrolls; the script scrolls near the top and bottom edge; Escape, a cancelled pointer or a release with no place marked change nothing; no drag while a text is edited. A press and release on a grip does nothing. | same | block-move |

@@ -1,5 +1,5 @@
 const { ok, open } = require('./_util');
-const OUT = process.env.OUT || '.';
+const OUT = process.env.OUT;
 (async () => {
   const { page, pen, text, done } = await open();
   await page.getByText('Try the sample scene').click();

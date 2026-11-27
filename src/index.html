@@ -19,32 +19,38 @@
 </style>
 <style id="pageRule"></style>
 </head>
-<body class="facing">
+<body class="facing write">
 <header id="bar">
   <button id="bMenu" data-tt="menu">&#9776;</button>
   <span id="who"><b id="showName"></b><span id="status"></span></span>
+  <span class="grp phase">
+    <button id="bWrite" data-t="phWrite" data-tt="phWriteTip" data-k="W"></button>
+    <button id="bRehearse" data-t="phRehearse" data-tt="phRehearseTip" data-k="R"></button>
+    <button id="bShow" data-t="showMode" data-tt="showTip" data-k="S"></button>
+  </span>
   <span class="grp ed">
     <span id="pens"></span>
     <button id="bErase" data-t="eraser" data-k="E"></button>
     <button id="bFinger" data-t="finger" data-tt="fingerTip" data-k="F"></button>
   </span>
-  <span class="grp ed">
+  <span class="grp rh">
     <button id="bUndo" data-tt="undo" data-k="Ctrl+Z">&#8630;</button>
     <button id="bRedo" data-tt="redo" data-k="Ctrl+Y">&#8631;</button>
   </span>
+  <button id="bSyntax" class="wr" data-t="syntax" data-tt="syntaxTip" data-k="Y"></button>
   <span class="grow"></span>
   <select id="outline" data-tt="jump"></select>
   <input id="search" type="search" data-tp="find" data-tt="kFind" data-k="Ctrl+F" autocomplete="off">
-  <span class="grp">
+  <span class="grp rh">
     <button id="bFacing" data-t="boards" data-tt="boardsTip" data-k="B"></button>
     <button id="bCues" data-t="cues" data-tt="cuesTip" data-k="C"></button>
     <button id="bInk" data-t="ink" data-tt="inkTip" data-k="I"></button>
+    <button id="bTiming" class="rh" data-t="timing" data-tt="timingTip" data-k="T"></button>
   </span>
   <span class="grp">
-    <button id="bReview" data-k="R" hidden></button>
+    <button id="bReview" class="wr" data-k="V" hidden></button>
     <button id="bList" data-t="cueList" data-k="L"></button>
     <button id="bPrint" data-t="print" data-k="Ctrl+P"></button>
-    <button id="bShow" data-t="showMode" data-tt="showTip" data-k="S"></button>
   </span>
   <div id="menu" hidden></div>
 </header>
@@ -52,6 +58,7 @@
 <div id="work">
   <div id="deskwrap">
     <main id="desk"><div id="zoomwrap"><div id="spreads"></div></div><div id="tpl"></div></main>
+    <div id="writer"><textarea id="wtext" spellcheck="false"></textarea><pre id="wsyntax" class="fmt" hidden></pre><div id="wcomp" hidden></div></div>
     <div id="dock">
       <button id="bNight" data-tt="night" data-k="N">&#9790;</button>
       <span class="sep"></span>
@@ -65,22 +72,21 @@
   </div>
   <aside id="showside" hidden>
     <div id="shClock"></div>
-    <div id="shCalls"></div>
-    <div id="shLearnBox" hidden>
-      <div><span id="shBlk"></span><button id="shDn" data-tt="shBlockTip">&minus;5 s</button><button id="shUp" data-tt="shBlockTip">+5 s</button></div>
-      <div><span id="shLast"></span><button id="shUndo" data-t="undo" hidden></button></div>
-      <div><span id="shShare"></span><button id="shRest" data-tt="shRestTip" hidden></button></div>
-      <div><span id="shSince"></span><button id="shNext" data-t="shNextBtn" data-tt="shNextTip" data-k="&darr;" hidden></button></div>
-      <div class="mode"><button id="shMRough" data-t="shRough" data-tt="shRoughTip"></button><button id="shMLine" data-t="shByLine" data-tt="shByLineTip"></button></div>
-    </div>
     <div id="shCtl">
       <button id="shPlay" data-tt="shPlay" data-k="Space"></button>
       <span class="pace"><button id="shSlow" data-tt="shSlower" data-k="[">&minus;</button><span id="shWpm"></span><button id="shFast" data-tt="shFaster" data-k="]">+</button></span>
       <button id="shUse" data-tt="shUseTip" hidden></button>
       <button id="shBack" data-t="shBack" data-k="Enter" hidden></button>
     </div>
+    <div id="shLearnBox" hidden>
+      <div class="mode"><button id="shMRough" data-t="shRough" data-tt="shRoughTip"></button><button id="shMLine" data-t="shByLine" data-tt="shByLineTip"></button></div>
+      <div><span id="shSince"></span><button id="shNext" data-t="shNextBtn" data-tt="shNextTip" data-k="&darr;" hidden></button></div>
+      <div><span id="shBlk"></span><button id="shDn" data-tt="shBlockTip">&minus;5 s</button><button id="shUp" data-tt="shBlockTip">+5 s</button></div>
+      <div><span id="shLast"></span><button id="shUndo" data-t="undo" hidden></button></div>
+      <div><span id="shShare"></span><button id="shRest" data-tt="shRestTip" hidden></button></div>
+    </div>
+    <div id="shCalls"></div>
     <div id="shMore">
-      <button id="shLearn" data-t="shLearn" data-tt="shLearnTip"></button>
       <button id="shNight" data-tt="night" data-k="N">&#9790;</button>
       <button id="shLeave" data-tt="kShLeave" data-k="S"></button>
     </div>

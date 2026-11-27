@@ -47,7 +47,7 @@ Il disegno è conservato sotto il nome della tavola. I modelli (il palco vuoto, 
 
 ## I tempi: sono ricordati per le parole
 
-La modalità spettacolo conserva, per ogni blocco cronometrato in prova, quanto dura. Un tempo è legato alle parole del suo blocco. Cambia le parole e il tempo di quel blocco è dimenticato: torna a una stima fatta sulla lunghezza, finché non viene cronometrato di nuovo. Tutto il resto tiene il suo tempo. Così la riscrittura di una scena costa il cronometraggio di quella scena e niente di più.
+La riga conserva, per ogni blocco cronometrato in Prova, quanto dura. Un tempo è legato alle parole del suo blocco. Cambia le parole e il tempo di quel blocco è dimenticato: torna a una stima fatta sulla lunghezza, finché non viene cronometrato di nuovo. Tutto il resto tiene il suo tempo. Così la riscrittura di una scena costa il cronometraggio di quella scena e niente di più.
 
 ## Le pagine: si muovono, a meno che tu le abbia fissate
 
@@ -63,7 +63,7 @@ A questo serve bloccare. Quando i numeri di pagina sono bloccati, una pagina com
 | Inchiostro | Il blocco su cui è stato scritto | C'è; segnalato con **!** se le parole sono cambiate; messo da parte se il blocco non c'è più | Rivedi: «Inchiostro da controllare», «Inchiostro di testo rimosso» |
 | Tavola | Una riga del copione | Tra gli stessi due blocchi | Pagina a fronte |
 | Modello | Le impostazioni dello spettacolo | Intatto | Menu → Modelli… |
-| Blocco cronometrato | Le parole del blocco | Dimenticato solo per i blocchi cambiati | Modalità spettacolo, «Cronometra» |
+| Blocco cronometrato | Le parole del blocco | Segue un blocco cambiato da solo, più lungo o più corto come il blocco; dimenticato per i blocchi riscritti insieme | Prova |
 | Numero di pagina | Niente, oppure il blocco delle pagine | Scorre; oppure tiene, con pagine A e segni | Cronologia |
 
 ## I limiti

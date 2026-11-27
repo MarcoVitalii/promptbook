@@ -41,16 +41,19 @@ Queste scelte appartengono al computer, non allo spettacolo: sono ricordate in q
 
 ## Tocco, penna e mouse
 
-Ognuno fa una cosa sola, senza modalità da cambiare.
+Ognuno fa una cosa sola. Il copione è sempre in una di tre fasi, accesa in alto: **Scrivi**, **Prova** o **Spettacolo** (W, R, S). In Scrivi non ci sono pagine: tutto il copione è un riquadro di testo, e il lavoro lo fa la tastiera. Sulle pagine, in Prova e in Spettacolo:
 
-| | Sul copione |
-|---|---|
-| Punta della penna | Scrive |
-| Gomma della penna, o il suo pulsante | Cancella |
-| Tocco del dito su una parola | Apre il riquadro per mettere un cue |
-| Trascinamento con il dito | Scorre |
-| Doppio tocco, o pressione lunga, su una battuta | Apre il suo testo per modificarlo |
-| Mouse | Fa ciò che fa un dito |
+| | In Prova | In Spettacolo |
+|---|---|---|
+| Punta della penna | Scrive | Scorre |
+| Gomma della penna, o il suo pulsante | Cancella | — |
+| Tocco del dito su una parola | Apre il riquadro per mettere un cue | Niente |
+| Trascinamento con il dito | Scorre | Scorre |
+| Doppio tocco su una parola | Porta lì la riga, con **Tempi** acceso | Porta lì la riga |
+| Pressione lunga su una battuta | Apre il suo testo | Niente |
+| Mouse | Fa ciò che fa un dito | Fa ciò che fa un dito |
+
+Scrivi è per il testo, Prova per cue, tratti, tavole e, con **Tempi** (T) acceso, la riga che impara i tempi, Spettacolo per chiamare la replica. La barra in alto cambia con la fase: Scrivi ha **Sintassi** e **Rivedi**, Prova le penne e i quattro interruttori; Spettacolo non ha barra.
 
 Non c'è una penna su questo computer? Premi **Dito** (F): dito e mouse disegnano. Premilo di nuovo per riavere tocco e scorrimento.
 
@@ -59,5 +62,7 @@ I tasti a lettera singola funzionano quando non stai scrivendo in un campo e nes
 ## Quando non trovi un pulsante
 
 - **Rivedi non ha numero.** Allora non c'è niente da guardare. Il pannello si apre lo stesso, con i personaggi e ciò che è commentato.
-- **La barra in alto è sparita.** Sei in modalità spettacolo. Premi **Esci** due volte, o S due volte.
+- **La barra in alto è sparita.** Sei in Spettacolo. Premi **Esci** due volte, o S due volte.
+- **Le penne sono sparite, e anche le pagine.** Sei in Scrivi. Premi **Prova** (R).
+- **I tasti singoli non fanno niente.** In Scrivi il cursore è nel riquadro: Esc lo porta fuori.
 - **La barra è su due righe.** La finestra è più stretta di circa 1280 px. C'è ancora tutto.

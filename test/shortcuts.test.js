@@ -51,10 +51,12 @@ const OUT = process.env.OUT;
   // panels
   await key('l');
   ok(await ev(() => PB.S.drawer) === 'cues', 'L opens the cue list');
-  await key('r');
-  ok(await ev(() => PB.S.drawer) === 'review', 'R opens Review');
-  await key('r');
-  ok(await ev(() => PB.S.drawer) === null && await page.locator('#drawer').isHidden(), 'R again closes it');
+  await key('w'); await page.waitForTimeout(80); await key('Escape');
+  await key('v');
+  ok(await ev(() => PB.S.drawer) === 'review', 'V opens Review, in Write');
+  await key('v');
+  ok(await ev(() => PB.S.drawer) === null && await page.locator('#drawer').isHidden(), 'V again closes it');
+  await key('r'); await page.waitForTimeout(80);
 
   // find, and no shortcut while typing
   await key('/');
@@ -121,7 +123,7 @@ const OUT = process.env.OUT;
   ok(lay.barH < 60, 'the toolbar is one row at 1500 px: ' + lay.barH);
   ok(lay.inDock && lay.corner, 'night, zoom and help sit in the bottom right corner of the desk');
   await page.setViewportSize({ width: 1280, height: 800 });
-  ok(await ev(() => document.querySelector('#bar').getBoundingClientRect().height) < 60, 'and still one row at 1280 px');
+  ok(await ev(() => document.querySelector('#bar').getBoundingClientRect().height) < 60, 'and still one row at 1280 px: ' + await ev(() => [...document.querySelectorAll('#bar > *')].filter(e => e.getClientRects().length).map(e => (e.id || e.className) + ':' + Math.round(e.getBoundingClientRect().width)).join(' ')));
   await page.setViewportSize({ width: 1500, height: 900 });
 
   // cue tags: a filled label for a start, an outlined one for an end
@@ -149,8 +151,8 @@ const OUT = process.env.OUT;
   let G = await guide();
   ok(G.open, 'H opens the guide to the buttons');
   ok(G.rows.length >= 18 && G.rows.join() === G.rings.join() && G.nums, 'every row of the guide has a ring with the same number on its button: ' + G.rows.length);
-  ok(['#bMenu', '#pens', '#bErase', '#bUndo', '#search', '#bFacing', '#bCues', '#bInk', '#bList', '#bPrint', '#bShow', '#bNight', '#zFit', '#bGuide', '#bKeys'].every(s => G.rows.includes(s)), 'the guide covers the toolbar and the corner buttons');
-  ok(!G.rows.some(s => s.startsWith('#sh')), 'the guide leaves out the buttons that are not in sight');
+  ok(['#bMenu', '#bWrite', '#bRehearse', '#bShow', '#pens', '#bErase', '#bUndo', '#search', '#bFacing', '#bCues', '#bInk', '#bTiming', '#bList', '#bPrint', '#bNight', '#zFit', '#bGuide', '#bKeys'].every(s => G.rows.includes(s)), 'the guide covers the toolbar and the corner buttons');
+  ok(!G.rows.some(s => s.startsWith('#sh')) && !G.rows.includes('#bSyntax'), 'the guide leaves out the buttons that are not in sight');
   ok(G.keys['#bFacing'] === 'B' && G.keys['#bUndo'] === 'Ctrl+Z' && G.keys['#pens'] === '1 2 3 4' && G.keys['#bMenu'] === '', 'a row names the key of its button, and none where there is none');
   ok(G.text['#bErase'].includes('Eraser') && G.text['#bErase'].includes('Rub out'), 'a row has the name and what the button does: ' + G.text['#bErase']);
   ok(await ev(() => { const g = document.querySelector('#guide .gring[data-g="#bCues"]').getBoundingClientRect(), b = document.querySelector('#bCues').getBoundingClientRect(); return Math.abs(g.left - b.left) < 4 && Math.abs(g.top - b.top) < 4; }), 'the ring is on its button');

@@ -14,7 +14,9 @@ en: {
   appSub: 'Prompt book', openFile: 'Open show file…', reopen: 'Reopen “{0}”', trySample: 'Try the sample scene',
   pasteNew: 'Start from pasted text', contDraft: 'Continue the unsaved draft ({0})', importBk: 'Import a backup file…',
   startHint: 'A show is one .zip file: script, ink, settings, boards and images together. Copy that file to move the show. Create it with “Start from pasted text” or the sample, then “Save as show file…”.',
-  noFs: 'This browser cannot save show files. Open the tool in Chrome or Edge for that. Here the show stays inside this browser until you export a backup.',
+  noFs: 'This browser cannot write into a show file by itself. Open the file here, work, then “Download show file” in the Menu; until then the changes stay inside this browser. In Chrome or Edge every change goes into the file.',
+  mDownload: 'Download show file', stUnsent: 'Not downloaded', downloaded: 'Show file downloaded',
+  dlBanner: 'This browser cannot write into the show file. Your changes are kept in this browser only: download the show file to keep them.',
   menu: 'Menu', mOpen: 'Open show file…', mSaveTo: 'Save as show file…', mText: 'Edit whole script…', mExport: 'Export backup', mImport: 'Import backup…',
   mSettings: 'Settings…', mClose: 'Close show', jump: 'Jump to act or scene', jumpTo: 'Jump to…', find: 'Find…',
   eraser: 'Eraser', finger: 'Finger', fingerTip: 'Let finger and mouse draw (for machines without a pen)', undo: 'Undo', redo: 'Redo',
@@ -25,9 +27,9 @@ en: {
   cueAfter: 'Cue after “{0}”', cueOwn: 'Cue on its own line, after this block', ownLine: 'On its own line',
   boardHere: 'Board here', editText: 'Edit text', label: 'Number or label', desc: 'Margin text', del: 'Delete', done: 'Done', lastLabel: 'last was {0}',
   save: 'Save', cancel: 'Cancel', close: 'Close',
-  keys: 'Keyboard shortcuts', kHint: 'Single keys work when no text field has the focus and no cue box is open.', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
+  keys: 'Keyboard shortcuts', kFind: 'Find in the script', kSave: 'Save now', kPens: 'Pen colour',
   kZoom: 'Zoom in and out', kFit: 'Fit the page to the window', kPage: 'Next and previous page', kEnds: 'Start and end of the script', kEsc: 'Close the box or the menu; leave Find',
-  editHint: 'Ctrl+Enter saves, Esc cancels. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
+  editHint: 'Ctrl+Enter saves, Esc cancels, Ctrl+↓ and Ctrl+↑ save and open the next or the previous block. One line per speech: NAME: text. Start a line with & for simultaneous speech.',
   textTitle: 'Script text', pasteTitle: 'Paste the script',
   fmtHelp: '---\ntitle: The Sea\nauthor: Name Surname\ncharacters:\n  - ANNA/A - the daughter\n  - MARCO\n---\n# ACT ONE\n## Scene 1\n(An action on its own line.)\nANNA: Dialogue. (inline direction) More dialogue.\n& MARCO: Spoken at the same time as the line above.',
   contd: '(cont.)', together: 'together', board: 'Board', addBoard: '+ Board', bImage: 'Image…',
@@ -109,10 +111,15 @@ en: {
   acMoved: 'The line has changed since you wrote this. Save to keep the note here.', acAttach: 'Put on this line', acLostHint: 'Tap a line, then its note button, to put one of these back.',
   acOlder: 'This file is older than the one opened last ({0}). Nothing was updated.', acOlderAsk: 'This file is older than the one you have ({0}). Open it anyway?',
   acNoStore: 'This browser does not keep your notes when the page is closed. Use “Export my notes” before you close it.', acLine: 'Notes on this line',
-  showMode: 'Show', showTip: 'Show mode: nothing can be changed, a line runs down the script and cues are announced',
+  phWrite: 'Write', phWriteTip: 'Write: the whole script as text. W',
+  phRehearse: 'Rehearse', phRehearseTip: 'Rehearse: cues, ink, boards, and with “Timing” the line that learns how long each part takes. Tap a word to pin a cue. R',
+  syntax: 'Syntax', syntaxTip: 'Show beside the text the forms the script is written in', timing: 'Timing', timingTip: 'The line and its clock: each block learns its time as the line runs. Space starts it, a double tap says “the show is here”',
+  kWrHint: 'In Write the box has the keys. Escape takes the cursor out of it; then the single keys act.', kWriteEsc: 'Out of the text box', wNext: 'next {0}',
+  showMode: 'Show', showTip: 'Show: nothing can be changed. The line runs down the script and the cues are called; nothing is learned. S',
+  kWrite: 'Write: the text', kRehearse: 'Rehearse: cues, ink, boards and timing', rehHint: 'Timing. Space starts the line; a double tap says “the show is here” and times what came before it.',
+  kRehHint: 'These are the keys of Rehearse: the editing keys and those of the line.',
   shPlay: 'Start or stop the line', shBack: 'Back to the line', shLeave: 'Leave', shLeave2: 'Press again to leave', shStandby: 'STANDBY', shWarning: 'WARNING', shGo: 'GO',
   shNext: 'Next', shNoCue: 'No more cues', shTempo: '{0}%', shSlower: 'Pace of the night: slower', shFaster: 'Pace of the night: faster', shUse: 'Tonight {0}%: use it', shUseTip: 'The pace of this run, measured from your corrections of the line',
-  shLearn: 'Time it', shLearnTip: 'For a rehearsal. While the line runs, each double tap says “the show is here”: the time since the mark before is kept for the blocks in between. Stop the line before jumping elsewhere.',
   shTimed: 'Timed {0}, was {1} · blocks: {2}', shBlockT: 'This block: {0}, timed', shBlockE: 'This block: ~{0}, estimated', shBlockTip: 'The time of the block the line is in: 5 seconds less, 5 seconds more',
   shWhyStop: 'Not timed: the line is stopped. Space starts it.', shWhyBack: 'Not timed: behind the mark before.', shWhyShort: 'Not timed: less than a second.', shWhyFast: 'Not timed: far too fast, taken for a jump.', shWhySlow: 'Not timed: far too slow.',
   shSince: 'Since the mark: {0}', shTypeTip: 'The time of this block: ~ inferred from its words, = set by hand. Press to type it; leave it empty to infer it again.',
@@ -121,9 +128,9 @@ en: {
   shNextBtn: 'Next', shNextTip: 'This block is over: it gets the time since the mark before, and the line goes to the next block',
   shShare: '{0}% of the show timed', shRest: 'Rest at {0} wpm', shRestTip: 'The pace measured over the timed speeches: use it for everything that is not timed',
   shLeft: '{0} left', shEnds: 'ends ~{0}', shPeekTip: 'Press to look at the place of this cue; the line stays where it is', shMapTip: 'The whole show, scene by scene. Press to look at that place; the line stays where it is.',
-  shForget: 'Forget {0} timed blocks', shHint: 'Show mode. Space starts the line. Double tap a word to put the line there.', shBusy: 'Close the editor first.',
+  shForget: 'Forget {0} timed blocks', shHint: 'Show. Space starts the line. Double tap a word to put the line there.', shBusy: 'Close the editor first.',
   paceL: 'Pace of blocks not timed (words per minute)', standbyL: 'Standby (seconds before the cue)', warningL: 'Warning (seconds before, 0 for none)',
-  kShow: 'Show mode', kShLeave: 'Leave show mode (press twice)', kShHint: 'These are the keys of show mode. The editing keys are back when you leave it.',
+  kShow: 'Show: read only, the line runs and the cues are called', kShLeave: 'Leave Show (press twice)', kShHint: 'These are the keys of Show. The editing keys are back in Write and Rehearse.',
   kShPlay: 'Start or stop the line', kShBack: 'Back to the line', kShStep: 'Line to the next or previous block', kShPace: 'Pace of the night: slower, faster',
   guide: 'Guide to the buttons', guideB: 'Guide', gHint: 'Every number sits on a button you can see now. Press a number or a row to light the pair. Esc, H or a press outside closes the guide.',
   gMenuD: 'The whole script as text, settings, templates, history, the files for the cast, backups, opening and saving a show file.',
@@ -140,7 +147,9 @@ it: {
   appSub: 'Copione di scena', openFile: 'Apri il file dello spettacolo…', reopen: 'Riapri «{0}»', trySample: 'Prova la scena di esempio',
   pasteNew: 'Inizia incollando il testo', contDraft: 'Riprendi la bozza non salvata ({0})', importBk: 'Importa un file di backup…',
   startHint: 'Uno spettacolo è un solo file .zip: copione, appunti a penna, impostazioni, schemi e immagini insieme. Per spostarlo basta copiare quel file. Crealo con «Inizia incollando il testo» o con l’esempio, poi «Salva come file spettacolo…».',
-  noFs: 'Questo browser non può salvare i file dello spettacolo. Per farlo apri lo strumento in Chrome o Edge. Qui lo spettacolo resta dentro questo browser finché non esporti un backup.',
+  noFs: 'Questo browser non può scrivere da solo nel file dello spettacolo. Apri qui il file, lavora, poi «Scarica il file spettacolo» nel Menu; fino ad allora le modifiche restano dentro questo browser. In Chrome o Edge ogni modifica va nel file.',
+  mDownload: 'Scarica il file spettacolo', stUnsent: 'Non scaricato', downloaded: 'File spettacolo scaricato',
+  dlBanner: 'Questo browser non può scrivere nel file dello spettacolo. Le modifiche restano solo in questo browser: scarica il file spettacolo per conservarle.',
   menu: 'Menu', mOpen: 'Apri file spettacolo…', mSaveTo: 'Salva come file spettacolo…', mText: 'Modifica tutto il testo…', mExport: 'Esporta backup', mImport: 'Importa backup…',
   mSettings: 'Impostazioni…', mClose: 'Chiudi spettacolo', jump: 'Vai ad atto o scena', jumpTo: 'Vai a…', find: 'Cerca…',
   eraser: 'Gomma', finger: 'Dito', fingerTip: 'Fa disegnare dito e mouse (per computer senza penna)', undo: 'Annulla', redo: 'Ripeti',
@@ -151,9 +160,9 @@ it: {
   cueAfter: 'Cue dopo «{0}»', cueOwn: 'Cue su riga propria, dopo questo blocco', ownLine: 'Su riga propria',
   boardHere: 'Tavola qui', editText: 'Modifica testo', label: 'Numero o sigla', desc: 'Testo a margine', del: 'Elimina', done: 'Fatto', lastLabel: 'l’ultimo era {0}',
   save: 'Salva', cancel: 'Annulla', close: 'Chiudi',
-  keys: 'Scorciatoie da tastiera', kHint: 'I tasti singoli funzionano quando nessun campo di testo è attivo e nessun riquadro dei cue è aperto.', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
+  keys: 'Scorciatoie da tastiera', kFind: 'Cerca nel testo', kSave: 'Salva subito', kPens: 'Colore della penna',
   kZoom: 'Ingrandisci e riduci', kFit: 'Adatta la pagina alla finestra', kPage: 'Pagina successiva e precedente', kEnds: 'Inizio e fine del testo', kEsc: 'Chiudi il riquadro o il menu; esci da Cerca',
-  editHint: 'Ctrl+Invio salva, Esc annulla. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
+  editHint: 'Ctrl+Invio salva, Esc annulla, Ctrl+↓ e Ctrl+↑ salvano e aprono il blocco successivo o precedente. Una riga per battuta: NOME: testo. Inizia la riga con & per le battute simultanee.',
   textTitle: 'Testo del copione', pasteTitle: 'Incolla il copione',
   fmtHelp: '---\ntitolo: Il mare\nautore: Nome Cognome\npersonaggi:\n  - ANNA/A - la figlia\n  - MARCO\n---\n# ATTO PRIMO\n## Scena 1\n(Un’azione su una riga a sé.)\nANNA: Battuta. (didascalia interna) Ancora battuta.\n& MARCO: Detta insieme alla riga sopra.',
   contd: '(segue)', together: 'insieme', board: 'Tavola', addBoard: '+ Tavola', bImage: 'Immagine…',
@@ -235,10 +244,15 @@ it: {
   acMoved: 'La battuta è cambiata da quando l’hai scritta. Salva per tenere qui la nota.', acAttach: 'Metti su questa battuta', acLostHint: 'Tocca una battuta, poi il suo pulsante delle note, per rimetterne una.',
   acOlder: 'Questo file è più vecchio dell’ultimo aperto ({0}). Non è stato aggiornato niente.', acOlderAsk: 'Questo file è più vecchio di quello che hai ({0}). Aprirlo lo stesso?',
   acNoStore: 'Questo browser non conserva le tue note quando la pagina viene chiusa. Usa «Esporta le mie note» prima di chiuderla.', acLine: 'Note su questa battuta',
-  showMode: 'Spettacolo', showTip: 'Modalità spettacolo: niente può essere modificato, una riga scorre sul copione e i cue vengono annunciati',
+  phWrite: 'Scrivi', phWriteTip: 'Scrivi: tutto il copione come testo. W',
+  phRehearse: 'Prova', phRehearseTip: 'Prova: cue, tratti, tavole, e con «Tempi» la riga che impara quanto dura ogni parte. Tocca una parola per fissare un cue. R',
+  syntax: 'Sintassi', syntaxTip: 'Mostra accanto al testo le forme in cui si scrive il copione', timing: 'Tempi', timingTip: 'La riga e il suo orologio: ogni blocco impara il suo tempo mentre la riga scorre. Spazio la avvia, un doppio tocco dice «lo spettacolo è qui»',
+  kWrHint: 'In Scrivi i tasti sono del riquadro. Esc porta il cursore fuori; poi i tasti singoli agiscono.', kWriteEsc: 'Fuori dal riquadro del testo', wNext: 'prossimo {0}',
+  showMode: 'Spettacolo', showTip: 'Spettacolo: niente può essere modificato. La riga scorre sul copione e i cue vengono chiamati; niente viene imparato. S',
+  kWrite: 'Scrivi: il testo', kRehearse: 'Prova: cue, tratti, tavole e tempi', rehHint: 'Tempi. Spazio avvia la riga; un doppio tocco dice «lo spettacolo è qui» e cronometra ciò che è venuto prima.',
+  kRehHint: 'Questi sono i tasti della Prova: i tasti di modifica e quelli della riga.',
   shPlay: 'Avvia o ferma la riga', shBack: 'Torna alla riga', shLeave: 'Esci', shLeave2: 'Premi ancora per uscire', shStandby: 'PRONTI', shWarning: 'ATTENZIONE', shGo: 'VIA',
   shNext: 'Prossimo', shNoCue: 'Nessun altro cue', shTempo: '{0}%', shSlower: 'Ritmo della serata: più lento', shFaster: 'Ritmo della serata: più veloce', shUse: 'Stasera {0}%: usalo', shUseTip: 'Il ritmo di questa replica, misurato dalle tue correzioni della riga',
-  shLearn: 'Cronometra', shLearnTip: 'Per una prova. Mentre la riga scorre, ogni doppio tocco dice «lo spettacolo è qui»: il tempo passato dal segno precedente viene conservato per i blocchi in mezzo. Ferma la riga prima di saltare altrove.',
   shTimed: 'Cronometrato {0}, era {1} · blocchi: {2}', shBlockT: 'Questo blocco: {0}, cronometrato', shBlockE: 'Questo blocco: ~{0}, stimato', shBlockTip: 'Il tempo del blocco in cui si trova la riga: 5 secondi in meno, 5 secondi in più',
   shWhyStop: 'Non cronometrato: la riga è ferma. Spazio la avvia.', shWhyBack: 'Non cronometrato: prima del segno precedente.', shWhyShort: 'Non cronometrato: meno di un secondo.', shWhyFast: 'Non cronometrato: troppo veloce, preso per un salto.', shWhySlow: 'Non cronometrato: troppo lento.',
   shSince: 'Dal segno: {0}', shTypeTip: 'Il tempo di questo blocco: ~ dedotto dalle parole, = fissato a mano. Premi per scriverlo; lascialo vuoto per dedurlo di nuovo.',
@@ -247,9 +261,9 @@ it: {
   shNextBtn: 'Avanti', shNextTip: 'Questo blocco è finito: prende il tempo dal segno precedente, e la riga passa al blocco seguente',
   shShare: 'Cronometrato il {0}% dello spettacolo', shRest: 'Il resto a {0} parole/min', shRestTip: 'Il ritmo misurato sulle battute cronometrate: usalo per tutto ciò che non è cronometrato',
   shLeft: 'mancano {0}', shEnds: 'fine ~{0}', shPeekTip: 'Premi per guardare il punto di questo cue; la riga resta dov’è', shMapTip: 'Tutto lo spettacolo, scena per scena. Premi per guardare quel punto; la riga resta dov’è.',
-  shForget: 'Dimentica {0} blocchi cronometrati', shHint: 'Modalità spettacolo. Spazio avvia la riga. Doppio tocco su una parola per portarci la riga.', shBusy: 'Chiudi prima l’editor.',
+  shForget: 'Dimentica {0} blocchi cronometrati', shHint: 'Spettacolo. Spazio avvia la riga. Doppio tocco su una parola per portarci la riga.', shBusy: 'Chiudi prima l’editor.',
   paceL: 'Ritmo dei blocchi non cronometrati (parole al minuto)', standbyL: 'Pronti (secondi prima del cue)', warningL: 'Attenzione (secondi prima, 0 per nessuna)',
-  kShow: 'Modalità spettacolo', kShLeave: 'Esci dalla modalità spettacolo (premi due volte)', kShHint: 'Questi sono i tasti della modalità spettacolo. I tasti di modifica tornano quando esci.',
+  kShow: 'Spettacolo: sola lettura, la riga scorre e i cue vengono chiamati', kShLeave: 'Esci dallo Spettacolo (premi due volte)', kShHint: 'Questi sono i tasti dello Spettacolo. I tasti di modifica tornano in Scrivi e in Prova.',
   kShPlay: 'Avvia o ferma la riga', kShBack: 'Torna alla riga', kShStep: 'Riga al blocco successivo o precedente', kShPace: 'Ritmo della serata: più lento, più veloce',
   guide: 'Guida ai pulsanti', guideB: 'Guida', gHint: 'Ogni numero è su un pulsante visibile adesso. Premi un numero o una riga per evidenziare la coppia. Esc, H o un tocco fuori chiudono la guida.',
   gMenuD: 'Tutto il testo del copione, impostazioni, modelli, cronologia, i file per gli attori, backup, apertura e salvataggio di un file spettacolo.',
@@ -295,7 +309,7 @@ const MAX_BOARDS = 8;   // per facing page, through the interface
 const FIG_EXTRA = 46;   // height a board figure takes besides its drawing: button row 26, name 20
 const FIG_WIDE = 420;   // from this width a figure shows its buttons; under it, one "\u22ef" button
 const FIG_GAP = 12;
-const VERSION = 'r1.12';
+const VERSION = 'r1.13';
 const READABLE_FROM = 'r1.10';   // the oldest release that opens and saves what this one writes without damaging it (STO-15). Raise it, as a rule to VERSION, whenever a saved format changes in a way an older release would damage
 /* release names are compared part by part, as numbers: r1.9 is older than r1.10. A name that cannot be read counts as the oldest */
 const relParts = v => { const m = /^r(\d+(?:\.\d+)*)$/i.exec(typeof v === 'string' ? v.trim() : ''); return m ? m[1].split('.').map(Number) : []; };
@@ -356,9 +370,10 @@ const S = {
   urls: new Map(),       // 'boards/<file>' or 'templates/<file>' -> object URL
   pairs: [], mode: 'script', meta: null,   // meta: the frontmatter of the script, when it has one
   pages: [], pageOff: 0, lockInfo: null, els: [], meas: new Map(),
-  view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false },
+  view: { zoom: 1, fit: true, facing: true, cues: true, ink: true, night: false, timing: false, syntax: false },   // timing: the line in Rehearse (SHW-45); syntax: the forms beside the text in Write (SHW-44)
   tool: { mode: 'pen', colour: INKS[0], width: 0.13, finger: false },
   hist: [], redo: [], sel: null, editing: false, drawer: null, cueFilter: null, findAt: null, loaded: false,
+  phase: 'write',        // 'write', 'rehearse' or 'show' (SHW-43); show.on and show.learn follow it
   show: { on: false, playing: false, base: 0, t0: 0, follow: true, played: 0, anchor: null, cal: { want: 0, ms: 0 }, tempo: 1, learn: false, last: null, tl: null, cues: [],
     opt: { mode: 'rough', share: 'finer', step: 'mark' }, fine: {}, marks: [], why: '' },   // opt.mode: timing from time to time ('rough') or line by line ('line'); fine: how each block was last timed; neither is kept
   store: { mode: 'none', name: '', stamp: {}, dirty: { script: false, ink: false, cfg: false, boards: new Set(), tpls: new Set() }, conflict: false, lastSave: null, err: null }
@@ -983,15 +998,15 @@ function inkFile() {
 }
 
 /* ---------- history ---------- */
-function pushHist(op) { if (S.show.on) return; S.hist.push(op); if (S.hist.length > 200) S.hist.shift(); S.redo.length = 0; updUndo(); }
-function undo() { if (S.show.on) return; const op = S.hist.pop(); if (!op) return; closePop(); op.undo(); S.redo.push(op); updUndo(); }
-function redo() { if (S.show.on) return; const op = S.redo.pop(); if (!op) return; closePop(); op.redo(); S.hist.push(op); updUndo(); }
+function pushHist(op) { if (showLocked()) return; S.hist.push(op); if (S.hist.length > 200) S.hist.shift(); S.redo.length = 0; updUndo(); }
+function undo() { if (showLocked()) return; const op = S.hist.pop(); if (!op) return; closePop(); op.undo(); S.redo.push(op); updUndo(); }
+function redo() { if (showLocked()) return; const op = S.redo.pop(); if (!op) return; closePop(); op.redo(); S.hist.push(op); updUndo(); }
 
-function applyText(tx) { reparse(tx); relayout(); markDirty('script'); }
+function applyText(tx) { const keep = showKeep(); reparse(tx); showCarry(keep); relayout(); markDirty('script'); }
 /* Change the script text as one undoable step. Only the changed span is kept in history. */
 function commitText(nt) {
   const old = serialize();
-  if (nt === old || S.show.on) return false;   // show mode is read only
+  if (nt === old || showLocked()) return false;   // show mode is read only, except in rehearsal
   applyText(nt);
   const cur = serialize();
   if (cur === old) return false;
@@ -1239,6 +1254,36 @@ function showCues() {
     out.push({ b, c, name: (c.end ? '/' : '') + cueName(c), at: showPlace(b, c.wi, !c.before) });
   }
   return out.sort((x, y) => x.at - y.at);
+}
+/* Show mode is read only, except in rehearsal: with "Time it" on the book can be written in. */
+function showLocked() { return S.show.on && !S.show.learn; }
+/* Before the text changes: the time of every timed block by the id of its first block, and the blocks the
+   line and the last mark are in, with how far into them. */
+function showKeep() {
+  const sh = S.show, own = new Map();
+  if (!S.groups || !S.cfg || !S.cfg.show) return null;
+  for (const e of showTl().list) if (e.own) own.set(gBlocks(e.g)[0].id, { d: e.d, w: e.w, key: e.key });
+  const where = pos => { const e = showAt(pos, 'at'); return e ? { id: gBlocks(e.g)[0].id, f: clamp((pos - e.at) / e.w, 0, 1) } : null; };
+  return { own, now: Date.now(), line: sh.on ? where(showNow()) : null, mark: sh.on && sh.anchor ? where(sh.anchor.pos) : null };
+}
+/* After it changed: a block that kept its id and lost its time to new words takes the time it had, by its
+   new length; the time under the old words stays, for undo. In show mode the line and the last mark stay
+   in their blocks, and the calls are those of the cues as they are now. */
+function showCarry(k) {
+  const sh = S.show; if (!k) return;
+  const T = S.cfg.show.times; let put = false;
+  sh.tl = null;
+  for (const e of showTl().list) {
+    const o = !e.own && k.own.get(gBlocks(e.g)[0].id);
+    if (o && o.key !== e.key) { T[e.key] = clamp(Math.round(o.d / 1000 * e.w / o.w * 10) / 10, 0.1, 3600); put = true; }
+  }
+  if (put) { sh.tl = null; markDirty('cfg'); }
+  if (!sh.on) return;
+  const tl = showTl(), place = (q, d) => { const e = q && tl.list.find(x => gBlocks(x.g)[0].id === q.id); return clamp(e ? e.at + q.f * e.w : d, 0, tl.total); };
+  if (sh.playing) sh.played += k.now - sh.t0;
+  sh.base = place(k.line, sh.base); sh.t0 = k.now;
+  if (sh.anchor) sh.anchor.pos = place(k.mark, sh.anchor.pos);
+  sh.cues = showCues();
 }
 /* timing line by line: the line waits on a block until "Next" says the block is over */
 const showByLine = () => S.show.learn && S.show.opt.mode === 'line';

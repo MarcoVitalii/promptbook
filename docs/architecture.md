@@ -149,7 +149,7 @@ flowchart TB
     exp["<b>CSV and print</b><br/>[Component]<br/>csvText, exportCSV, doPrint"]
     panels["<b>Cue list and Review</b><br/>[Component]<br/>collectCues, reviewData, renderDrawer"]
     boards["<b>Boards and templates</b><br/>[Component]<br/>fillBoard, renderFacing,<br/>boardAct, renderTemplates"]
-    showv["<b>Show mode</b><br/>[Component]<br/>showOn, showTick, showFollow,<br/>renderShowSide"]
+    showv["<b>Phases and show mode</b><br/>[Component]<br/>setPhase, showTick, showFollow,<br/>renderShowSide"]
   end
 
   subgraph io["src/io.js — storage and shell"]
@@ -221,7 +221,7 @@ Three components have no arrows, to keep the picture readable. `Strings` and `St
 | Layout | `core.js`, LAYOUT | Builds a row's DOM, measures it in a hidden element, breaks blocks into pages | PAG |
 | Page renderer and navigation | `view.js`, VIEW, navigation | Draws only the pages near the screen; margin tags, connector lines, rails, ink; jump and find | PAG-10, CUE-7, UI-2 |
 | Boards and templates | `view.js`, facing page, templates | Facing page, board figures, grid, template chains, Templates view, images | BRD |
-| Show mode | `view.js`, show | Read only and focus; the running line, the page in steps, the rail of calls, the map | SHW |
+| Phases and show mode | `view.js`, show | The three phases (Write, Rehearse, Show); read only and focus; the running line, the page in steps, the rail of calls, the map | SHW |
 | Pointer input | `view.js`, INPUT, drag | One state machine for pen, finger and mouse: draw, erase, tap, scroll, long press, drag a cue or a block | INP, CUE-25 to CUE-34, CUE-43, TXT-28 to TXT-30 |
 | Popovers and block editor | `view.js`, POPOVERS, in-place editor | Cue pin, cue editor, board name, comment, ink flag; the text editor of a block | CUE-3, TXT-8 |
 | Cue list and Review | `view.js`, PANELS | Rows computed from the tokens; the Review sections and the badge | CUE-35, UI-1 |

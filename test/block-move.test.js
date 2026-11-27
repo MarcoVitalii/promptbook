@@ -1,5 +1,5 @@
 // Moving a block by dragging the grip in its gutter to another place: mouse, finger (after a hold) and pen.
-const { ok, open, serve } = require('./_util');
+const { ok, open, serve, editBlock } = require('./_util');
 const path = require('path');
 const OUT = process.env.OUT || path.join('.cache', 'out');
 (async () => {
@@ -166,7 +166,7 @@ const OUT = process.env.OUT || path.join('.cache', 'out');
 
   /* ---- not while a block is edited ---- */
   await reset();
-  await page.locator('.w', { hasText: 'quattro' }).dblclick();
+  await editBlock(page, page.locator('.w', { hasText: 'quattro' }));
   from = await row('uno'); to = await row('sei');
   await mouseDrag(from, { x: to.tx, y: to.bottom - 3 }, false);
   ok((await marks()).ghost === 0, 'no drag while a block is being edited');

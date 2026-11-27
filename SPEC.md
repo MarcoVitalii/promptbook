@@ -1,6 +1,6 @@
 # Promptbook — Specification
 
-**Tool described:** r1.12 (`VERSION` in `src/core.js`), 2026-10-13.
+**Tool described:** r1.13 (`VERSION` in `src/core.js`), not yet released.
 **State:** every requirement with a check passes in a simulated browser. The client has used part of it on a real show (`docs/verification.md` §4). Nothing has been tried on the rehearsal laptop under a recorded trial, on a phone or on paper.
 
 ---
@@ -75,7 +75,7 @@ These bind every capability. Each restates a decision.
 |---|---|---|
 | C1 | The tool is one HTML file. No install, no server, no third-party libraries. The only third-party content is one embedded font (Inter, SIL Open Font License 1.1). | D12 `[ASSUMED]`, G6 |
 | C2 | The tool never uses the network. | D12 `[ASSUMED]` |
-| C3 | It is built and tested for Chrome or Edge on a laptop with touchscreen and pen. Elsewhere it still works, with the show kept in the browser and moved by backup files. | D13 `[LOCKED]`, K6, A7 |
+| C3 | It is built and tested for Chrome or Edge on a laptop with touchscreen and pen. Elsewhere it opens the same show file and downloads it again, with the changes in between kept in the browser (STO-28 to STO-30); nothing else is adapted to another device yet. | D13 `[LOCKED]`, K6, A7 |
 | C4 | One editor at a time. No merge, no co-editing. | D15 `[LOCKED]` |
 | C5 | The script format is the convention already in use, plus `#` headings, one cue token and an optional frontmatter. No new markup inside the script body. | D3, D19 `[LOCKED]` |
 | C6 | A show is a set of plain files the user owns, readable and hand-editable without the tool. | D10 `[LOCKED]` |
@@ -95,11 +95,11 @@ These bind every capability. Each restates a decision.
 | Boards and templates | `docs/specs/04-boards.md` | BRD | 30 |
 | Input: pen, finger, mouse, keyboard | `docs/specs/05-input.md` | INP | 12 |
 | Pages and print, locked page numbers | `docs/specs/06-pages-print.md` | PAG | 20 |
-| Storage: show file, autosave, data shapes, damaged files, compatibility | `docs/specs/07-storage.md` | STO | 25 |
+| Storage: show file, autosave, data shapes, damaged files, compatibility | `docs/specs/07-storage.md` | STO | 28 |
 | History, variants and changes | `docs/specs/08-history.md` | HIS | 15 |
-| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 13 |
+| Workbench: Review, find, settings, language, toolbar, shortcuts | `docs/specs/09-workbench.md` | UI | 14 |
 | Cast: notes for the actors, the cast file, the script for the actors | `docs/specs/10-cast.md` | CST | 21 |
-| Show mode: read only, the running line, block times learned in rehearsal, warnings and standbys | `docs/specs/11-show.md` | SHW | 25 |
+| The three phases (Write, Rehearse, Show); show mode: read only, the running line, block times learned in rehearsal, the rehearsal in which the book is written in, warnings and standbys | `docs/specs/11-show.md` | SHW | 36 |
 
 ## 3. Consequences
 
@@ -110,7 +110,7 @@ These bind every capability. Each restates a decision.
 | Ink as the way to write cues | Ink is not data. Cues are pinned by tapping; ink is for everything else. | K3 |
 | Ink that never needs re-aligning | Ink is anchored to its block and flagged when that block's text changes. Re-alignment shrinks to the lines that changed. | K4 |
 | The drawing tools of Excalidraw | A built-in pen and reusable templates. No shapes, text objects or movable props. | K5, K9 |
-| Any browser | Saving to disk needs Chrome or Edge. | K6 |
+| Any browser | Every browser opens and downloads a show file. Saving into it without a command needs Chrome or Edge. | K6 |
 | Collaboration as in Word | One editor at a time. | K2 |
 
 **Everything is hand-written and lives in one file** (two, with the script for the actors). Zip, git objects, CSV, storage, pen, layout. Each covers only what the tool needs. How it is put together, and what that costs, is in `docs/architecture.md`.
@@ -131,7 +131,7 @@ These bind every capability. Each restates a decision.
 | A4 | A4 portrait. Q19 was answered "yes", which names neither a size nor single- or double-sided, so this stands. | Page model |
 | A5 | 80–150 pages, a few hundred cues. | Performance |
 | A6 | The old Excalidraw workflow stays available as fallback during the first rehearsals. Nothing is migrated destructively. | Risk posture |
-| A7 | The laptop runs Chrome or Edge and is the machine that holds the show. Not stated in the answer. | Storage: in another browser the tool still works, but only with the in-browser fallback and backup files |
+| A7 | The laptop runs Chrome or Edge and is the machine that holds the show. Not stated in the answer. | Storage: in another browser the show file is saved by hand, as a download (STO-29, STO-30) |
 
 ## 5. Open questions
 
@@ -156,6 +156,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 |---|---|---|---|
 | r1.11 | 2026-10-13 | The first release: everything the capability files describe | 01 to 11 |
 | r1.12 | 2026-10-13 | A guide to the buttons laid over the window (UI-13). The guide for whoever uses the tool, `docs/guide/`, in English and Italian. Settings in sections. Timing a rehearsal line by line or from time to time, the time of every block on the page and typed in place (SHW-31 to SHW-36) | 09, 11 |
+| r1.13 | not yet released | Three phases, Write, Rehearse and Show, in one switch (SHW-43 to SHW-48, SHW-50, UI-14): Write is the whole script as text, with the forms beside it and completion for names and cues (TXT-32); Rehearse is the workbench, and "Timing" brings the line, written in while the line runs, the time of a block and the place of the line surviving an edit (SHW-38 to SHW-42); Show alone calls the cues and learns nothing. A show file opens and is downloaded in every browser (STO-28 to STO-30) | 01, 05, 07, 09, 11 |
 
 What a release holds for the user is in `CHANGELOG.md`. How it was checked is in `docs/verification.md`.
 

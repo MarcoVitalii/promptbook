@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { rehearseFirst, editBlock } = require('./_util');
 const path = require('path'), fs = require('fs'), http = require('http');
 const OUT = process.env.OUT;
 const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
@@ -9,7 +10,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   const url = 'http://localhost:' + srv.address().port + '/promptbook.html';
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: 'en-GB', hasTouch: true, acceptDownloads: true });
-  const page = await ctx.newPage();
+  const page = await ctx.newPage(); await rehearseFirst(page);
   const errs = [];
   page.on('pageerror', e => errs.push('PAGEERROR ' + e.message + '\n' + e.stack));
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE ' + m.text()); });
@@ -46,7 +47,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(who.includes('& MARCO: Allora ho sbagliato vita.'), 'ink in a simultaneous column belongs to that speech');
 
   // delete an inked block -> orphan, undo -> ink back
-  await page.locator('.w', { hasText: 'gridare,' }).first().dblclick();
+  await editBlock(page, page.locator('.w', { hasText: 'gridare,' }).first());
   await page.locator('#editor textarea').fill('');
   await page.locator('#editor .btn', { hasText: 'Save' }).click();
   let st = await page.evaluate(() => [PB.S.orphans.length, PB.S.ink.size, PB.serialize().includes('gridare')]);
@@ -57,7 +58,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m);
   ok(st[0] === 0 && st[1] === 2 && await page.locator('.flag').count() === 0, 'undo re-attaches the ink with no flag');
 
   // split a speech into two by editing: ink follows the closest text
-  await page.locator('.w', { hasText: 'gridare,' }).first().dblclick();
+  await editBlock(page, page.locator('.w', { hasText: 'gridare,' }).first());
   const raw = await page.locator('#editor textarea').inputValue();
   await page.locator('#editor textarea').fill(raw.replace(' Non gridare', '\nANNA: (interrompe) E allora?\nMARCO: Non gridare'));
   await page.keyboard.press('Control+Enter');
