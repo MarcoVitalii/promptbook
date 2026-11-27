@@ -1,6 +1,6 @@
 # Promptbook — Specification
 
-**Tool described:** r1.13 (`VERSION` in `src/core.js`), not yet released.
+**Tool described:** r1.13 (`VERSION` in `src/core.js`), 2026-11-27.
 **State:** every requirement with a check passes in a simulated browser. The client has used part of it on a real show (`docs/verification.md` §4). Nothing has been tried on the rehearsal laptop under a recorded trial, on a phone or on paper.
 
 ---
@@ -156,7 +156,7 @@ Readings shown to the client, or built on, that were neither confirmed nor vetoe
 |---|---|---|---|
 | r1.11 | 2026-10-13 | The first release: everything the capability files describe | 01 to 11 |
 | r1.12 | 2026-10-13 | A guide to the buttons laid over the window (UI-13). The guide for whoever uses the tool, `docs/guide/`, in English and Italian. Settings in sections. Timing a rehearsal line by line or from time to time, the time of every block on the page and typed in place (SHW-31 to SHW-36) | 09, 11 |
-| r1.13 | not yet released | Three phases, Write, Rehearse and Show, in one switch (SHW-43 to SHW-48, SHW-50, UI-14): Write is the whole script as text, with the forms beside it and completion for names and cues (TXT-32); Rehearse is the workbench, and "Timing" brings the line, written in while the line runs, the time of a block and the place of the line surviving an edit (SHW-38 to SHW-42); Show alone calls the cues and learns nothing. A show file opens and is downloaded in every browser (STO-28 to STO-30) | 01, 05, 07, 09, 11 |
+| r1.13 | 2026-11-27 | Three phases, Write, Rehearse and Show, in one switch (SHW-43 to SHW-48, SHW-50, UI-14): Write is the whole script as text, with the forms beside it and completion for names and cues (TXT-32); Rehearse is the workbench, and "Timing" brings the line, written in while the line runs, the time of a block and the place of the line surviving an edit (SHW-38 to SHW-42); Show alone calls the cues and learns nothing. A show file opens and is downloaded in every browser (STO-28 to STO-30) | 01, 05, 07, 09, 11 |
 
 What a release holds for the user is in `CHANGELOG.md`. How it was checked is in `docs/verification.md`.
 

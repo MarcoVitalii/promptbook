@@ -1,19 +1,39 @@
 # Changelog
 
-## r1.13 — not yet released
+## r1.13 — 2026-11-27
 
-- **Three phases, one switch.** At the top, next to the name of the show: **Write**, **Rehearse**, **Show** (W, R, S). The book is always in one of them, and the browser remembers which, Write or Rehearse, for the next show it opens.
-  - **Write** is the whole script as text, in one box: no pages, no pen. What you type is in the show after a short pause, and on Esc, Ctrl+S or a change of phase. **Syntax** (Y) shows the forms of the script beside the text. As you type, a list offers what fits: a character's name at the start of a line, a department with its next number after `{`, the cues still open after `{/`; Enter takes it. Find and the jump menu work in the box. Review lives here, now on V.
-  - **Rehearse** is the workbench: the pens, the cue pin, the boards, the grips. **Timing** (T), a toggle beside Boards, Cues and Ink, brings the line and its panel on the right: the clock, Start, the two ways of timing, the map, the time of every block on the page. The line learns whenever it runs here: "Time it" is gone. Without Timing the whole window is the book. No cue is called in Rehearse.
-  - **Show** is as before: read only, in focus, the line, the warnings, standbys and goes, the pace of the night. Nothing is learned. Leave takes you back to the phase you came from.
-- **A rehearsal in the book.** In Rehearse the book can be written in while the line runs: the pen draws, a tap on a word pins a cue or a note, a long press or "Edit text" opens the text of a speech, a cue tag is dragged. Before, timing a rehearsal meant a book that could not be touched.
-- In Rehearse a double tap says "the show is here". It never opens the text of a speech.
-- Escape closes the text of a speech from wherever the focus went, a button included.
-- A change to the text no longer moves the line: it stays in the speech it was in, however many words were added or cut above it.
+The book now follows the work: writing the script, rehearsing it, calling the show. One switch at the top, next to the name of the show, says which of the three it is for: **Write**, **Rehearse** or **Show** (W, R, S). And a show file now opens in any browser, not only in Chrome and Edge.
+
+### Three phases, one switch
+
+- The book is always in one phase. A show opens in the one this browser was left in, Write or Rehearse, never Show; the first time, Write. The phase stays with the browser, not in the show file.
+- **Write** is the whole script as text, in one box: no pages, no pen. What you type is in the show after a short pause, and on Esc, Ctrl+S or a change of phase.
+  - **Syntax** (Y) shows the forms of the script beside the text.
+  - As you type, a list offers what fits: a character's name at the start of a line, a department with its next number after `{`, the cues still open after `{/`. Enter takes it.
+  - Find and the jump menu work in the box. Review lives here, now on V.
+- **Rehearse** is the workbench: the pens, the cue pin, the boards, the grips. **Timing** (T), a toggle beside Boards, Cues and Ink, brings in the line and its panel on the right: the clock, Start, the two ways of timing, the map and the time of every block on the page. Without Timing the whole window is the book. No cue is called in Rehearse.
+- **Show** is as before: read only, in focus, the line, the warnings, standbys and goes, the pace of the night. Nothing is learned. "Leave" takes you back to the phase you came from.
+- "Time it" is gone. The line learns whenever it runs in Rehearse, and never in Show.
+
+### A rehearsal in the book
+
+- While the line runs in Rehearse, the book can still be written in: the pen draws, a tap on a word pins a cue or a note, a long press or "Edit text" opens the text of a speech, a cue tag is dragged. Before, timing a rehearsal meant a book that could not be touched.
+- A double tap says "the show is here". It never opens the text of a speech.
 - **A timed speech keeps its time when its words change**, longer or shorter as the speech became. Before, one corrected word sent it back to the pace of the show. This holds for a speech changed on its own; speeches rewritten together are inferred from their words again.
+- A change to the text no longer moves the line: it stays in the speech it was in, however many words were added or cut above it.
 
-- **A show file opens in every browser.** In Firefox, Safari, or on a tablet or phone, "Open show file…" takes the file through the browser's own file box, and the show opens whole, history included. Such a browser cannot write into the file, so the Menu and a banner offer "Download show file": until you press it the status says "Not downloaded" and your changes are kept in that browser only. Before, the button was greyed out there and a show could only cross as a backup, without its history. In Chrome and Edge nothing changes.
+### A show file in every browser
+
+- In Firefox, Safari, or on a tablet or phone, "Open show file…" takes the file through the browser's own file box, and the show opens whole, history included.
+- Such a browser cannot write into the file, so the Menu and a banner offer "Download show file". Until you press it the status says "Not downloaded", and your changes are kept in that browser only.
+- Before, the button was greyed out there, and a show could only cross as a backup, without its history. In Chrome and Edge nothing changes.
+
+### Fixed
+
+- Escape closes the text of a speech from wherever the focus went, a button included.
 - A backup exported from a show file that had been closed and opened again lost the images of its boards when imported. It keeps them.
+
+**How it was checked.** In a simulated browser only: headless Chromium, with its file dialogs taken away to stand in for the other browsers. Not yet tried by hand: the pen and a finger in Rehearse while the line runs, the three phases on the rehearsal laptop, and Firefox, Safari, a tablet or a phone.
 
 **Compatibility.** Nothing in the show file changes: shows written by r1.11 and r1.12 open unchanged, and they open a show saved by r1.13. Two keys moved: Review is V (R picks Rehearse), and a double tap no longer opens the text of a speech (in Rehearse a long press or "Edit text" does; in Write the whole script is the text).
 

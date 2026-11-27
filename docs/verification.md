@@ -28,7 +28,7 @@ Three properties of the method to keep in mind when reading a green result:
 
 ## 3. Record by release
 
-**r1.13, measured on 2026-11-26.** Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,301 checks pass, none fail**: 273 unit checks in 10 files and 1,028 browser checks in 23 files, the browser part in about 85 s. `test/KNOWN_FAILING` is empty. The table below is of this release.
+**r1.13, measured on 2026-11-27.** Node 24.21.0, Playwright 1.64.1 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,301 checks pass, none fail**: 273 unit checks in 10 files and 1,028 browser checks in 23 files, the browser part in 45 to 85 s from one run to the next. `test/KNOWN_FAILING` is empty. The table below is of this release.
 
 **r1.12, measured on 2026-10-13.** Node 24.21.0, Playwright 1.64.0 headless Chromium on Linux (WSL2). `sh scripts/check.sh full --force`: **1,195 checks pass, none fail**: 261 unit checks in 10 files and 934 browser checks in 20 files, the browser part in about 75 s. `test/KNOWN_FAILING` is empty. `test/damaged` needs `python3` for the two archives written by another program, and `git` for `git fsck`.
 
