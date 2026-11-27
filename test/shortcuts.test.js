@@ -64,6 +64,8 @@ const OUT = process.env.OUT;
   await page.keyboard.type('bin 89');
   ok(await view() === 'true,true,true,false' && await page.locator('#search').inputValue() === 'bin 89', 'letters typed in a field are text, not shortcuts');
   const sw = () => ev(() => document.querySelector('#search').getBoundingClientRect().width);
+  // the width is a CSS transition: on a slow runner it can still be opening
+  await page.waitForFunction(() => document.querySelector('#search').getBoundingClientRect().width > 150, null, { timeout: 2000 }).catch(() => {});
   ok(await sw() > 150, 'Find is wide while it is used');
   await key('Escape'); await page.waitForTimeout(250);
   ok(await ev(() => document.activeElement.id) !== 'search' && await page.locator('#search').inputValue() === '' && await sw() < 60, 'Escape leaves Find, empties it and folds it back to the magnifier');
